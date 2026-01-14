@@ -1,0 +1,42 @@
+[
+  {
+    "role": "user",
+    "content": "Benim adım Berke"
+  },
+  {
+    "role": "assistant",
+    "content": "Merhaba Berke! Size nasıl yardımcı olabilirim?"
+  },
+  {
+    "role": "user",
+    "content": "Adımı hatırlıyor musun"
+  },
+  {
+    "role": "assistant",
+    "content": "Evet, adın Berke! Sana nasıl yardımcı olabilirim?"
+  },
+  {
+    "role": "user",
+    "content": "Benim adım Berke"
+  },
+  {
+    "role": "assistant",
+    "content": "Evet, adın Berke! Başka bir konuda yardımcı olabilir miyim?"
+  },
+  {
+    "role": "user",
+    "content": "adımı hatırlıyor musun"
+  },
+  {
+    "role": "assistant",
+    "content": "Evet, adın Berke! Sana başka nasıl yardımcı olabilirim?"
+  },
+  {
+    "role": "user",
+    "content": "Bugün moralim yok beni motive eder misin"
+  },
+  {
+    "role": "assistant",
+    "content": "Tabii Berke! Unutma, her zor an geçer ve senin içinde büyük bir güç var. Küçük bir adım bile, büyük değişimlerin başlangıcıdır. Bugün pes etme, çünkü sen bunu başaracak kapasitedesin! Hadi, biraz nefes al ve ilerlemeye devam et!"
+  }
+]

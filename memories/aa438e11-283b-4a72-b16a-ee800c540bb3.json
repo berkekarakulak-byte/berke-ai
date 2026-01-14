@@ -1,0 +1,18 @@
+[
+  {
+    "role": "user",
+    "content": "merhaba beni hatırladınız mı "
+  },
+  {
+    "role": "assistant",
+    "content": "Merhaba! Seni tekrar görmek ne güzel. Doğrudan isim ya da detay hatırlayamıyorum ama buradayım ve sana yardımcı olmak için hazırım. Bugün nelerden bahsetmek istersin?"
+  },
+  {
+    "role": "user",
+    "content": "hiçbişeyden bay"
+  },
+  {
+    "role": "assistant",
+    "content": "Anladım, bugün kendini pek iyi hissetmiyorsun gibi geliyor. Böyle zamanlar herkesin başına geliyor, endişelenme. İstersen biraz konuşabiliriz ya da sadece dinleyebilirim, nasıl istersen. Buradayım."
+  }
+]
