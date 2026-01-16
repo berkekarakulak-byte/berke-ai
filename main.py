@@ -1,123 +1,152 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel
 from datetime import datetime
-from uuid import uuid4
-import os, json
-
+import os, json, uuid
+import httpx
 from openai import OpenAI
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
+# ======================
+# CONFIG
+# ======================
 MEMORY_DIR = "memories"
+USERS_FILE = "users.json"
 os.makedirs(MEMORY_DIR, exist_ok=True)
 
+ADMIN_EMAIL = "berkekarakulak@gmail.com"
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI")
+
+client = OpenAI(api_key=OPENAI_API_KEY)
+
+PERSONA = "Samimi, dost canlısı, kısa ve net cevaplar veren bir asistansın."
+
+app = FastAPI()
+
+# ======================
+# MODELS
+# ======================
 class ChatIn(BaseModel):
     message: str
 
-# ---------- USER ----------
-def get_user_id(request: Request):
-    uid = request.cookies.get("user_id")
-    if not uid:
-        uid = str(uuid4())
-    return uid
+# ======================
+# HELPERS
+# ======================
+def mem_path(uid): return f"{MEMORY_DIR}/{uid}.json"
 
-# ---------- MEMORY ----------
-def short_mem_path(uid): return f"{MEMORY_DIR}/{uid}.json"
-def summary_path(uid): return f"{MEMORY_DIR}/{uid}_summary.txt"
-
-def load_short(uid):
-    if not os.path.exists(short_mem_path(uid)):
+def load_memory(uid):
+    if not uid or not os.path.exists(mem_path(uid)):
         return []
-    with open(short_mem_path(uid), "r", encoding="utf-8") as f:
-        return json.load(f)
+    return json.load(open(mem_path(uid), encoding="utf-8"))
 
-def save_short(uid, mem):
-    with open(short_mem_path(uid), "w", encoding="utf-8") as f:
-        json.dump(mem[-20:], f, ensure_ascii=False, indent=2)
+def save_memory(uid, mem):
+    if not uid:
+        return
+    json.dump(mem[-20:], open(mem_path(uid), "w", encoding="utf-8"),
+              ensure_ascii=False, indent=2)
 
-def load_summary(uid):
-    if not os.path.exists(summary_path(uid)):
-        return ""
-    with open(summary_path(uid), "r", encoding="utf-8") as f:
-        return f.read()
+def load_users():
+    if not os.path.exists(USERS_FILE):
+        return []
+    return json.load(open(USERS_FILE, encoding="utf-8"))
 
-def save_summary(uid, text):
-    with open(summary_path(uid), "w", encoding="utf-8") as f:
-        f.write(text)
+def save_user(email):
+    users = load_users()
+    if email not in [u["email"] for u in users]:
+        users.append({
+            "email": email,
+            "first_login": datetime.now().strftime("%Y-%m-%d %H:%M")
+        })
+        json.dump(users, open(USERS_FILE, "w", encoding="utf-8"),
+                  ensure_ascii=False, indent=2)
 
-def update_summary(uid, short_mem):
-    prompt = [
-        {
-            "role": "system",
-            "content": (
-                "Aşağıdaki konuşmalardan kullanıcı hakkında "
-                "kalıcı ve önemli bilgileri çıkar. "
-                "Kısa, net ve maddeler halinde yaz."
-            )
-        },
-        {
-            "role": "user",
-            "content": json.dumps(short_mem, ensure_ascii=False)
-        }
-    ]
-
-    res = client.responses.create(
-        model="gpt-4.1-mini",
-        input=prompt
-    )
-
-    save_summary(uid, res.output_text)
-
-# ---------- ROUTES ----------
+# ======================
+# ROUTES
+# ======================
 @app.get("/", response_class=HTMLResponse)
-def index(request: Request):
-    with open("static/index.html", "r", encoding="utf-8") as f:
-        html = f.read()
-
+def index(req: Request):
+    html = open("static/index.html", encoding="utf-8").read()
     resp = HTMLResponse(html)
-    if not request.cookies.get("user_id"):
-        resp.set_cookie("user_id", str(uuid4()), max_age=60*60*24*365)
+    if not req.cookies.get("uid"):
+        resp.set_cookie("uid", str(uuid.uuid4()), max_age=60*60*24*365)
     return resp
 
 @app.post("/chat")
-def chat(data: ChatIn, request: Request):
-    uid = get_user_id(request)
+def chat(data: ChatIn, req: Request):
+    uid = req.cookies.get("uid")
+    memory = load_memory(uid)
 
-    short_mem = load_short(uid)
-    summary = load_summary(uid)
+    memory.append({"role": "user", "content": data.message})
+    messages = [{"role": "system", "content": PERSONA}] + memory[-10:]
 
-    # Kullanıcı mesajı
-    short_mem.append({"role": "user", "content": data.message})
-
-    # AI prompt
-    messages = []
-    if summary:
-        messages.append({
-            "role": "system",
-            "content": f"Kullanıcı hakkında bilinenler:\n{summary}"
-        })
-
-    messages += short_mem[-10:]
-
-    response = client.responses.create(
+    res = client.responses.create(
         model="gpt-4.1-mini",
         input=messages
     )
 
-    reply = response.output_text
+    reply = res.output_text
+    memory.append({"role": "assistant", "content": reply})
+    save_memory(uid, memory)
 
-    short_mem.append({"role": "assistant", "content": reply})
-    save_short(uid, short_mem)
-
-    # Her 5 mesajda bir özeti güncelle
-    if len(short_mem) % 5 == 0:
-        update_summary(uid, short_mem)
-
-    return JSONResponse({
+    return {
         "reply": reply,
         "time": datetime.now().strftime("%H:%M")
-    })
+    }
+
+# ======================
+# GOOGLE LOGIN
+# ======================
+@app.get("/auth/google")
+def google_login():
+    url = (
+        "https://accounts.google.com/o/oauth2/v2/auth"
+        f"?client_id={GOOGLE_CLIENT_ID}"
+        f"&redirect_uri={GOOGLE_REDIRECT_URI}"
+        "&response_type=code"
+        "&scope=openid%20email%20profile"
+    )
+    return RedirectResponse(url)
+
+@app.get("/auth/google/callback")
+async def google_callback(code: str):
+    async with httpx.AsyncClient() as http:
+        token = (await http.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "client_id": GOOGLE_CLIENT_ID,
+                "client_secret": GOOGLE_CLIENT_SECRET,
+                "code": code,
+                "grant_type": "authorization_code",
+                "redirect_uri": GOOGLE_REDIRECT_URI
+            }
+        )).json()
+
+        userinfo = (await http.get(
+            "https://www.googleapis.com/oauth2/v2/userinfo",
+            headers={"Authorization": f"Bearer {token['access_token']}"}
+        )).json()
+
+    email = userinfo["email"]
+    save_user(email)
+
+    resp = RedirectResponse("/")
+    resp.set_cookie("uid", email, max_age=60*60*24*365)
+    return resp
+
+# ======================
+# ADMIN
+# ======================
+@app.get("/admin")
+def admin_api(req: Request):
+    if req.cookies.get("uid") != ADMIN_EMAIL:
+        return JSONResponse({"error": "Yetkisiz"}, status_code=403)
+    return load_users()
+
+@app.get("/admin-ui", response_class=HTMLResponse)
+def admin_ui(req: Request):
+    if req.cookies.get("uid") != ADMIN_EMAIL:
+        return HTMLResponse("<h2>403 Yetkisiz</h2>", status_code=403)
+    return open("static/admin.html", encoding="utf-8").read()
