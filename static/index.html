@@ -15,7 +15,7 @@
   --muted:#94a3b8;
 }
 :root.darker{
-  --bg:#000000;
+  --bg:#000;
   --panel:#020617;
   --border:#111827;
   --user:#1d4ed8;
@@ -38,36 +38,37 @@ body{
   display:flex;flex-direction:column;
   border:1px solid var(--border);
   box-shadow:0 40px 80px rgba(0,0,0,.9);
-  overflow:hidden; position:relative;
+  overflow:hidden;position:relative;
 }
 .header{
   padding:16px;text-align:center;
-  font-weight:600;letter-spacing:.3px;
-  border-bottom:1px solid var(--border);
+  font-weight:600;border-bottom:1px solid var(--border);
   position:relative;
 }
 .header .right{
   position:absolute;right:12px;top:12px;
-  display:flex;gap:10px;
+  display:flex;gap:8px;
 }
 .header button{
-  background:none;border:none;color:#93c5fd;
-  cursor:pointer;font-size:12px;
+  background:none;border:none;
+  color:#93c5fd;font-size:12px;
+  cursor:pointer;
 }
 .messages{
-  flex:1;padding:16px;overflow-y:auto;
-  display:flex;flex-direction:column;gap:12px;
+  flex:1;padding:16px;
+  overflow-y:auto;display:flex;
+  flex-direction:column;gap:12px;
 }
 .wrap{
-  max-width:80%;display:flex;flex-direction:column;gap:4px;
-  animation:fade .18s ease;
+  max-width:80%;
+  display:flex;flex-direction:column;
+  gap:4px;animation:fade .18s ease;
 }
 .wrap.user{align-self:flex-end;align-items:flex-end}
 .wrap.ai{align-self:flex-start}
 .bubble{
   padding:12px 16px;border-radius:16px;
   font-size:14px;line-height:1.45;
-  backdrop-filter:blur(6px);
 }
 .user .bubble{
   background:linear-gradient(135deg,#2563eb,#1d4ed8);
@@ -82,39 +83,33 @@ body{
   padding-left:6px;animation:pulse 1.2s infinite;
 }
 .input{
-  display:flex;gap:10px;padding:14px;
-  border-top:1px solid var(--border);
-  background:rgba(2,6,23,.9);
+  display:flex;gap:10px;
+  padding:14px;border-top:1px solid var(--border);
 }
 input{
-  flex:1;padding:14px 16px;border-radius:14px;
-  border:1px solid var(--border);
+  flex:1;padding:14px 16px;
+  border-radius:14px;border:1px solid var(--border);
   background:var(--panel);color:white;
-  font-size:14px;outline:none;
+  outline:none;
 }
-input:focus{border-color:#3b82f6}
 button.send{
-  padding:0 18px;border-radius:14px;border:none;
-  background:linear-gradient(135deg,#2563eb,#1d4ed8);
-  color:white;font-size:14px;cursor:pointer;
+  padding:0 18px;border-radius:14px;
+  border:none;background:linear-gradient(135deg,#2563eb,#1d4ed8);
+  color:white;cursor:pointer;
 }
 .profile{
   position:absolute;inset:0;
   background:linear-gradient(180deg,var(--panel),#000);
-  padding:20px;display:none;flex-direction:column;gap:14px;
+  padding:20px;display:none;
+  flex-direction:column;gap:14px;
 }
-.profile h3{margin:0;font-size:16px}
 .profile pre{
   flex:1;background:var(--panel);
   border:1px solid var(--border);
   border-radius:14px;padding:14px;
-  white-space:pre-wrap;font-size:13px;
+  white-space:pre-wrap;
 }
-.profile button{
-  background:var(--panel);border:1px solid var(--border);
-  color:white;padding:10px;border-radius:12px;cursor:pointer;
-}
-@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1}}
 @keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
 </style>
 </head>
@@ -125,6 +120,7 @@ button.send{
   <div class="header">
     ✨ Berke AI
     <div class="right">
+      <button onclick="location.href='/auth/google'">Google</button>
       <button onclick="toggleTheme()">Tema</button>
       <button onclick="openProfile()">Profil</button>
     </div>
@@ -141,8 +137,6 @@ button.send{
 <div class="profile" id="profile">
   <h3>AI seni böyle tanıyor</h3>
   <pre id="profileText"></pre>
-  <button onclick="resetMem()">Hafızayı Sıfırla</button>
-  <button onclick="clearProf()">Profil Temizle</button>
   <button onclick="closeProfile()">Kapat</button>
 </div>
 
@@ -151,51 +145,47 @@ const msgs=document.getElementById("msgs");
 const inp=document.getElementById("inp");
 const root=document.documentElement;
 
-// 🔊 SOFT SES (web audio, dosya yok)
-const ctx = new (window.AudioContext||window.webkitAudioContext)();
-function clickSound(){
-  const o=ctx.createOscillator(), g=ctx.createGain();
-  o.connect(g); g.connect(ctx.destination);
-  o.type="sine"; o.frequency.value=600;
-  g.gain.setValueAtTime(0.03,ctx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.12);
-  o.start(); o.stop(ctx.currentTime+0.12);
+// 🔊 Soft click sound
+const ctx=new (window.AudioContext||window.webkitAudioContext)();
+function sound(){
+  const o=ctx.createOscillator(),g=ctx.createGain();
+  o.connect(g);g.connect(ctx.destination);
+  o.frequency.value=600;
+  g.gain.setValueAtTime(.03,ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.12);
+  o.start();o.stop(ctx.currentTime+.12);
 }
 
 function add(text,who,time){
   const w=document.createElement("div");
   w.className="wrap "+who;
   const b=document.createElement("div");
-  b.className="bubble"; b.textContent=text;
+  b.className="bubble";b.textContent=text;
   const t=document.createElement("div");
-  t.className="time"; t.textContent=time;
-  w.append(b,t); msgs.append(w);
+  t.className="time";t.textContent=time;
+  w.append(b,t);msgs.append(w);
   msgs.scrollTop=msgs.scrollHeight;
 }
 
-let typingEl=null;
+let typing=null;
 function showTyping(){
-  typingEl=document.createElement("div");
-  typingEl.className="typing";
-  typingEl.textContent="AI yazıyor…";
-  msgs.append(typingEl);
+  typing=document.createElement("div");
+  typing.className="typing";
+  typing.textContent="AI yazıyor…";
+  msgs.append(typing);
   msgs.scrollTop=msgs.scrollHeight;
 }
-function hideTyping(){
-  if(typingEl){ typingEl.remove(); typingEl=null; }
-}
+function hideTyping(){if(typing){typing.remove();typing=null;}}
 
 async function send(){
   const text=inp.value.trim();
   if(!text) return;
-  clickSound();
-
+  sound();
   const now=new Date().toLocaleTimeString([],{
     hour:"2-digit",minute:"2-digit"
   });
   add(text,"user",now);
   inp.value="";
-
   showTyping();
   const r=await fetch("/chat",{
     method:"POST",
@@ -208,24 +198,18 @@ async function send(){
 }
 
 inp.addEventListener("keydown",e=>{
-  if(e.key==="Enter"){ e.preventDefault(); send(); }
+  if(e.key==="Enter"){e.preventDefault();send();}
 });
 
-// 🌗 TEMA
-function toggleTheme(){
-  root.classList.toggle("darker");
-}
+function toggleTheme(){root.classList.toggle("darker");}
 
-// 👤 PROFİL
 async function openProfile(){
   profile.style.display="flex";
   const r=await fetch("/profile");
   const j=await r.json();
-  profileText.textContent=j.summary || "Henüz bilgi yok.";
+  profileText.textContent=j.summary||"Henüz bilgi yok.";
 }
 function closeProfile(){profile.style.display="none";}
-async function resetMem(){await fetch("/profile/reset",{method:"POST"});openProfile();}
-async function clearProf(){await fetch("/profile/clear",{method:"POST"});openProfile();}
 </script>
 
 </body>
