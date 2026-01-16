@@ -1,121 +1,231 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Berke AI</title>
+<meta charset="UTF-8">
+<title>Berke AI</title>
 
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; height: 100vh; background: #0f172a;
-      font-family: Arial, sans-serif; display: flex;
-      align-items: center; justify-content: center; color: #e5e7eb;
-    }
-    .chat {
-      width: 420px; height: 600px; background: #020617;
-      border-radius: 14px; display: flex; flex-direction: column;
-      overflow: hidden; box-shadow: 0 0 40px rgba(0,0,0,0.7);
-    }
-    .header {
-      padding: 14px; text-align: center; font-weight: bold;
-      border-bottom: 1px solid #1e293b;
-    }
-    .messages {
-      flex: 1; padding: 14px; overflow-y: auto;
-      display: flex; flex-direction: column; gap: 10px;
-    }
-    .wrap { max-width: 80%; display: flex; flex-direction: column; gap: 4px; }
-    .u { align-self: flex-end; align-items: flex-end; }
-    .a { align-self: flex-start; align-items: flex-start; }
-    .bubble {
-      padding: 10px 14px; border-radius: 12px;
-      font-size: 14px; line-height: 1.4; white-space: pre-wrap;
-    }
-    .user { background: #2563eb; }
-    .ai { background: #1e293b; }
-    .time { font-size: 11px; color: #94a3b8; }
-    .input {
-      display: flex; border-top: 1px solid #1e293b;
-    }
-    input {
-      flex: 1; padding: 12px; border: none; outline: none;
-      background: #020617; color: #e5e7eb; font-size: 14px;
-    }
-    button {
-      padding: 0 18px; background: #2563eb; border: none;
-      color: white; cursor: pointer; font-size: 14px;
-    }
-    button:disabled { opacity: .6; }
-  </style>
+<style>
+:root{
+  --bg:#020617;
+  --panel:#020617;
+  --border:#1e293b;
+  --user:#2563eb;
+  --ai:#111827;
+  --text:#e5e7eb;
+  --muted:#94a3b8;
+}
+:root.darker{
+  --bg:#000000;
+  --panel:#020617;
+  --border:#111827;
+  --user:#1d4ed8;
+  --ai:#020617;
+  --text:#e5e7eb;
+  --muted:#64748b;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;height:100vh;
+  background:radial-gradient(circle at top,var(--bg),#000);
+  font-family:Inter,system-ui,Arial;
+  display:flex;justify-content:center;align-items:center;
+  color:var(--text);
+}
+.chat{
+  width:420px;height:640px;
+  background:linear-gradient(180deg,var(--panel),#000);
+  border-radius:18px;
+  display:flex;flex-direction:column;
+  border:1px solid var(--border);
+  box-shadow:0 40px 80px rgba(0,0,0,.9);
+  overflow:hidden; position:relative;
+}
+.header{
+  padding:16px;text-align:center;
+  font-weight:600;letter-spacing:.3px;
+  border-bottom:1px solid var(--border);
+  position:relative;
+}
+.header .right{
+  position:absolute;right:12px;top:12px;
+  display:flex;gap:10px;
+}
+.header button{
+  background:none;border:none;color:#93c5fd;
+  cursor:pointer;font-size:12px;
+}
+.messages{
+  flex:1;padding:16px;overflow-y:auto;
+  display:flex;flex-direction:column;gap:12px;
+}
+.wrap{
+  max-width:80%;display:flex;flex-direction:column;gap:4px;
+  animation:fade .18s ease;
+}
+.wrap.user{align-self:flex-end;align-items:flex-end}
+.wrap.ai{align-self:flex-start}
+.bubble{
+  padding:12px 16px;border-radius:16px;
+  font-size:14px;line-height:1.45;
+  backdrop-filter:blur(6px);
+}
+.user .bubble{
+  background:linear-gradient(135deg,#2563eb,#1d4ed8);
+}
+.ai .bubble{
+  background:linear-gradient(135deg,var(--ai),var(--panel));
+  border:1px solid var(--border);
+}
+.time{font-size:11px;color:var(--muted)}
+.typing{
+  font-size:13px;color:var(--muted);
+  padding-left:6px;animation:pulse 1.2s infinite;
+}
+.input{
+  display:flex;gap:10px;padding:14px;
+  border-top:1px solid var(--border);
+  background:rgba(2,6,23,.9);
+}
+input{
+  flex:1;padding:14px 16px;border-radius:14px;
+  border:1px solid var(--border);
+  background:var(--panel);color:white;
+  font-size:14px;outline:none;
+}
+input:focus{border-color:#3b82f6}
+button.send{
+  padding:0 18px;border-radius:14px;border:none;
+  background:linear-gradient(135deg,#2563eb,#1d4ed8);
+  color:white;font-size:14px;cursor:pointer;
+}
+.profile{
+  position:absolute;inset:0;
+  background:linear-gradient(180deg,var(--panel),#000);
+  padding:20px;display:none;flex-direction:column;gap:14px;
+}
+.profile h3{margin:0;font-size:16px}
+.profile pre{
+  flex:1;background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:14px;padding:14px;
+  white-space:pre-wrap;font-size:13px;
+}
+.profile button{
+  background:var(--panel);border:1px solid var(--border);
+  color:white;padding:10px;border-radius:12px;cursor:pointer;
+}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+</style>
 </head>
+
 <body>
 
 <div class="chat">
-  <div class="header">🤖 Berke AI</div>
+  <div class="header">
+    ✨ Berke AI
+    <div class="right">
+      <button onclick="toggleTheme()">Tema</button>
+      <button onclick="openProfile()">Profil</button>
+    </div>
+  </div>
+
   <div class="messages" id="msgs"></div>
+
   <div class="input">
-    <input id="inp" placeholder="Bir şey yaz..." />
-    <button id="btn">Gönder</button>
+    <input id="inp" placeholder="Bir şey yaz…" />
+    <button class="send" onclick="send()">Gönder</button>
   </div>
 </div>
 
+<div class="profile" id="profile">
+  <h3>AI seni böyle tanıyor</h3>
+  <pre id="profileText"></pre>
+  <button onclick="resetMem()">Hafızayı Sıfırla</button>
+  <button onclick="clearProf()">Profil Temizle</button>
+  <button onclick="closeProfile()">Kapat</button>
+</div>
+
 <script>
-  const msgs = document.getElementById("msgs");
-  const inp = document.getElementById("inp");
-  const btn = document.getElementById("btn");
+const msgs=document.getElementById("msgs");
+const inp=document.getElementById("inp");
+const root=document.documentElement;
 
-  function add(text, who, time="") {
-    const w = document.createElement("div");
-    w.className = "wrap " + (who === "user" ? "u" : "a");
+// 🔊 SOFT SES (web audio, dosya yok)
+const ctx = new (window.AudioContext||window.webkitAudioContext)();
+function clickSound(){
+  const o=ctx.createOscillator(), g=ctx.createGain();
+  o.connect(g); g.connect(ctx.destination);
+  o.type="sine"; o.frequency.value=600;
+  g.gain.setValueAtTime(0.03,ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.12);
+  o.start(); o.stop(ctx.currentTime+0.12);
+}
 
-    const b = document.createElement("div");
-    b.className = "bubble " + who;
-    b.textContent = text;
+function add(text,who,time){
+  const w=document.createElement("div");
+  w.className="wrap "+who;
+  const b=document.createElement("div");
+  b.className="bubble"; b.textContent=text;
+  const t=document.createElement("div");
+  t.className="time"; t.textContent=time;
+  w.append(b,t); msgs.append(w);
+  msgs.scrollTop=msgs.scrollHeight;
+}
 
-    const t = document.createElement("div");
-    t.className = "time";
-    t.textContent = time;
+let typingEl=null;
+function showTyping(){
+  typingEl=document.createElement("div");
+  typingEl.className="typing";
+  typingEl.textContent="AI yazıyor…";
+  msgs.append(typingEl);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+function hideTyping(){
+  if(typingEl){ typingEl.remove(); typingEl=null; }
+}
 
-    w.appendChild(b);
-    if (time) w.appendChild(t);
-    msgs.appendChild(w);
-    msgs.scrollTop = msgs.scrollHeight;
-    return { bubble: b, timeEl: t };
-  }
+async function send(){
+  const text=inp.value.trim();
+  if(!text) return;
+  clickSound();
 
-  function type(el, text, speed=25) {
-    el.textContent = "";
-    let i = 0;
-    const it = setInterval(() => {
-      el.textContent += text[i++] || "";
-      msgs.scrollTop = msgs.scrollHeight;
-      if (i >= text.length) clearInterval(it);
-    }, speed);
-  }
+  const now=new Date().toLocaleTimeString([],{
+    hour:"2-digit",minute:"2-digit"
+  });
+  add(text,"user",now);
+  inp.value="";
 
-  async function send() {
-    const text = inp.value.trim();
-    if (!text) return;
-    add(text, "user", new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"}));
-    inp.value = ""; btn.disabled = true;
+  showTyping();
+  const r=await fetch("/chat",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({message:text})
+  });
+  const j=await r.json();
+  hideTyping();
+  add(j.reply,"ai",j.time);
+}
 
-    const load = add("Yazıyor...", "ai");
+inp.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){ e.preventDefault(); send(); }
+});
 
-    const r = await fetch("/chat", {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({message:text})
-    });
-    const d = await r.json();
+// 🌗 TEMA
+function toggleTheme(){
+  root.classList.toggle("darker");
+}
 
-    load.bubble.textContent = "";
-    load.timeEl.textContent = d.time;   // 🔥 backend saat
-    type(load.bubble, d.reply);
-    btn.disabled = false;
-  }
-
-  btn.onclick = send;
-  inp.addEventListener("keydown", e => e.key === "Enter" && send());
+// 👤 PROFİL
+async function openProfile(){
+  profile.style.display="flex";
+  const r=await fetch("/profile");
+  const j=await r.json();
+  profileText.textContent=j.summary || "Henüz bilgi yok.";
+}
+function closeProfile(){profile.style.display="none";}
+async function resetMem(){await fetch("/profile/reset",{method:"POST"});openProfile();}
+async function clearProf(){await fetch("/profile/clear",{method:"POST"});openProfile();}
 </script>
 
 </body>
