@@ -1,86 +1,123 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from datetime import datetime
+from uuid import uuid4
+import os, json
+
 from openai import OpenAI
-import os, json, uuid
-from pathlib import Path
-
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
 app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
-PERSONA_FILE = "persona.txt"
-CHAT_DIR = "memories"
-PROFILE_DIR = "profiles"
+MEMORY_DIR = "memories"
+os.makedirs(MEMORY_DIR, exist_ok=True)
 
-os.makedirs(CHAT_DIR, exist_ok=True)
-os.makedirs(PROFILE_DIR, exist_ok=True)
-
-def load_persona():
-    if not Path(PERSONA_FILE).exists():
-        return ""
-    return Path(PERSONA_FILE).read_text(encoding="utf-8")
-
-def chat_file(uid): return os.path.join(CHAT_DIR, f"{uid}.json")
-def profile_file(uid): return os.path.join(PROFILE_DIR, f"{uid}.json")
-
-def load_json(path, default):
-    if not os.path.exists(path): return default
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-def save_json(path, data):
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-
-class ChatMessage(BaseModel):
+class ChatIn(BaseModel):
     message: str
 
-@app.get("/")
-def home(request: Request):
-    response = FileResponse("static/index.html")
-    if "user_id" not in request.cookies:
-        response.set_cookie("user_id", str(uuid.uuid4()), httponly=True)
-    return response
+# ---------- USER ----------
+def get_user_id(request: Request):
+    uid = request.cookies.get("user_id")
+    if not uid:
+        uid = str(uuid4())
+    return uid
+
+# ---------- MEMORY ----------
+def short_mem_path(uid): return f"{MEMORY_DIR}/{uid}.json"
+def summary_path(uid): return f"{MEMORY_DIR}/{uid}_summary.txt"
+
+def load_short(uid):
+    if not os.path.exists(short_mem_path(uid)):
+        return []
+    with open(short_mem_path(uid), "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def save_short(uid, mem):
+    with open(short_mem_path(uid), "w", encoding="utf-8") as f:
+        json.dump(mem[-20:], f, ensure_ascii=False, indent=2)
+
+def load_summary(uid):
+    if not os.path.exists(summary_path(uid)):
+        return ""
+    with open(summary_path(uid), "r", encoding="utf-8") as f:
+        return f.read()
+
+def save_summary(uid, text):
+    with open(summary_path(uid), "w", encoding="utf-8") as f:
+        f.write(text)
+
+def update_summary(uid, short_mem):
+    prompt = [
+        {
+            "role": "system",
+            "content": (
+                "Aşağıdaki konuşmalardan kullanıcı hakkında "
+                "kalıcı ve önemli bilgileri çıkar. "
+                "Kısa, net ve maddeler halinde yaz."
+            )
+        },
+        {
+            "role": "user",
+            "content": json.dumps(short_mem, ensure_ascii=False)
+        }
+    ]
+
+    res = client.responses.create(
+        model="gpt-4.1-mini",
+        input=prompt
+    )
+
+    save_summary(uid, res.output_text)
+
+# ---------- ROUTES ----------
+@app.get("/", response_class=HTMLResponse)
+def index(request: Request):
+    with open("static/index.html", "r", encoding="utf-8") as f:
+        html = f.read()
+
+    resp = HTMLResponse(html)
+    if not request.cookies.get("user_id"):
+        resp.set_cookie("user_id", str(uuid4()), max_age=60*60*24*365)
+    return resp
 
 @app.post("/chat")
-def chat(msg: ChatMessage, request: Request):
-    uid = request.cookies.get("user_id")
-    persona = load_persona()
-    chat_memory = load_json(chat_file(uid), [])
-    profile = load_json(profile_file(uid), {})
+def chat(data: ChatIn, request: Request):
+    uid = get_user_id(request)
 
-    chat_memory.append({"role": "user", "content": msg.message})
+    short_mem = load_short(uid)
+    summary = load_summary(uid)
 
-    system_prompt = f"""
-{persona}
+    # Kullanıcı mesajı
+    short_mem.append({"role": "user", "content": data.message})
 
-KULLANICI PROFİLİ:
-{json.dumps(profile, ensure_ascii=False)}
+    # AI prompt
+    messages = []
+    if summary:
+        messages.append({
+            "role": "system",
+            "content": f"Kullanıcı hakkında bilinenler:\n{summary}"
+        })
 
-Kurallar:
-- Profil bilgisini esas al
-- Günlük konuşmaları kalıcı sanma
-"""
+    messages += short_mem[-10:]
 
     response = client.responses.create(
         model="gpt-4.1-mini",
-        input=[{"role": "system", "content": system_prompt}, *chat_memory]
+        input=messages
     )
 
-    reply = response.output_text or response.output[0].content[0].text
-    chat_memory.append({"role": "assistant", "content": reply})
-    save_json(chat_file(uid), chat_memory)
+    reply = response.output_text
 
-    return {"reply": reply}
+    short_mem.append({"role": "assistant", "content": reply})
+    save_short(uid, short_mem)
 
-@app.get("/profile")
-def get_profile(request: Request):
-    uid = request.cookies.get("user_id")
-    return load_json(profile_file(uid), {})
+    # Her 5 mesajda bir özeti güncelle
+    if len(short_mem) % 5 == 0:
+        update_summary(uid, short_mem)
 
-@app.post("/profile")
-def update_profile(request: Request):
-    uid = request.cookies.get("user_id")
-    data = request.json()
-    save_json(profile_file(uid), data)
-    return {"status": "ok"}
+    return JSONResponse({
+        "reply": reply,
+        "time": datetime.now().strftime("%H:%M")
+    })

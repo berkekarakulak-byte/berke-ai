@@ -1,239 +1,121 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<title>Berke AI</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-body {
-    margin: 0;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    background: linear-gradient(135deg, #020617, #0f172a);
-    color: #e5e7eb;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
+  <meta charset="UTF-8" />
+  <title>Berke AI</title>
 
-.chat {
-    width: 100%;
-    max-width: 420px;
-    height: 90vh;
-    background: #020617;
-    border-radius: 16px;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-}
-
-.top {
-    padding: 12px 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #1e293b;
-}
-
-.top strong {
-    font-size: 16px;
-}
-
-button {
-    background: #2563eb;
-    border: none;
-    color: white;
-    padding: 6px 12px;
-    border-radius: 999px;
-    cursor: pointer;
-    font-size: 13px;
-}
-
-.messages {
-    flex: 1;
-    padding: 16px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.bubble {
-    max-width: 75%;
-    padding: 10px 14px;
-    border-radius: 14px;
-    line-height: 1.4;
-    font-size: 14px;
-    animation: fadeIn 0.2s ease-out;
-}
-
-.user {
-    align-self: flex-end;
-    background: #2563eb;
-    border-bottom-right-radius: 4px;
-}
-
-.ai {
-    align-self: flex-start;
-    background: #1e293b;
-    border-bottom-left-radius: 4px;
-}
-
-.input-area {
-    padding: 12px;
-    border-top: 1px solid #1e293b;
-    display: flex;
-    gap: 8px;
-}
-
-input {
-    flex: 1;
-    padding: 10px 14px;
-    border-radius: 999px;
-    border: none;
-    outline: none;
-    background: #020617;
-    color: #e5e7eb;
-}
-
-.typing {
-    font-size: 13px;
-    opacity: 0.6;
-    padding-left: 4px;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(4px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* MODAL */
-.modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    display: none;
-    justify-content: center;
-    align-items: center;
-}
-
-.modal-content {
-    background: #020617;
-    padding: 16px;
-    width: 90%;
-    max-width: 340px;
-    border-radius: 12px;
-}
-
-textarea {
-    width: 100%;
-    height: 120px;
-    background: #020617;
-    color: #e5e7eb;
-    border: 1px solid #1e293b;
-    border-radius: 8px;
-    padding: 8px;
-}
-</style>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; height: 100vh; background: #0f172a;
+      font-family: Arial, sans-serif; display: flex;
+      align-items: center; justify-content: center; color: #e5e7eb;
+    }
+    .chat {
+      width: 420px; height: 600px; background: #020617;
+      border-radius: 14px; display: flex; flex-direction: column;
+      overflow: hidden; box-shadow: 0 0 40px rgba(0,0,0,0.7);
+    }
+    .header {
+      padding: 14px; text-align: center; font-weight: bold;
+      border-bottom: 1px solid #1e293b;
+    }
+    .messages {
+      flex: 1; padding: 14px; overflow-y: auto;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .wrap { max-width: 80%; display: flex; flex-direction: column; gap: 4px; }
+    .u { align-self: flex-end; align-items: flex-end; }
+    .a { align-self: flex-start; align-items: flex-start; }
+    .bubble {
+      padding: 10px 14px; border-radius: 12px;
+      font-size: 14px; line-height: 1.4; white-space: pre-wrap;
+    }
+    .user { background: #2563eb; }
+    .ai { background: #1e293b; }
+    .time { font-size: 11px; color: #94a3b8; }
+    .input {
+      display: flex; border-top: 1px solid #1e293b;
+    }
+    input {
+      flex: 1; padding: 12px; border: none; outline: none;
+      background: #020617; color: #e5e7eb; font-size: 14px;
+    }
+    button {
+      padding: 0 18px; background: #2563eb; border: none;
+      color: white; cursor: pointer; font-size: 14px;
+    }
+    button:disabled { opacity: .6; }
+  </style>
 </head>
 <body>
 
 <div class="chat">
-    <div class="top">
-        <strong>Berke AI</strong>
-        <button onclick="openProfile()">Profilim</button>
-    </div>
-
-    <div class="messages" id="messages"></div>
-
-    <div class="input-area">
-        <input id="input" placeholder="Bir şey yaz..." />
-    </div>
-</div>
-
-<div class="modal" id="profileModal">
-  <div class="modal-content">
-    <h3>Profil</h3>
-    <textarea id="profileText"></textarea>
-    <button onclick="saveProfile()">Kaydet</button>
-    <button onclick="closeProfile()">Kapat</button>
+  <div class="header">🤖 Berke AI</div>
+  <div class="messages" id="msgs"></div>
+  <div class="input">
+    <input id="inp" placeholder="Bir şey yaz..." />
+    <button id="btn">Gönder</button>
   </div>
 </div>
 
 <script>
-const input = document.getElementById("input");
-const messages = document.getElementById("messages");
+  const msgs = document.getElementById("msgs");
+  const inp = document.getElementById("inp");
+  const btn = document.getElementById("btn");
 
-input.addEventListener("keydown", async (e) => {
-    if (e.key === "Enter" && input.value.trim()) {
-        const text = input.value;
-        input.value = "";
+  function add(text, who, time="") {
+    const w = document.createElement("div");
+    w.className = "wrap " + (who === "user" ? "u" : "a");
 
-        addBubble(text, "user");
-        showTyping();
+    const b = document.createElement("div");
+    b.className = "bubble " + who;
+    b.textContent = text;
 
-        const res = await fetch("/chat", {
-            method: "POST",
-            headers: {"Content-Type":"application/json"},
-            body: JSON.stringify({message:text})
-        });
+    const t = document.createElement("div");
+    t.className = "time";
+    t.textContent = time;
 
-        const data = await res.json();
-        removeTyping();
-        addBubble(data.reply, "ai");
-    }
-});
+    w.appendChild(b);
+    if (time) w.appendChild(t);
+    msgs.appendChild(w);
+    msgs.scrollTop = msgs.scrollHeight;
+    return { bubble: b, timeEl: t };
+  }
 
-function addBubble(text, type) {
-    const div = document.createElement("div");
-    div.className = `bubble ${type}`;
-    div.innerText = text;
-    messages.appendChild(div);
-    messages.scrollTop = messages.scrollHeight;
-}
+  function type(el, text, speed=25) {
+    el.textContent = "";
+    let i = 0;
+    const it = setInterval(() => {
+      el.textContent += text[i++] || "";
+      msgs.scrollTop = msgs.scrollHeight;
+      if (i >= text.length) clearInterval(it);
+    }, speed);
+  }
 
-function showTyping() {
-    const div = document.createElement("div");
-    div.id = "typing";
-    div.className = "typing";
-    div.innerText = "AI yazıyor...";
-    messages.appendChild(div);
-    messages.scrollTop = messages.scrollHeight;
-}
+  async function send() {
+    const text = inp.value.trim();
+    if (!text) return;
+    add(text, "user", new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"}));
+    inp.value = ""; btn.disabled = true;
 
-function removeTyping() {
-    const t = document.getElementById("typing");
-    if (t) t.remove();
-}
+    const load = add("Yazıyor...", "ai");
 
-async function openProfile(){
-    const res = await fetch("/profile");
-    const data = await res.json();
-    document.getElementById("profileText").value =
-        JSON.stringify(data, null, 2);
-    document.getElementById("profileModal").style.display="flex";
-}
+    const r = await fetch("/chat", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({message:text})
+    });
+    const d = await r.json();
 
-function closeProfile(){
-    document.getElementById("profileModal").style.display="none";
-}
+    load.bubble.textContent = "";
+    load.timeEl.textContent = d.time;   // 🔥 backend saat
+    type(load.bubble, d.reply);
+    btn.disabled = false;
+  }
 
-async function saveProfile(){
-    try{
-        const json = JSON.parse(
-            document.getElementById("profileText").value
-        );
-        await fetch("/profile",{
-            method:"POST",
-            headers:{"Content-Type":"application/json"},
-            body: JSON.stringify(json)
-        });
-        alert("Profil kaydedildi");
-        closeProfile();
-    }catch{
-        alert("Geçerli JSON gir");
-    }
-}
+  btn.onclick = send;
+  inp.addEventListener("keydown", e => e.key === "Enter" && send());
 </script>
 
 </body>
