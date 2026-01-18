@@ -76,7 +76,7 @@
     }
 
     .messages {
-      max-height: 320px;
+      max-height: 340px;
       overflow-y: auto;
       margin-bottom: 12px;
     }
@@ -168,12 +168,6 @@
 </div>
 
 <script>
-  function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-  }
-
   function goGoogle() {
     window.location.href = "/auth/google";
   }
@@ -184,10 +178,11 @@
     document.getElementById("msgInput").focus();
   }
 
-  // 🔥 GOOGLE İLE GİRİŞ YAPILDIYSA OTOMATİK SOHBET
-  const uid = getCookie("uid");
-  if (uid && uid.length > 5) {
+  // 🔥 SADECE GOOGLE CALLBACK’TEN GELİNCE AÇ
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("login") === "google") {
     startChat();
+    window.history.replaceState({}, document.title, "/");
   }
 
   async function sendMessage() {
