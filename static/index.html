@@ -49,7 +49,6 @@
       cursor: pointer;
       font-size: 15px;
       margin-bottom: 12px;
-      text-decoration: none;
       transition: 0.2s ease;
     }
 
@@ -131,14 +130,13 @@
   <h1>Berke AI</h1>
   <p>Samimi, dost canlısı yapay zeka</p>
 
-  <!-- LOGIN AREA -->
+  <!-- LOGIN -->
   <div id="login-area">
-    <!-- 🔥 GOOGLE LOGIN (BACKEND’E BAĞLI) -->
-    <a href="/auth/google" class="btn btn-google">
+    <!-- 🔥 GARANTİLİ GOOGLE YÖNLENDİRME -->
+    <button class="btn btn-google" onclick="goGoogle()">
       Google ile giriş yap
-    </a>
+    </button>
 
-    <!-- MISAFIR -->
     <button class="btn btn-guest" onclick="startGuest()">
       Misafir olarak devam et
     </button>
@@ -161,6 +159,10 @@
 </div>
 
 <script>
+  function goGoogle() {
+    window.location.href = "/auth/google";
+  }
+
   function startGuest() {
     document.getElementById("login-area").style.display = "none";
     document.getElementById("chat-box").style.display = "block";
