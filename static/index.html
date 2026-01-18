@@ -1,207 +1,196 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<title>Berke AI</title>
+  <meta charset="UTF-8" />
+  <title>Berke AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<style>
-:root{
-  --bg:#020617;
-  --panel:#020617;
-  --border:#1e293b;
-  --user:#2563eb;
-  --ai:#111827;
-  --text:#e5e7eb;
-  --muted:#94a3b8;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;height:100vh;
-  background:radial-gradient(circle at top,var(--bg),#000);
-  font-family:Inter,system-ui,Arial;
-  display:flex;justify-content:center;align-items:center;
-  color:var(--text);
-}
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #0f1117;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
 
-/* ONBOARD */
-.onboard{
-  position:fixed;inset:0;
-  background:rgba(2,6,23,.92);
-  backdrop-filter:blur(18px);
-  display:flex;align-items:center;justify-content:center;
-  z-index:10;
-}
-.card{
-  width:380px;
-  background:linear-gradient(180deg,var(--panel),#000);
-  border:1px solid var(--border);
-  border-radius:22px;
-  padding:28px;
-  text-align:center;
-  box-shadow:0 40px 80px rgba(0,0,0,.9);
-}
-.card h1{margin:0 0 8px}
-.card p{color:var(--muted);font-size:14px;margin-bottom:24px}
-.card button{
-  width:100%;padding:14px;
-  border-radius:14px;border:none;
-  cursor:pointer;font-size:14px;
-  margin-bottom:12px;
-}
-.google{background:linear-gradient(135deg,#4285F4,#2563eb);color:white}
-.guest{background:#020617;border:1px solid var(--border);color:white}
+    .container {
+      width: 100%;
+      max-width: 420px;
+      background: #181b23;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.5);
+      text-align: center;
+    }
 
-/* CHAT */
-.chat{
-  width:420px;height:640px;
-  background:linear-gradient(180deg,var(--panel),#000);
-  border-radius:22px;
-  border:1px solid var(--border);
-  display:flex;flex-direction:column;
-  overflow:hidden;
-}
-.header{
-  padding:16px;text-align:center;
-  font-weight:600;border-bottom:1px solid var(--border);
-}
-.messages{
-  flex:1;padding:16px;
-  overflow-y:auto;display:flex;
-  flex-direction:column;gap:12px;
-}
-.wrap{
-  max-width:80%;
-  display:flex;flex-direction:column;
-  gap:4px;
-}
-.wrap.user{align-self:flex-end;align-items:flex-end}
-.wrap.ai{align-self:flex-start}
-.bubble{
-  padding:12px 16px;
-  border-radius:16px;
-  font-size:14px;line-height:1.45;
-}
-.user .bubble{
-  background:linear-gradient(135deg,#2563eb,#1d4ed8);
-}
-.ai .bubble{
-  background:linear-gradient(135deg,var(--ai),var(--panel));
-  border:1px solid var(--border);
-}
-.time{font-size:11px;color:var(--muted)}
-.typing{font-size:13px;color:var(--muted);animation:pulse 1.2s infinite}
-.input{
-  display:flex;gap:10px;
-  padding:14px;border-top:1px solid var(--border);
-}
-input{
-  flex:1;padding:14px;
-  border-radius:14px;border:1px solid var(--border);
-  background:var(--panel);color:white;
-}
-.send{
-  background:linear-gradient(135deg,#2563eb,#1d4ed8);
-  border:none;color:white;
-  padding:0 18px;border-radius:14px;
-  cursor:pointer;
-}
-@keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
-</style>
+    h1 {
+      margin-bottom: 8px;
+      font-size: 28px;
+      letter-spacing: 1px;
+    }
+
+    p {
+      color: #9aa4b2;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+      margin-bottom: 12px;
+      text-decoration: none;
+      transition: 0.2s ease;
+    }
+
+    .btn-google {
+      background: #ffffff;
+      color: #000000;
+      font-weight: bold;
+    }
+
+    .btn-google:hover {
+      background: #e6e6e6;
+    }
+
+    .btn-guest {
+      background: #2a2f3a;
+      color: #ffffff;
+    }
+
+    .btn-guest:hover {
+      background: #353b48;
+    }
+
+    .chat-box {
+      display: none;
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .messages {
+      max-height: 300px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+    }
+
+    .msg {
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .user {
+      background: #3b82f6;
+      text-align: right;
+    }
+
+    .ai {
+      background: #2a2f3a;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    input {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+      font-size: 14px;
+    }
+
+    button.send {
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      background: #22c55e;
+      color: #000;
+      font-weight: bold;
+    }
+  </style>
 </head>
-
 <body>
 
-<!-- ONBOARD -->
-<div class="onboard" id="onboard">
-  <div class="card">
-    <h1>✨ Berke AI</h1>
-    <p>Sana özel yapay zeka deneyimi</p>
+<div class="container">
+  <h1>Berke AI</h1>
+  <p>Samimi, dost canlısı yapay zeka</p>
 
-    <button class="google" onclick="location.href='/auth/google'">
+  <!-- LOGIN AREA -->
+  <div id="login-area">
+    <!-- 🔥 GOOGLE LOGIN (BACKEND’E BAĞLI) -->
+    <a href="/auth/google" class="btn btn-google">
       Google ile giriş yap
-    </button>
+    </a>
 
-    <button class="guest" onclick="closeOnboard()">
+    <!-- MISAFIR -->
+    <button class="btn btn-guest" onclick="startGuest()">
       Misafir olarak devam et
     </button>
   </div>
-</div>
 
-<!-- CHAT -->
-<div class="chat">
-  <div class="header">Berke AI</div>
-  <div class="messages" id="msgs"></div>
-  <div class="input">
-    <input id="inp" placeholder="Bir şey yaz…" />
-    <button class="send" onclick="send()">Gönder</button>
+  <!-- CHAT -->
+  <div class="chat-box" id="chat-box">
+    <div class="messages" id="messages"></div>
+
+    <div class="input-row">
+      <input
+        id="msgInput"
+        type="text"
+        placeholder="Bir şey yaz..."
+        onkeydown="if(event.key==='Enter'){sendMessage()}"
+      />
+      <button class="send" onclick="sendMessage()">Gönder</button>
+    </div>
   </div>
 </div>
 
 <script>
-const msgs=document.getElementById("msgs");
-const inp=document.getElementById("inp");
-const onboard=document.getElementById("onboard");
+  function startGuest() {
+    document.getElementById("login-area").style.display = "none";
+    document.getElementById("chat-box").style.display = "block";
+  }
 
-// 🔊 SES
-const ctx=new (window.AudioContext||window.webkitAudioContext)();
-function clickSound(){
-  const o=ctx.createOscillator(),g=ctx.createGain();
-  o.connect(g);g.connect(ctx.destination);
-  o.frequency.value=520;
-  g.gain.setValueAtTime(.03,ctx.currentTime);
-  g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.12);
-  o.start();o.stop(ctx.currentTime+.12);
-}
+  async function sendMessage() {
+    const input = document.getElementById("msgInput");
+    const text = input.value.trim();
+    if (!text) return;
 
-function closeOnboard(){
-  onboard.style.display="none";
-}
+    addMessage(text, "user");
+    input.value = "";
 
-function add(text,who,time){
-  const w=document.createElement("div");
-  w.className="wrap "+who;
-  const b=document.createElement("div");
-  b.className="bubble";b.textContent=text;
-  const t=document.createElement("div");
-  t.className="time";t.textContent=time;
-  w.append(b,t);msgs.append(w);
-  msgs.scrollTop=msgs.scrollHeight;
-}
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
 
-let typing=null;
-function showTyping(){
-  typing=document.createElement("div");
-  typing.className="typing";
-  typing.textContent="AI yazıyor…";
-  msgs.append(typing);
-  msgs.scrollTop=msgs.scrollHeight;
-}
-function hideTyping(){if(typing){typing.remove();typing=null;}}
+    const data = await res.json();
+    addMessage(data.reply, "ai");
+  }
 
-async function send(){
-  const text=inp.value.trim();
-  if(!text) return;
-  clickSound();
-  const now=new Date().toLocaleTimeString([],{
-    hour:"2-digit",minute:"2-digit"
-  });
-  add(text,"user",now);
-  inp.value="";
-  showTyping();
-
-  const r=await fetch("/chat",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({message:text})
-  });
-  const j=await r.json();
-  hideTyping();
-  add(j.reply,"ai",j.time);
-}
-
-inp.addEventListener("keydown",e=>{
-  if(e.key==="Enter"){e.preventDefault();send();}
-});
+  function addMessage(text, type) {
+    const div = document.createElement("div");
+    div.className = "msg " + type;
+    div.innerText = text;
+    document.getElementById("messages").appendChild(div);
+    div.scrollIntoView({ behavior: "smooth" });
+  }
 </script>
 
 </body>
