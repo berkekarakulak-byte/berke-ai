@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Berke AI</title>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-body{margin:0;background:#0b0f14;color:#fff;font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh}
-.app{width:420px;height:90vh;background:#121822;border-radius:18px;display:flex;flex-direction:column;overflow:hidden}
-.header{padding:16px;text-align:center;font-weight:bold;background:#1f6bff}
-.login, .chat{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center}
+body{margin:0;background:#0b0f14;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh}
+.app{width:420px;height:90vh;background:#121822;border-radius:18px;display:flex;flex-direction:column}
+.header{text-align:center;padding:16px;background:#1f6bff}
+.login,.chat{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center}
 .chat{display:none}
 button{padding:12px 20px;border:none;border-radius:12px;margin:8px;cursor:pointer}
 .google{background:#fff;color:#000}
@@ -17,27 +17,24 @@ button{padding:12px 20px;border:none;border-radius:12px;margin:8px;cursor:pointe
 .msg{max-width:75%;margin:8px;padding:10px;border-radius:12px}
 .user{background:#1f6bff;margin-left:auto}
 .ai{background:#1f2a3a}
-.input{display:flex;width:100%;padding:10px}
-input{flex:1;padding:10px;border-radius:10px;border:none}
+input{width:90%;padding:10px;border-radius:10px;border:none}
 </style>
 </head>
 <body>
 <div class="app">
-  <div class="header">✨ Berke AI</div>
+<div class="header">✨ Berke AI</div>
 
-  <div class="login" id="login">
-    <button class="google" onclick="location.href='/auth/google'">
-      <i class="fa-brands fa-google"></i> Google ile giriş
-    </button>
-    <button class="guest" onclick="guest()">Misafir</button>
-  </div>
+<div class="login" id="login">
+<button class="google" onclick="location.href='/auth/google'">
+<i class="fa-brands fa-google"></i> Google ile giriş
+</button>
+<button class="guest" onclick="guest()">Misafir</button>
+</div>
 
-  <div class="chat" id="chat">
-    <div class="messages" id="msgs"></div>
-    <div class="input">
-      <input id="m" placeholder="Yaz..." onkeydown="if(event.key==='Enter')send()">
-    </div>
-  </div>
+<div class="chat" id="chat">
+<div class="messages" id="msgs"></div>
+<input id="m" placeholder="Yaz..." onkeydown="if(event.key==='Enter')send()">
+</div>
 </div>
 
 <script>
@@ -46,14 +43,14 @@ const email=p.get("email")
 if(p.get("login")==="google"){login.style.display="none";chat.style.display="flex"}
 function guest(){fetch("/guest",{method:"POST"});login.style.display="none";chat.style.display="flex"}
 async function send(){
-  if(!m.value)return
-  let t=m.value;m.value=""
-  msgs.innerHTML+=`<div class="msg user">${t}</div>`
-  let r=await fetch("/chat",{method:"POST",headers:{"Content-Type":"application/json"},
-  body:JSON.stringify({message:t,email:email})})
-  let j=await r.json()
-  msgs.innerHTML+=`<div class="msg ai">${j.reply}</div>`
-  msgs.scrollTop=msgs.scrollHeight
+if(!m.value)return
+let t=m.value;m.value=""
+msgs.innerHTML+=`<div class="msg user">${t}</div>`
+let r=await fetch("/chat",{method:"POST",headers:{"Content-Type":"application/json"},
+body:JSON.stringify({message:t,email:email})})
+let j=await r.json()
+msgs.innerHTML+=`<div class="msg ai">${j.reply}</div>`
+msgs.scrollTop=msgs.scrollHeight
 }
 </script>
 </body>

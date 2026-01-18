@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
-<body style="background:#0b0f14;color:#fff;font-family:Arial;padding:30px">
+<body style="background:#0b0f14;color:#fff;padding:30px">
 <h2>Admin Panel</h2>
 <pre id="out">Yükleniyor...</pre>
 <script>
 fetch("/admin/data").then(r=>r.json()).then(d=>{
-  out.textContent=JSON.stringify(d,null,2)
+out.textContent=JSON.stringify(d,null,2)
 })
 </script>
 </body>
