@@ -1,60 +1,122 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
 <meta charset="UTF-8">
 <title>Berke AI</title>
 <style>
-body{margin:0;background:#0b0f14;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh}
-.app{width:420px;height:90vh;background:#121822;border-radius:18px;display:flex;flex-direction:column}
-.header{padding:14px;text-align:center;background:#1f6bff;font-weight:bold}
-.login,.chat{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center}
-.chat{display:none}
-button{padding:12px 20px;border-radius:12px;border:none;margin:6px;cursor:pointer}
+body{
+  margin:0;
+  background:#0f172a;
+  color:#e5e7eb;
+  font-family:Inter,Arial;
+}
+.app{
+  max-width:900px;
+  margin:auto;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+.header{
+  padding:14px;
+  border-bottom:1px solid #1e293b;
+  font-weight:600;
+}
+.login{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+}
+button{
+  padding:12px 18px;
+  border-radius:10px;
+  border:none;
+  cursor:pointer;
+}
 .google{background:#fff;color:#000}
-.guest{background:#1f2a3a;color:#fff}
-.messages{flex:1;width:100%;padding:10px;overflow:auto}
-.msg{max-width:75%;margin:6px;padding:10px;border-radius:12px}
-.user{background:#1f6bff;margin-left:auto}
-.ai{background:#1f2a3a}
-input{width:90%;padding:10px;border-radius:10px;border:none}
+.guest{background:#1e293b;color:#fff}
+.chat{
+  flex:1;
+  display:none;
+  flex-direction:column;
+}
+.messages{
+  flex:1;
+  padding:20px;
+  overflow-y:auto;
+}
+.msg{
+  max-width:75%;
+  padding:12px;
+  border-radius:12px;
+  margin-bottom:14px;
+  line-height:1.5;
+}
+.user{background:#2563eb;margin-left:auto}
+.ai{background:#1e293b}
+.input{
+  border-top:1px solid #1e293b;
+  padding:14px;
+}
+textarea{
+  width:100%;
+  resize:none;
+  padding:12px;
+  border-radius:12px;
+  border:none;
+  background:#020617;
+  color:#fff;
+}
 </style>
 </head>
 <body>
+
 <div class="app">
-<div class="header">✨ Berke AI</div>
+  <div class="header">✨ Berke AI</div>
 
-<div class="login" id="login">
-<button class="google" onclick="location.href='/auth/google'">Google ile giriş</button>
-<button class="guest" onclick="guest()">Misafir</button>
-</div>
+  <div class="login" id="login">
+    <button class="google" onclick="location.href='/auth/google'">Google ile giriş</button>
+    <button class="guest" onclick="guest()">Misafir olarak devam et</button>
+  </div>
 
-<div class="chat" id="chat">
-<div class="messages" id="msgs"></div>
-<input id="m" placeholder="Yaz ve Enter’a bas"
-onkeydown="if(event.key==='Enter'){send()}">
-</div>
+  <div class="chat" id="chat">
+    <div class="messages" id="msgs"></div>
+    <div class="input">
+      <textarea id="m" rows="2" placeholder="Mesaj yaz... (Enter gönder, Shift+Enter satır)"
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send()}"></textarea>
+    </div>
+  </div>
 </div>
 
 <script>
 const p=new URLSearchParams(location.search)
 const email=p.get("email")
-if(p.get("login")==="google"){login.style.display="none";chat.style.display="flex"}
+if(p.get("login")==="google"){
+  login.style.display="none"
+  chat.style.display="flex"
+}
 
 function guest(){
-fetch("/guest",{method:"POST"})
-login.style.display="none";chat.style.display="flex"
+  fetch("/guest",{method:"POST"})
+  login.style.display="none"
+  chat.style.display="flex"
 }
 
 async function send(){
-if(!m.value)return
-let t=m.value;m.value=""
-msgs.innerHTML+=`<div class="msg user">${t}</div>`
-let r=await fetch("/chat",{method:"POST",headers:{"Content-Type":"application/json"},
-body:JSON.stringify({message:t,email:email})})
-let j=await r.json()
-msgs.innerHTML+=`<div class="msg ai">${j.reply}</div>`
-msgs.scrollTop=msgs.scrollHeight
+  if(!m.value.trim())return
+  let t=m.value;m.value=""
+  msgs.innerHTML+=`<div class="msg user">${t}</div>`
+  msgs.scrollTop=msgs.scrollHeight
+  let r=await fetch("/chat",{method:"POST",headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({message:t,email:email})})
+  let j=await r.json()
+  msgs.innerHTML+=`<div class="msg ai">${j.reply}</div>`
+  msgs.scrollTop=msgs.scrollHeight
 }
 </script>
+
 </body>
 </html>

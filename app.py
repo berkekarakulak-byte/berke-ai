@@ -1,14 +1,13 @@
 import os, json, traceback
 from datetime import datetime
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 import httpx
 from openai import OpenAI
 
-print("🔥 APP.PY (FINAL) ÇALIŞIYOR 🔥")
+print("🔥 FINAL APP.PY ÇALIŞIYOR 🔥")
 
-# ================= CONFIG =================
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
@@ -17,7 +16,6 @@ GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI")
 
 ADMIN_EMAIL = "berkekarakulak@gmail.com"
 
-# ================= APP =================
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -27,27 +25,24 @@ if not os.path.exists("stats.json"):
     with open("stats.json", "w") as f:
         json.dump({"google_users": {}, "guest_count": 0}, f)
 
-# ================= HELPERS =================
+# ---------- HELPERS ----------
 def load_stats():
-    if not os.path.exists("stats.json"):
-        return {"google_users": {}, "guest_count": 0}
-    with open("stats.json", "r") as f:
+    with open("stats.json") as f:
         return json.load(f)
 
-def save_stats(data):
+def save_stats(d):
     with open("stats.json", "w") as f:
-        json.dump(data, f, indent=2)
+        json.dump(d, f, indent=2)
 
-def memory_path(email):
-    safe = email.replace("@", "_at_").replace(".", "_")
-    return f"memories/{safe}.json"
+def mem_path(email):
+    return "memories/" + email.replace("@","_").replace(".","_") + ".json"
 
-# ================= ROUTES =================
+# ---------- ROUTES ----------
 @app.get("/", response_class=HTMLResponse)
 def home():
     return open("static/index.html", encoding="utf-8").read()
 
-# ---------- GOOGLE LOGIN ----------
+# GOOGLE LOGIN
 @app.get("/auth/google")
 def google_login():
     url = (
@@ -77,11 +72,8 @@ async def google_callback(request: Request):
                     "redirect_uri": GOOGLE_REDIRECT_URI,
                     "grant_type": "authorization_code",
                 },
-                headers={"Content-Type": "application/x-www-form-urlencoded"},
             )
-
-            access = token.json().get("access_token")
-
+            access = token.json()["access_token"]
             userinfo = await c.get(
                 "https://www.googleapis.com/oauth2/v2/userinfo",
                 headers={"Authorization": f"Bearer {access}"},
@@ -89,100 +81,89 @@ async def google_callback(request: Request):
 
         info = userinfo.json()
         email = info["email"]
-        name = info.get("name", "")
+        name = info.get("name","")
 
         stats = load_stats()
         now = datetime.now().strftime("%Y-%m-%d %H:%M")
 
         if email not in stats["google_users"]:
-            stats["google_users"][email] = {
-                "count": 1,
-                "first_login": now,
-                "last_login": now,
-            }
+            stats["google_users"][email] = {"count":1,"first":now,"last":now}
         else:
             stats["google_users"][email]["count"] += 1
-            stats["google_users"][email]["last_login"] = now
+            stats["google_users"][email]["last"] = now
 
         save_stats(stats)
 
-        mem = memory_path(email)
-        if not os.path.exists(mem):
-            with open(mem, "w") as f:
-                json.dump({"name": name, "messages": []}, f, indent=2)
+        path = mem_path(email)
+        if not os.path.exists(path):
+            with open(path,"w") as f:
+                json.dump({"name":name,"messages":[]},f,indent=2)
 
         return RedirectResponse(f"/?login=google&email={email}")
 
     except Exception:
-        print("🔥 GOOGLE ERROR")
         print(traceback.format_exc())
         return RedirectResponse("/")
 
-# ---------- GUEST ----------
+# GUEST
 @app.post("/guest")
 def guest():
     stats = load_stats()
     stats["guest_count"] += 1
     save_stats(stats)
-    return {"ok": True}
+    return {"ok":True}
 
-# ---------- CHAT ----------
+# CHAT
 @app.post("/chat")
 async def chat(req: Request):
     try:
-        data = await req.json()
-        message = data.get("message")
-        email = data.get("email")
+        d = await req.json()
+        msg = d.get("message")
+        email = d.get("email")
 
-        if not message:
-            return {"reply": "Bir şey yaz 🙂"}
-
-        history = []
-        name = "dostum"
+        history=[]
+        name="dostum"
 
         if email:
-            with open(memory_path(email)) as f:
-                mem = json.load(f)
-            name = mem.get("name", name)
-            history = mem["messages"][-6:]
+            with open(mem_path(email)) as f:
+                mem=json.load(f)
+            name=mem.get("name",name)
+            history=mem["messages"][-6:]
 
-        messages = [
-            {"role": "system", "content": f"Samimi, dost canlısı bir asistansın. Kullanıcının adı {name}."}
-        ] + history + [{"role": "user", "content": message}]
+        messages=[{"role":"system","content":f"Samimi, arkadaş canlısı bir asistansın. Kullanıcının adı {name}."}]
+        messages+=history
+        messages.append({"role":"user","content":msg})
 
-        res = client.chat.completions.create(
+        res=client.chat.completions.create(
             model="gpt-4o-mini",
             messages=messages
         )
 
-        reply = res.choices[0].message.content
+        reply=res.choices[0].message.content
 
         if email:
-            mem["messages"] += [
-                {"role": "user", "content": message},
-                {"role": "assistant", "content": reply},
+            mem["messages"]+= [
+                {"role":"user","content":msg},
+                {"role":"assistant","content":reply}
             ]
-            with open(memory_path(email), "w") as f:
-                json.dump(mem, f, indent=2)
+            with open(mem_path(email),"w") as f:
+                json.dump(mem,f,indent=2)
 
-        return {"reply": reply}
+        return {"reply":reply}
 
     except Exception:
-        print("🔥 CHAT ERROR")
         print(traceback.format_exc())
-        return {"reply": "Şu an teknik bir sorun var ama buradayım."}
+        return {"reply":"Şu an teknik bir sorun var ama buradayım."}
 
-# ---------- ADMIN ----------
-@app.get("/admin", response_class=HTMLResponse)
-def admin(request: Request):
-    email = request.query_params.get("email")
-    if email != ADMIN_EMAIL:
-        raise HTTPException(status_code=403)
-    return open("static/admin.html", encoding="utf-8").read()
+# ADMIN
+@app.get("/admin")
+def admin(request:Request):
+    if request.query_params.get("email")!=ADMIN_EMAIL:
+        raise HTTPException(403)
+    return open("static/admin.html").read()
 
 @app.get("/admin/data")
-def admin_data(request: Request):
-    email = request.query_params.get("email")
-    if email != ADMIN_EMAIL:
-        raise HTTPException(status_code=403)
+def admin_data(request:Request):
+    if request.query_params.get("email")!=ADMIN_EMAIL:
+        raise HTTPException(403)
     return load_stats()

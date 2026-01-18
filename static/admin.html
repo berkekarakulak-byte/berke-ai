@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
-<body style="background:#0b0f14;color:#fff;padding:30px">
+<body style="background:#0f172a;color:#fff;padding:30px">
 <h2>Admin Panel</h2>
-<pre id="out">Yükleniyor...</pre>
+<pre id="o">Yükleniyor…</pre>
 <script>
 const p=new URLSearchParams(location.search)
 fetch(`/admin/data?email=${p.get("email")}`)
 .then(r=>r.json())
-.then(d=>out.textContent=JSON.stringify(d,null,2))
+.then(d=>o.textContent=JSON.stringify(d,null,2))
 </script>
 </body>
 </html>
