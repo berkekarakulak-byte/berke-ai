@@ -3,120 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <title>Berke AI</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-
 <style>
-*{box-sizing:border-box;font-family:Inter}
-body{
-  margin:0;
-  background:#0b0f14;
-  color:#fff;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-}
-.app{
-  width:420px;
-  height:90vh;
-  background:#121822;
-  border-radius:20px;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-  box-shadow:0 30px 80px rgba(0,0,0,.6);
-}
-.header{
-  padding:18px;
-  text-align:center;
-  font-weight:600;
-  font-size:20px;
-  background:linear-gradient(90deg,#1f6bff,#6a9bff);
-}
-.login{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  gap:18px;
-}
-.login button{
-  width:70%;
-  padding:14px;
-  border-radius:12px;
-  border:none;
-  cursor:pointer;
-  font-size:15px;
-}
-.google{
-  background:#fff;
-  color:#000;
-}
-.google i{margin-right:8px}
-.guest{
-  background:#1f2a3a;
-  color:#fff;
-}
-.chat{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  display:none;
-}
-.messages{
-  flex:1;
-  padding:14px;
-  overflow-y:auto;
-}
-.msg{
-  max-width:75%;
-  padding:10px 14px;
-  border-radius:16px;
-  margin-bottom:10px;
-  font-size:14px;
-}
-.user{
-  background:#1f6bff;
-  align-self:flex-end;
-  border-bottom-right-radius:4px;
-}
-.ai{
-  background:#1f2a3a;
-  align-self:flex-start;
-  border-bottom-left-radius:4px;
-}
-.time{
-  font-size:10px;
-  opacity:.5;
-  margin-top:4px;
-}
-.input{
-  display:flex;
-  padding:12px;
-  gap:10px;
-}
-.input input{
-  flex:1;
-  padding:12px;
-  border-radius:12px;
-  border:none;
-  outline:none;
-  background:#0b0f14;
-  color:#fff;
-}
-.send{
-  width:46px;
-  border-radius:12px;
-  background:#1f6bff;
-  border:none;
-  color:#fff;
-  cursor:pointer;
-}
+body{margin:0;background:#0b0f14;color:#fff;font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh}
+.app{width:420px;height:90vh;background:#121822;border-radius:18px;display:flex;flex-direction:column;overflow:hidden}
+.header{padding:16px;text-align:center;font-weight:bold;background:#1f6bff}
+.login, .chat{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center}
+.chat{display:none}
+button{padding:12px 20px;border:none;border-radius:12px;margin:8px;cursor:pointer}
+.google{background:#fff;color:#000}
+.guest{background:#1f2a3a;color:#fff}
+.messages{flex:1;width:100%;padding:10px;overflow:auto}
+.msg{max-width:75%;margin:8px;padding:10px;border-radius:12px}
+.user{background:#1f6bff;margin-left:auto}
+.ai{background:#1f2a3a}
+.input{display:flex;width:100%;padding:10px}
+input{flex:1;padding:10px;border-radius:10px;border:none}
 </style>
 </head>
-
 <body>
 <div class="app">
   <div class="header">✨ Berke AI</div>
@@ -125,54 +29,30 @@ body{
     <button class="google" onclick="location.href='/auth/google'">
       <i class="fa-brands fa-google"></i> Google ile giriş
     </button>
-    <button class="guest" onclick="guest()">Misafir olarak devam et</button>
+    <button class="guest" onclick="guest()">Misafir</button>
   </div>
 
   <div class="chat" id="chat">
     <div class="messages" id="msgs"></div>
     <div class="input">
-      <input id="m" placeholder="Bir şey yaz..." />
-      <button class="send" onclick="send()">
-        <i class="fa-solid fa-paper-plane"></i>
-      </button>
+      <input id="m" placeholder="Yaz..." onkeydown="if(event.key==='Enter')send()">
     </div>
   </div>
 </div>
 
 <script>
-const params=new URLSearchParams(location.search)
-const email=params.get("email")
-
-if(params.get("login")==="google"){
-  login.style.display="none"
-  chat.style.display="flex"
-}
-
-function guest(){
-  fetch("/guest",{method:"POST"})
-  login.style.display="none"
-  chat.style.display="flex"
-}
-
-m.addEventListener("keydown",e=>{
-  if(e.key==="Enter")send()
-})
-
-function time(){
-  return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})
-}
-
+const p=new URLSearchParams(location.search)
+const email=p.get("email")
+if(p.get("login")==="google"){login.style.display="none";chat.style.display="flex"}
+function guest(){fetch("/guest",{method:"POST"});login.style.display="none";chat.style.display="flex"}
 async function send(){
-  if(!m.value.trim())return
-  let text=m.value
-  m.value=""
-  msgs.innerHTML+=`<div class="msg user">${text}<div class="time">${time()}</div></div>`
-  msgs.scrollTop=msgs.scrollHeight
-
+  if(!m.value)return
+  let t=m.value;m.value=""
+  msgs.innerHTML+=`<div class="msg user">${t}</div>`
   let r=await fetch("/chat",{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({message:text,email:email})})
+  body:JSON.stringify({message:t,email:email})})
   let j=await r.json()
-  msgs.innerHTML+=`<div class="msg ai">${j.reply}<div class="time">${time()}</div></div>`
+  msgs.innerHTML+=`<div class="msg ai">${j.reply}</div>`
   msgs.scrollTop=msgs.scrollHeight
 }
 </script>

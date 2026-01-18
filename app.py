@@ -1,4 +1,4 @@
-import os, json, uuid
+import os, json
 from datetime import datetime
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse, HTMLResponse, JSONResponse
@@ -15,10 +15,14 @@ GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI")
 
+print("🔥 APP.PY ÇALIŞIYOR 🔥")
+
+# ================= APP =================
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 os.makedirs("memories", exist_ok=True)
+
 if not os.path.exists("stats.json"):
     with open("stats.json", "w") as f:
         json.dump({"google_users": {}, "guest_count": 0}, f)
@@ -42,6 +46,7 @@ def home():
     with open("static/index.html", "r", encoding="utf-8") as f:
         return f.read()
 
+# ---------- GOOGLE LOGIN ----------
 @app.get("/auth/google")
 def google_login():
     url = (
@@ -79,8 +84,9 @@ async def google_callback(request: Request):
             headers={"Authorization": f"Bearer {access}"},
         )
 
-    email = userinfo.json().get("email")
-    name = userinfo.json().get("name", "")
+    info = userinfo.json()
+    email = info.get("email")
+    name = info.get("name", "")
 
     stats = load_stats()
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -97,43 +103,40 @@ async def google_callback(request: Request):
 
     save_stats(stats)
 
-    mem_file = memory_path(email)
-    if not os.path.exists(mem_file):
-        with open(mem_file, "w") as f:
-            json.dump({
-                "name": name,
-                "messages": []
-            }, f, indent=2)
+    mem = memory_path(email)
+    if not os.path.exists(mem):
+        with open(mem, "w") as f:
+            json.dump({"name": name, "messages": []}, f, indent=2)
 
-    response = RedirectResponse(f"/?login=google&email={email}")
-    return response
+    return RedirectResponse(f"/?login=google&email={email}")
 
+# ---------- GUEST ----------
 @app.post("/guest")
-def guest_enter():
+def guest():
     stats = load_stats()
     stats["guest_count"] += 1
     save_stats(stats)
     return {"ok": True}
 
+# ---------- CHAT ----------
 @app.post("/chat")
 async def chat(req: Request):
     data = await req.json()
     message = data.get("message")
-    email = data.get("email")  # google user ise gelir
+    email = data.get("email")
 
     history = []
     name = "dostum"
 
     if email:
-        mem_file = memory_path(email)
-        with open(mem_file, "r") as f:
+        with open(memory_path(email), "r") as f:
             mem = json.load(f)
         name = mem.get("name", name)
         history = mem["messages"][-6:]
 
-    messages = [{"role": "system", "content": f"Samimi, dost canlısı bir asistansın. Kullanıcının adı {name}."}]
-    messages += history
-    messages.append({"role": "user", "content": message})
+    messages = [
+        {"role": "system", "content": f"Samimi, dost canlısı bir asistansın. Kullanıcının adı {name}."}
+    ] + history + [{"role": "user", "content": message}]
 
     completion = openai.ChatCompletion.create(
         model="gpt-4o-mini",
@@ -145,11 +148,12 @@ async def chat(req: Request):
     if email:
         mem["messages"].append({"role": "user", "content": message})
         mem["messages"].append({"role": "assistant", "content": reply})
-        with open(mem_file, "w") as f:
+        with open(memory_path(email), "w") as f:
             json.dump(mem, f, indent=2)
 
     return {"reply": reply}
 
+# ---------- ADMIN ----------
 @app.get("/admin", response_class=HTMLResponse)
 def admin():
     with open("static/admin.html", "r", encoding="utf-8") as f:

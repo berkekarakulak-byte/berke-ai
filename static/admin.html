@@ -1,41 +1,10 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="UTF-8">
-<title>Admin Panel</title>
-<style>
-body{
-  background:#0b0f14;
-  color:#fff;
-  font-family:Inter;
-  padding:40px;
-}
-.card{
-  background:#121822;
-  padding:20px;
-  border-radius:16px;
-  max-width:800px;
-  margin:auto;
-}
-h2{margin-bottom:20px}
-pre{
-  background:#0b0f14;
-  padding:20px;
-  border-radius:12px;
-  overflow:auto;
-}
-</style>
-</head>
-<body>
-<div class="card">
-  <h2>📊 Admin Panel</h2>
-  <pre id="out">Yükleniyor...</pre>
-</div>
-
+<body style="background:#0b0f14;color:#fff;font-family:Arial;padding:30px">
+<h2>Admin Panel</h2>
+<pre id="out">Yükleniyor...</pre>
 <script>
-fetch("/admin/data")
-.then(r=>r.json())
-.then(d=>{
+fetch("/admin/data").then(r=>r.json()).then(d=>{
   out.textContent=JSON.stringify(d,null,2)
 })
 </script>
