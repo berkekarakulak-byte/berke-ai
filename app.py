@@ -1,15 +1,15 @@
 import os, json, traceback
 from datetime import datetime
 from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse, HTMLResponse, JSONResponse
+from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import httpx
-import openai
+from openai import OpenAI
 
-print("🔥 APP.PY ÇALIŞIYOR 🔥")
+print("🔥 APP.PY (NEW SDK) ÇALIŞIYOR 🔥")
 
 # ================= CONFIG =================
-openai.api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
@@ -68,8 +68,8 @@ async def google_callback(request: Request):
         if not code:
             return RedirectResponse("/")
 
-        async with httpx.AsyncClient() as client:
-            token = await client.post(
+        async with httpx.AsyncClient() as client_http:
+            token = await client_http.post(
                 "https://oauth2.googleapis.com/token",
                 data={
                     "client_id": GOOGLE_CLIENT_ID,
@@ -80,9 +80,10 @@ async def google_callback(request: Request):
                 },
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
             )
+
             access = token.json().get("access_token")
 
-            userinfo = await client.get(
+            userinfo = await client_http.get(
                 "https://www.googleapis.com/oauth2/v2/userinfo",
                 headers={"Authorization": f"Bearer {access}"},
             )
@@ -150,12 +151,12 @@ async def chat(req: Request):
             {"role": "system", "content": f"Samimi, dost canlısı bir asistansın. Kullanıcının adı {name}."}
         ] + history + [{"role": "user", "content": message}]
 
-        completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
             messages=messages
         )
 
-        reply = completion.choices[0].message["content"]
+        reply = response.choices[0].message.content
 
         if email:
             mem["messages"].append({"role": "user", "content": message})
