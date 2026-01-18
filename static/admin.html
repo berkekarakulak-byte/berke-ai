@@ -4,9 +4,10 @@
 <h2>Admin Panel</h2>
 <pre id="out">Yükleniyor...</pre>
 <script>
-fetch("/admin/data").then(r=>r.json()).then(d=>{
-out.textContent=JSON.stringify(d,null,2)
-})
+const p=new URLSearchParams(location.search)
+fetch(`/admin/data?email=${p.get("email")}`)
+.then(r=>r.json())
+.then(d=>out.textContent=JSON.stringify(d,null,2))
 </script>
 </body>
 </html>

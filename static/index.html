@@ -3,18 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <title>Berke AI</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
 body{margin:0;background:#0b0f14;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh}
 .app{width:420px;height:90vh;background:#121822;border-radius:18px;display:flex;flex-direction:column}
-.header{text-align:center;padding:16px;background:#1f6bff}
+.header{padding:14px;text-align:center;background:#1f6bff;font-weight:bold}
 .login,.chat{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center}
 .chat{display:none}
-button{padding:12px 20px;border:none;border-radius:12px;margin:8px;cursor:pointer}
+button{padding:12px 20px;border-radius:12px;border:none;margin:6px;cursor:pointer}
 .google{background:#fff;color:#000}
 .guest{background:#1f2a3a;color:#fff}
 .messages{flex:1;width:100%;padding:10px;overflow:auto}
-.msg{max-width:75%;margin:8px;padding:10px;border-radius:12px}
+.msg{max-width:75%;margin:6px;padding:10px;border-radius:12px}
 .user{background:#1f6bff;margin-left:auto}
 .ai{background:#1f2a3a}
 input{width:90%;padding:10px;border-radius:10px;border:none}
@@ -25,15 +24,14 @@ input{width:90%;padding:10px;border-radius:10px;border:none}
 <div class="header">✨ Berke AI</div>
 
 <div class="login" id="login">
-<button class="google" onclick="location.href='/auth/google'">
-<i class="fa-brands fa-google"></i> Google ile giriş
-</button>
+<button class="google" onclick="location.href='/auth/google'">Google ile giriş</button>
 <button class="guest" onclick="guest()">Misafir</button>
 </div>
 
 <div class="chat" id="chat">
 <div class="messages" id="msgs"></div>
-<input id="m" placeholder="Yaz..." onkeydown="if(event.key==='Enter')send()">
+<input id="m" placeholder="Yaz ve Enter’a bas"
+onkeydown="if(event.key==='Enter'){send()}">
 </div>
 </div>
 
@@ -41,7 +39,12 @@ input{width:90%;padding:10px;border-radius:10px;border:none}
 const p=new URLSearchParams(location.search)
 const email=p.get("email")
 if(p.get("login")==="google"){login.style.display="none";chat.style.display="flex"}
-function guest(){fetch("/guest",{method:"POST"});login.style.display="none";chat.style.display="flex"}
+
+function guest(){
+fetch("/guest",{method:"POST"})
+login.style.display="none";chat.style.display="flex"
+}
+
 async function send(){
 if(!m.value)return
 let t=m.value;m.value=""

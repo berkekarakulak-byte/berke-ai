@@ -1,12 +1,12 @@
 import os, json, traceback
 from datetime import datetime
-from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse, HTMLResponse
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 import httpx
 from openai import OpenAI
 
-print("🔥 APP.PY (NEW SDK) ÇALIŞIYOR 🔥")
+print("🔥 APP.PY (FINAL) ÇALIŞIYOR 🔥")
 
 # ================= CONFIG =================
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -45,8 +45,7 @@ def memory_path(email):
 # ================= ROUTES =================
 @app.get("/", response_class=HTMLResponse)
 def home():
-    with open("static/index.html", "r", encoding="utf-8") as f:
-        return f.read()
+    return open("static/index.html", encoding="utf-8").read()
 
 # ---------- GOOGLE LOGIN ----------
 @app.get("/auth/google")
@@ -68,8 +67,8 @@ async def google_callback(request: Request):
         if not code:
             return RedirectResponse("/")
 
-        async with httpx.AsyncClient() as client_http:
-            token = await client_http.post(
+        async with httpx.AsyncClient() as c:
+            token = await c.post(
                 "https://oauth2.googleapis.com/token",
                 data={
                     "client_id": GOOGLE_CLIENT_ID,
@@ -83,13 +82,13 @@ async def google_callback(request: Request):
 
             access = token.json().get("access_token")
 
-            userinfo = await client_http.get(
+            userinfo = await c.get(
                 "https://www.googleapis.com/oauth2/v2/userinfo",
                 headers={"Authorization": f"Bearer {access}"},
             )
 
         info = userinfo.json()
-        email = info.get("email")
+        email = info["email"]
         name = info.get("name", "")
 
         stats = load_stats()
@@ -115,7 +114,7 @@ async def google_callback(request: Request):
         return RedirectResponse(f"/?login=google&email={email}")
 
     except Exception:
-        print("🔥 GOOGLE CALLBACK ERROR")
+        print("🔥 GOOGLE ERROR")
         print(traceback.format_exc())
         return RedirectResponse("/")
 
@@ -136,13 +135,13 @@ async def chat(req: Request):
         email = data.get("email")
 
         if not message:
-            return {"reply": "Bir şey yazman lazım 🙂"}
+            return {"reply": "Bir şey yaz 🙂"}
 
         history = []
         name = "dostum"
 
         if email:
-            with open(memory_path(email), "r") as f:
+            with open(memory_path(email)) as f:
                 mem = json.load(f)
             name = mem.get("name", name)
             history = mem["messages"][-6:]
@@ -151,16 +150,18 @@ async def chat(req: Request):
             {"role": "system", "content": f"Samimi, dost canlısı bir asistansın. Kullanıcının adı {name}."}
         ] + history + [{"role": "user", "content": message}]
 
-        response = client.chat.completions.create(
+        res = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=messages
         )
 
-        reply = response.choices[0].message.content
+        reply = res.choices[0].message.content
 
         if email:
-            mem["messages"].append({"role": "user", "content": message})
-            mem["messages"].append({"role": "assistant", "content": reply})
+            mem["messages"] += [
+                {"role": "user", "content": message},
+                {"role": "assistant", "content": reply},
+            ]
             with open(memory_path(email), "w") as f:
                 json.dump(mem, f, indent=2)
 
@@ -173,10 +174,15 @@ async def chat(req: Request):
 
 # ---------- ADMIN ----------
 @app.get("/admin", response_class=HTMLResponse)
-def admin():
-    with open("static/admin.html", "r", encoding="utf-8") as f:
-        return f.read()
+def admin(request: Request):
+    email = request.query_params.get("email")
+    if email != ADMIN_EMAIL:
+        raise HTTPException(status_code=403)
+    return open("static/admin.html", encoding="utf-8").read()
 
 @app.get("/admin/data")
-def admin_data():
+def admin_data(request: Request):
+    email = request.query_params.get("email")
+    if email != ADMIN_EMAIL:
+        raise HTTPException(status_code=403)
     return load_stats()
