@@ -1,219 +1,26 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Berke AI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: Inter, Arial, sans-serif;
-      background: #0f1117;
-      color: #ffffff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 420px;
-      background: #181b23;
-      border-radius: 18px;
-      padding: 28px;
-      box-shadow: 0 0 40px rgba(0,0,0,0.6);
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 6px;
-      font-size: 28px;
-      letter-spacing: 1px;
-    }
-
-    p.sub {
-      text-align: center;
-      color: #9aa4b2;
-      margin-bottom: 26px;
-      font-size: 14px;
-    }
-
-    .btn {
-      width: 100%;
-      padding: 14px;
-      border-radius: 12px;
-      border: none;
-      cursor: pointer;
-      font-size: 15px;
-      margin-bottom: 12px;
-      transition: 0.2s ease;
-    }
-
-    .btn-google {
-      background: #ffffff;
-      color: #000;
-      font-weight: 600;
-    }
-
-    .btn-google:hover {
-      background: #e6e6e6;
-    }
-
-    .btn-guest {
-      background: #2a2f3a;
-      color: #fff;
-    }
-
-    .btn-guest:hover {
-      background: #353b48;
-    }
-
-    #chat-box {
-      display: none;
-    }
-
-    .messages {
-      max-height: 340px;
-      overflow-y: auto;
-      margin-bottom: 12px;
-    }
-
-    .msg {
-      margin-bottom: 10px;
-      padding: 10px 12px;
-      border-radius: 12px;
-      font-size: 14px;
-      line-height: 1.4;
-      max-width: 85%;
-    }
-
-    .user {
-      background: #3b82f6;
-      margin-left: auto;
-      text-align: right;
-    }
-
-    .ai {
-      background: #2a2f3a;
-      margin-right: auto;
-    }
-
-    .time {
-      font-size: 10px;
-      opacity: 0.6;
-      margin-top: 4px;
-    }
-
-    .input-row {
-      display: flex;
-      gap: 8px;
-    }
-
-    input {
-      flex: 1;
-      padding: 12px;
-      border-radius: 12px;
-      border: none;
-      outline: none;
-      font-size: 14px;
-    }
-
-    button.send {
-      padding: 12px 16px;
-      border-radius: 12px;
-      border: none;
-      cursor: pointer;
-      background: #22c55e;
-      color: #000;
-      font-weight: bold;
-    }
-  </style>
 </head>
-<body>
+<body style="background:#111;color:#fff;text-align:center;padding-top:50px">
 
-<div class="container">
+  <h1>Berke AI</h1>
 
-  <!-- LOGIN -->
-  <div id="login-area">
-    <h1>Berke AI</h1>
-    <p class="sub">Samimi, dost canlısı yapay zeka</p>
-
-    <button class="btn btn-google" onclick="goGoogle()">
-      Google ile giriş yap
-    </button>
-
-    <button class="btn btn-guest" onclick="startChat()">
-      Misafir olarak devam et
-    </button>
-  </div>
-
-  <!-- CHAT -->
-  <div id="chat-box">
-    <div class="messages" id="messages"></div>
-
-    <div class="input-row">
-      <input
-        id="msgInput"
-        type="text"
-        placeholder="Bir şey yaz..."
-        onkeydown="if(event.key==='Enter'){sendMessage()}"
-      />
-      <button class="send" onclick="sendMessage()">Gönder</button>
-    </div>
-  </div>
-
-</div>
-
-<script>
-  function goGoogle() {
-    window.location.href = "/auth/google";
-  }
-
-  function startChat() {
-    document.getElementById("login-area").style.display = "none";
-    document.getElementById("chat-box").style.display = "block";
-    document.getElementById("msgInput").focus();
-  }
-
-  // 🔥 SADECE GOOGLE CALLBACK’TEN GELİNCE AÇ
-  const params = new URLSearchParams(window.location.search);
-  if (params.get("login") === "google") {
-    startChat();
-    window.history.replaceState({}, document.title, "/");
-  }
-
-  async function sendMessage() {
-    const input = document.getElementById("msgInput");
-    const text = input.value.trim();
-    if (!text) return;
-
-    addMessage(text, "user");
-    input.value = "";
-
-    const res = await fetch("/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text })
-    });
-
-    const data = await res.json();
-    addMessage(data.reply, "ai", data.time);
-  }
-
-  function addMessage(text, type, time=null) {
-    const div = document.createElement("div");
-    div.className = "msg " + type;
-    div.innerHTML = `
-      ${text}
-      ${time ? `<div class="time">${time}</div>` : ""}
-    `;
-    document.getElementById("messages").appendChild(div);
-    div.scrollIntoView({ behavior: "smooth" });
-  }
-</script>
+  <!-- HİÇ JS YOK -->
+  <a href="/auth/google"
+     style="
+       display:inline-block;
+       padding:14px 20px;
+       background:#fff;
+       color:#000;
+       text-decoration:none;
+       border-radius:8px;
+       font-weight:bold;
+     ">
+     Google ile giriş yap
+  </a>
 
 </body>
 </html>
