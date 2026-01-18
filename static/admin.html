@@ -1,13 +1,156 @@
 <!DOCTYPE html>
-<html>
-<body style="background:#0f172a;color:#fff;padding:30px">
-<h2>Admin Panel</h2>
-<pre id="o">Yükleniyor…</pre>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Berke AI — Admin Panel</title>
+
+<style>
+:root{
+  --bg:#0f172a;
+  --panel:#020617;
+  --border:#1e293b;
+  --text:#e5e7eb;
+  --muted:#94a3b8;
+  --accent:#2563eb;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,system-ui,Arial;
+}
+.container{
+  max-width:1100px;
+  margin:40px auto;
+  padding:24px;
+}
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:24px;
+}
+.header h1{
+  margin:0;
+  font-size:22px;
+}
+.badges{
+  display:flex;
+  gap:12px;
+}
+.badge{
+  background:var(--panel);
+  border:1px solid var(--border);
+  padding:10px 16px;
+  border-radius:14px;
+  font-size:14px;
+}
+.table-wrap{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:18px;
+  overflow:hidden;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+thead{
+  background:#020617;
+}
+th,td{
+  padding:14px 16px;
+  text-align:left;
+  font-size:14px;
+}
+th{
+  color:var(--muted);
+  font-weight:500;
+  border-bottom:1px solid var(--border);
+}
+td{
+  border-bottom:1px solid var(--border);
+}
+tr:hover{
+  background:#020617;
+}
+.count{
+  color:var(--accent);
+  font-weight:600;
+}
+.footer{
+  margin-top:16px;
+  font-size:12px;
+  color:var(--muted);
+}
+.center{
+  text-align:center;
+  margin-top:80px;
+  font-size:18px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>📊 Berke AI — Admin Panel</h1>
+    <div class="badges">
+      <div class="badge" id="guestBadge">👻 Misafir: 0</div>
+      <div class="badge" id="userBadge">👤 Google Kullanıcı: 0</div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Mail</th>
+          <th>Giriş Sayısı</th>
+          <th>İlk Giriş</th>
+          <th>Son Giriş</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    🔒 Bu panel sadece yetkili admin için görünür.
+  </div>
+</div>
+
 <script>
-const p=new URLSearchParams(location.search)
-fetch(`/admin/data?email=${p.get("email")}`)
-.then(r=>r.json())
-.then(d=>o.textContent=JSON.stringify(d,null,2))
+const params = new URLSearchParams(window.location.search)
+const email = params.get("email")
+
+fetch(`/admin/data?email=${email}`)
+.then(r=>{
+  if(!r.ok) throw "yetkisiz"
+  return r.json()
+})
+.then(data=>{
+  guestBadge.innerText = "👻 Misafir: " + data.guest_count
+  userBadge.innerText = "👤 Google Kullanıcı: " + Object.keys(data.google_users).length
+
+  Object.entries(data.google_users).forEach(([mail,info])=>{
+    rows.innerHTML += `
+      <tr>
+        <td>${mail}</td>
+        <td class="count">${info.count}</td>
+        <td>${info.first || info.first_login}</td>
+        <td>${info.last || info.last_login}</td>
+      </tr>
+    `
+  })
+})
+.catch(()=>{
+  document.body.innerHTML =
+    "<div class='center'>⛔ Yetkisiz Erişim</div>"
+})
 </script>
+
 </body>
 </html>
