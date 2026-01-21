@@ -2,176 +2,454 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#020617">
 <title>Berke AI</title>
 
 <style>
 :root{
-  --bg:#0f172a;
-  --panel:#020617;
-  --border:#1e293b;
-  --user:#2563eb;
-  --ai:#1e293b;
-  --text:#e5e7eb;
+  --txt:#e5e7eb;
+  --mut:#94a3b8;
+  --b1: rgba(255,255,255,.10);
+  --b2: rgba(255,255,255,.16);
+
+  --glass: rgba(2,6,23,.50);
+  --glass2: rgba(15,23,42,.40);
+
+  --user1:#2563eb;
+  --user2:#1d4ed8;
+  --ai: rgba(30,41,59,.70);
+
+  --shadow: 0 25px 80px rgba(0,0,0,.55);
+  --stroke: 1px solid rgba(148,163,184,.20);
 }
+
 *{box-sizing:border-box}
+html,body{height:100%}
 body{
   margin:0;
-  background:var(--bg);
-  color:var(--text);
-  font-family:Inter,system-ui,Arial;
+  color:var(--txt);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Arial;
+  overflow:hidden;
+
+  /* ⭐ Galaxy background */
+  background: url("/static/bg.jpg") center/cover no-repeat fixed;
+}
+body::before{
+  content:"";
+  position:fixed; inset:0;
+  background: rgba(2,6,23,.62);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index:-1;
+}
+
+/* Layout */
+.shell{
+  height:100dvh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  padding-top: calc(18px + env(safe-area-inset-top));
+  padding-bottom: calc(18px + env(safe-area-inset-bottom));
 }
 .app{
-  max-width:900px;
-  height:100vh;
-  margin:auto;
+  width:min(940px, 100%);
+  height:min(760px, 100dvh);
   display:flex;
   flex-direction:column;
+  border-radius:22px;
+  box-shadow: var(--shadow);
+  border: var(--stroke);
+  background: linear-gradient(180deg, var(--glass), var(--glass2));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  overflow:hidden;
 }
+
+/* Header */
 .header{
-  padding:14px 20px;
-  border-bottom:1px solid var(--border);
-  font-weight:600;
-  background:var(--panel);
-}
-.login{
-  flex:1;
+  flex:0 0 auto;
+  padding:14px 16px;
   display:flex;
-  flex-direction:column;
-  justify-content:center;
   align-items:center;
-  gap:14px;
+  justify-content:space-between;
+  border-bottom: 1px solid rgba(148,163,184,.18);
+  background: rgba(2,6,23,.35);
 }
-button{
-  padding:14px 22px;
-  border-radius:14px;
-  border:none;
-  font-size:15px;
+.brand{
+  display:flex; flex-direction:column; gap:2px;
+}
+.brand .title{
+  font-weight:800;
+  letter-spacing:.6px;
+  display:flex; gap:10px; align-items:center;
+}
+.badge{
+  font-size:11px;
+  color: var(--mut);
+  border: 1px solid rgba(148,163,184,.20);
+  padding:4px 10px;
+  border-radius:999px;
+  background: rgba(2,6,23,.25);
+}
+.brand .sub{ font-size:12px; color:var(--mut); }
+
+.top-actions{
+  display:flex; gap:10px; align-items:center;
+}
+.pill{
+  border: 1px solid rgba(148,163,184,.20);
+  background: rgba(2,6,23,.25);
+  color: var(--txt);
+  padding:8px 12px;
+  border-radius:999px;
   cursor:pointer;
+  font-size:12px;
+  user-select:none;
 }
-.google{
-  background:#fff;
-  color:#000;
+.pill:hover{ background: rgba(2,6,23,.35); }
+
+/* Login screen */
+.login{
+  flex:1 1 auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
 }
-.guest{
-  background:#1e293b;
-  color:#fff;
+.login-card{
+  width:min(520px, 100%);
+  border-radius:20px;
+  border: var(--stroke);
+  background: rgba(2,6,23,.35);
+  box-shadow: 0 18px 60px rgba(0,0,0,.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding:18px;
 }
+.login-title{
+  font-size:18px;
+  font-weight:800;
+  margin: 4px 0 12px;
+}
+.login-desc{
+  color:var(--mut);
+  font-size:13px;
+  margin-bottom:14px;
+  line-height:1.5;
+}
+.btn{
+  width:100%;
+  padding:14px 14px;
+  border-radius:14px;
+  border: 1px solid rgba(148,163,184,.20);
+  background: rgba(2,6,23,.30);
+  color: var(--txt);
+  cursor:pointer;
+  font-size:15px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+.btn:hover{ background: rgba(2,6,23,.40); }
+
+.btn-google{
+  background: rgba(255,255,255,.95);
+  color:#0b1220;
+  border: none;
+  font-weight:800;
+}
+.btn-google:hover{ background:#fff; }
+
+.sep{ height:10px; }
+.small{ font-size:12px; color:var(--mut); text-align:center; margin-top:12px; }
+
+/* Chat */
 .chat{
-  flex:1;
+  flex:1 1 auto;
   display:none;
-  flex-direction:column;
+  min-height:0;
 }
 .messages{
-  flex:1;
-  padding:20px;
+  flex:1 1 auto;
+  min-height:0;
   overflow-y:auto;
+  -webkit-overflow-scrolling: touch;
+  padding:16px 16px 130px;
+}
+.msg-wrap{
+  display:flex;
+  flex-direction:column;
+  margin-bottom:12px;
 }
 .msg{
-  max-width:72%;
+  max-width:86%;
   padding:12px 14px;
-  border-radius:16px;
-  margin-bottom:12px;
-  line-height:1.5;
+  border-radius:18px;
+  line-height:1.55;
   white-space:pre-wrap;
+  word-wrap:break-word;
+  border: 1px solid rgba(148,163,184,.14);
+  box-shadow: 0 12px 35px rgba(0,0,0,.35);
+}
+@media (min-width: 768px){
+  .msg{ max-width:72%; }
 }
 .user{
-  background:var(--user);
   margin-left:auto;
-  border-bottom-right-radius:4px;
+  background: linear-gradient(135deg, var(--user1), var(--user2));
+  border-bottom-right-radius:7px;
 }
 .ai{
-  background:var(--ai);
-  border-bottom-left-radius:4px;
+  background: var(--ai);
+  border-bottom-left-radius:7px;
 }
-.input{
-  border-top:1px solid var(--border);
-  padding:14px;
-  background:var(--panel);
+.meta{
+  font-size:11px;
+  color: rgba(229,231,235,.70);
+  margin-top:5px;
+}
+.meta-right{ text-align:right; }
+
+.typing{
+  font-size:13px;
+  color: var(--mut);
+  margin: 6px 0 10px;
+}
+
+/* Input bar */
+.inputbar{
+  flex:0 0 auto;
+  position:sticky;
+  bottom:0;
+  padding:12px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(148,163,184,.18);
+  background: rgba(2,6,23,.35);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.composer{
+  display:flex;
+  gap:10px;
+  align-items:flex-end;
 }
 textarea{
-  width:100%;
+  flex:1 1 auto;
   resize:none;
-  padding:14px;
-  border-radius:14px;
-  border:none;
+  min-height:46px;
+  max-height:170px;
+  padding:12px 14px;
+  border-radius:16px;
+  border: 1px solid rgba(148,163,184,.22);
+  background: rgba(2,6,23,.35);
+  color: var(--txt);
   outline:none;
-  background:#020617;
-  color:var(--text);
-  font-size:15px;
+  font-size:16px; /* iOS zoom fix */
+}
+textarea::placeholder{ color: rgba(148,163,184,.85); }
+
+.send{
+  width:46px;
+  height:46px;
+  border-radius:16px;
+  border: 1px solid rgba(148,163,184,.22);
+  background: rgba(2,6,23,.35);
+  color: var(--txt);
+  cursor:pointer;
+}
+.send:hover{ background: rgba(2,6,23,.45); }
+
+.hint-row{
+  display:flex; gap:10px; align-items:center;
+  margin-top:10px; color:var(--mut); font-size:12px;
+}
+.hint-pill{
+  border: 1px solid rgba(148,163,184,.20);
+  background: rgba(2,6,23,.25);
+  padding:6px 10px;
+  border-radius:999px;
+  cursor:pointer;
+  user-select:none;
 }
 </style>
 </head>
 
 <body>
+<div class="shell">
+  <div class="app">
+    <div class="header">
+      <div class="brand">
+        <div class="title">
+          ✨ Berke AI
+          <span class="badge">Ultra Premium</span>
+        </div>
+        <div class="sub">Dark • Glass • Mobile Perfect</div>
+      </div>
 
-<div class="app">
-  <div class="header">✨ Berke AI</div>
+      <div class="top-actions">
+        <div class="pill" id="adminBtn" style="display:none;">Admin</div>
+        <div class="pill" onclick="hardRefreshHint()">Cache</div>
+      </div>
+    </div>
 
-  <!-- LOGIN -->
-  <div class="login" id="login">
-    <button class="google" onclick="location.href='/auth/google'">
-      Google ile devam et
-    </button>
-    <button class="guest" onclick="guest()">
-      Misafir olarak devam et
-    </button>
-  </div>
+    <!-- LOGIN -->
+    <div class="login" id="login">
+      <div class="login-card">
+        <div class="login-title">Devam etmek için giriş yap</div>
+        <div class="login-desc">
+          Google ile giriş yaparsan hafızan sana özel tutulur. Misafir modunda sohbet çalışır ama sadece misafir sayımı tutulur.
+        </div>
 
-  <!-- CHAT -->
-  <div class="chat" id="chat">
-    <div class="messages" id="msgs"></div>
-    <div class="input">
-      <textarea id="m" rows="2"
-        placeholder="Mesaj yaz… (Enter gönder, Shift+Enter satır)"
-        onkeydown="handleKey(event)">
-      </textarea>
+        <button class="btn btn-google" onclick="location.href='/auth/google'">
+          <!-- Basit Google icon -->
+          <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.6 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.2 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.3-.4-3.5z"/>
+            <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.2 6.1 29.3 4 24 4 16.3 4 9.6 8.4 6.3 14.7z"/>
+            <path fill="#4CAF50" d="M24 44c5.1 0 9.8-2 13.3-5.2l-6.1-5.2C29.1 35.4 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.6 5.1C9.4 39.6 16.3 44 24 44z"/>
+            <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.1 3-3.4 5.3-6.3 6.6l6.1 5.2C38.7 36.5 44 31.1 44 24c0-1.2-.1-2.3-.4-3.5z"/>
+          </svg>
+          Google ile devam et
+        </button>
+
+        <div class="sep"></div>
+
+        <button class="btn" onclick="guest()">Misafir olarak devam et</button>
+
+        <div class="small">İpucu: Edge bazen eski arayüzü cache’ler. Ctrl+F5 işe yarar.</div>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="chat" id="chat">
+      <div class="messages" id="msgs"></div>
+
+      <div class="inputbar">
+        <div class="composer">
+          <textarea id="m" rows="1"
+            placeholder="Mesaj yaz… (Enter gönder, Shift+Enter satır)"
+            onkeydown="handleKey(event)"></textarea>
+          <button class="send" onclick="send()" title="Gönder">➤</button>
+        </div>
+
+        <div class="hint-row">
+          <div class="hint-pill" onclick="clearQuery()">URL Temizle</div>
+          <div class="hint-pill" onclick="scrollBottom()">Alta Git</div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-const params = new URLSearchParams(window.location.search)
-const email = params.get("email")
-const loginType = params.get("login")
+const params = new URLSearchParams(location.search);
+const email = params.get("email") || "";
+const loginType = params.get("login") || "";
 
-// 🔥 GOOGLE LOGIN → DİREKT CHAT
+function showChat(){
+  document.getElementById("login").style.display="none";
+  document.getElementById("chat").style.display="flex";
+
+  if(email === "berkekarakulak@gmail.com"){
+    const a = document.getElementById("adminBtn");
+    a.style.display="inline-block";
+    a.onclick = () => location.href = `/admin?email=${encodeURIComponent(email)}`;
+  }
+}
+
 if(loginType==="google" && email){
-  login.style.display="none"
-  chat.style.display="flex"
+  showChat();
 }
 
 function guest(){
-  fetch("/guest",{method:"POST"})
-  login.style.display="none"
-  chat.style.display="flex"
+  fetch("/guest",{method:"POST"}).catch(()=>{});
+  history.replaceState(null,"", "/");
+  showChat();
 }
 
 function handleKey(e){
   if(e.key==="Enter" && !e.shiftKey){
-    e.preventDefault()
-    send()
+    e.preventDefault();
+    send();
   }
 }
 
+function nowTime(){
+  return new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"});
+}
+
+function appendMsg(role, text){
+  const wrap = document.createElement("div");
+  wrap.className = "msg-wrap";
+
+  const bubble = document.createElement("div");
+  bubble.className = "msg " + (role==="user" ? "user" : "ai");
+  bubble.textContent = text;
+
+  const meta = document.createElement("div");
+  meta.className = "meta" + (role==="user" ? " meta-right" : "");
+  meta.textContent = nowTime();
+
+  wrap.appendChild(bubble);
+  wrap.appendChild(meta);
+
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function typingOn(){
+  const t = document.createElement("div");
+  t.id="typing";
+  t.className="typing";
+  t.textContent="Berke AI yazıyor…";
+  msgs.appendChild(t);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function typingOff(){
+  const t = document.getElementById("typing");
+  if(t) t.remove();
+}
+
 async function send(){
-  if(!m.value.trim()) return
-  const text = m.value
-  m.value=""
+  const box = document.getElementById("m");
+  const text = (box.value || "").trim();
+  if(!text) return;
 
-  msgs.innerHTML += `<div class="msg user">${text}</div>`
-  msgs.scrollTop = msgs.scrollHeight
+  box.value = "";
+  appendMsg("user", text);
+  typingOn();
 
-  const r = await fetch("/chat",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({message:text,email:email})
-  })
-  const j = await r.json()
+  try{
+    const r = await fetch("/chat",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({message:text, email: email})
+    });
+    const j = await r.json();
+    typingOff();
+    appendMsg("ai", j.reply || "Boş cevap geldi 😅");
+  }catch(e){
+    typingOff();
+    appendMsg("ai", "Bağlantı hatası oldu. Tekrar dener misin?");
+  }
+}
 
-  msgs.innerHTML += `<div class="msg ai">${j.reply}</div>`
-  msgs.scrollTop = msgs.scrollHeight
+function scrollBottom(){ msgs.scrollTop = msgs.scrollHeight; }
+
+document.getElementById("m").addEventListener("focus", ()=>{
+  setTimeout(()=>{ msgs.scrollTop = msgs.scrollHeight; }, 160);
+});
+
+function hardRefreshHint(){
+  alert("Edge bazen eski UI kalabilir.\nCtrl+F5 yap veya URL’ye ?v=2 ekle.");
+}
+function clearQuery(){
+  history.replaceState(null,"", "/");
+  alert("URL temizlendi.");
 }
 </script>
-
 </body>
 </html>
