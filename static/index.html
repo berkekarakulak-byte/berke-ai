@@ -10,13 +10,16 @@
     :root{
       --bg0:#050a14;
       --bg1:#0b1220;
-      --panel: rgba(12,18,32,.72);
-      --panel2: rgba(12,18,32,.55);
+      --panel: rgba(12,18,32,.70);
+      --panel2: rgba(12,18,32,.50);
       --stroke: rgba(148,163,184,.18);
       --txt:#e5e7eb;
       --mut:#94a3b8;
-      --user:#1d4ed8;
-      --ai: rgba(30,41,59,.75);
+
+      --user1:#2563eb;
+      --user2:#1d4ed8;
+      --aiBg: rgba(30,41,59,.75);
+
       --shadow: 0 24px 80px rgba(0,0,0,.55);
     }
 
@@ -27,12 +30,14 @@
       font-family: Inter, system-ui, -apple-system, Segoe UI, Arial;
       color:var(--txt);
       overflow:hidden;
+
+      /* if bg.jpg exists, it will be used below */
       background: radial-gradient(1200px 700px at 20% 10%, rgba(29,78,216,.22), transparent 60%),
                   radial-gradient(900px 600px at 80% 0%, rgba(168,85,247,.14), transparent 60%),
                   linear-gradient(180deg, var(--bg0), var(--bg1));
     }
 
-    /* Optional: galaxy image if you have bg.jpg */
+    /* Premium background (works if /static/bg.jpg exists) */
     body.has-bg{
       background: url("/static/bg.jpg") center/cover no-repeat fixed;
     }
@@ -45,7 +50,7 @@
       z-index:-1;
     }
 
-    /* App shell */
+    /* Layout shell */
     .shell{
       height:100dvh;
       display:flex;
@@ -67,7 +72,6 @@
       display:flex;
       flex-direction:column;
     }
-
     @media (max-width: 640px){
       .shell{ padding:0; }
       .app{
@@ -78,7 +82,7 @@
       }
     }
 
-    /* Top bar (ChatGPT-like) */
+    /* Topbar (ChatGPT-like) */
     .topbar{
       flex:0 0 auto;
       display:flex;
@@ -87,6 +91,11 @@
       padding:12px 14px;
       border-bottom:1px solid rgba(148,163,184,.16);
       background: rgba(5,10,20,.35);
+    }
+    .left{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
     }
     .brand{
       display:flex;
@@ -103,7 +112,6 @@
     .sub{
       font-size:12px;
       color:var(--mut);
-      margin-top:2px;
       font-weight:600;
     }
     .actions{
@@ -123,7 +131,7 @@
     }
     .pill:hover{ background: rgba(5,10,20,.35); }
 
-    /* Login panel */
+    /* Login card */
     .login{
       flex:1 1 auto;
       display:flex;
@@ -181,24 +189,28 @@
       color:var(--mut);
     }
 
-    /* Chat area */
+    /* Chat section (ChatGPT layout) */
     .chat{
       flex:1 1 auto;
       display:none;
       min-height:0;
+      display:flex;
+      flex-direction:column;
     }
 
+    /* Messages scroll area */
     .messages{
       flex:1 1 auto;
       min-height:0;
       overflow-y:auto;
       -webkit-overflow-scrolling: touch;
-      padding:18px 14px 140px;
+      padding:18px 14px 160px; /* make room for composer */
       display:flex;
       flex-direction:column;
       gap:14px;
     }
 
+    /* Message rows */
     .row{
       width:100%;
       display:flex;
@@ -206,11 +218,20 @@
     .row.user{ justify-content:flex-end; }
     .row.ai{ justify-content:flex-start; }
 
+    /* WhatsApp-like bubbles (but in ChatGPT layout) */
+    .bubblewrap{
+      display:flex;
+      flex-direction:column;
+      max-width: 82%;
+    }
+    @media (min-width: 768px){
+      .bubblewrap{ max-width: 64%; }
+    }
+
     .bubble{
-      max-width: 760px;
-      width: fit-content;
+      position:relative;
       padding:12px 14px;
-      border-radius:14px;
+      border-radius:18px;
       border: 1px solid rgba(148,163,184,.14);
       box-shadow: 0 12px 35px rgba(0,0,0,.30);
       line-height:1.6;
@@ -218,39 +239,69 @@
       word-wrap:break-word;
       font-size:15px;
     }
+
     .row.user .bubble{
-      background: rgba(29,78,216,.20);
-      border-color: rgba(29,78,216,.35);
+      background: linear-gradient(135deg, var(--user1), var(--user2));
+      border-color: rgba(37,99,235,.35);
+      border-bottom-right-radius:8px;
     }
     .row.ai .bubble{
-      background: var(--ai);
+      background: var(--aiBg);
+      border-bottom-left-radius:8px;
     }
 
+    /* bubble tails */
+    .row.user .bubble::after{
+      content:"";
+      position:absolute;
+      right:-6px;
+      bottom:10px;
+      width:12px;
+      height:12px;
+      background: linear-gradient(135deg, var(--user1), var(--user2));
+      transform: rotate(45deg);
+      border-radius:3px;
+    }
+    .row.ai .bubble::after{
+      content:"";
+      position:absolute;
+      left:-6px;
+      bottom:10px;
+      width:12px;
+      height:12px;
+      background: var(--aiBg);
+      transform: rotate(45deg);
+      border-radius:3px;
+    }
+
+    /* time under bubble */
     .meta{
       font-size:11px;
-      color: rgba(229,231,235,.65);
+      color: rgba(229,231,235,.70);
       margin-top:6px;
     }
     .row.user .meta{ text-align:right; }
 
+    /* typing */
     .typing{
       font-size:12px;
       color: var(--mut);
-      margin: 4px 2px 0;
+      margin: 8px 2px 0;
       display:none;
     }
 
-    /* Composer like ChatGPT */
+    /* Composer pinned to bottom */
     .composer{
       position: sticky;
       bottom:0;
       padding:12px;
       padding-bottom: calc(12px + env(safe-area-inset-bottom));
       border-top: 1px solid rgba(148,163,184,.16);
-      background: rgba(5,10,20,.40);
+      background: rgba(5,10,20,.55);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
     }
+
     .inputwrap{
       display:flex;
       gap:10px;
@@ -306,9 +357,9 @@
   <div class="shell">
     <div class="app">
       <div class="topbar">
-        <div>
+        <div class="left">
           <div class="brand"><span class="dot"></span> Berke AI</div>
-          <div class="sub">ChatGPT tarzı • PC + Mobil sağlam</div>
+          <div class="sub">Hibrit UI • ChatGPT düzeni + WP balon</div>
         </div>
         <div class="actions">
           <div class="pill" id="adminBtn" style="display:none;">Admin</div>
@@ -335,7 +386,6 @@
           <div style="height:10px"></div>
 
           <button class="btn" onclick="guest()">Misafir olarak devam et</button>
-
           <div class="small">Edge bazen eski UI’yi cache’ler. Ctrl+F5 işe yarar.</div>
         </div>
       </div>
@@ -395,7 +445,7 @@
     }
   });
 
-  // Auto-grow
+  // Auto-grow textarea
   ta.addEventListener("input", ()=>{
     ta.style.height = "auto";
     ta.style.height = Math.min(180, ta.scrollHeight) + "px";
@@ -415,8 +465,7 @@
     row.className = "row " + role;
 
     const wrap = document.createElement("div");
-    wrap.style.display="flex";
-    wrap.style.flexDirection="column";
+    wrap.className = "bubblewrap";
 
     const bubble = document.createElement("div");
     bubble.className = "bubble";
