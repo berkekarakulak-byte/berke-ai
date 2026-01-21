@@ -1,487 +1,475 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#020617">
-<title>Berke AI</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1220" />
+  <title>Berke AI</title>
 
-<style>
-:root{
-  --txt:#e5e7eb;
-  --mut:#94a3b8;
-  --stroke: 1px solid rgba(148,163,184,.20);
-  --shadow: 0 25px 80px rgba(0,0,0,.55);
+  <style>
+    :root{
+      --bg0:#050a14;
+      --bg1:#0b1220;
+      --panel: rgba(12,18,32,.72);
+      --panel2: rgba(12,18,32,.55);
+      --stroke: rgba(148,163,184,.18);
+      --txt:#e5e7eb;
+      --mut:#94a3b8;
+      --user:#1d4ed8;
+      --ai: rgba(30,41,59,.75);
+      --shadow: 0 24px 80px rgba(0,0,0,.55);
+    }
 
-  --glassA: rgba(2,6,23,.52);
-  --glassB: rgba(15,23,42,.38);
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Arial;
+      color:var(--txt);
+      overflow:hidden;
+      background: radial-gradient(1200px 700px at 20% 10%, rgba(29,78,216,.22), transparent 60%),
+                  radial-gradient(900px 600px at 80% 0%, rgba(168,85,247,.14), transparent 60%),
+                  linear-gradient(180deg, var(--bg0), var(--bg1));
+    }
 
-  --user1:#2563eb;
-  --user2:#1d4ed8;
-  --aiBg: rgba(30,41,59,.78);
+    /* Optional: galaxy image if you have bg.jpg */
+    body.has-bg{
+      background: url("/static/bg.jpg") center/cover no-repeat fixed;
+    }
+    body.has-bg::before{
+      content:"";
+      position:fixed; inset:0;
+      background: rgba(5,10,20,.68);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      z-index:-1;
+    }
 
-  --panel: rgba(2,6,23,.55);
-  --panel2: rgba(2,6,23,.35);
-}
+    /* App shell */
+    .shell{
+      height:100dvh;
+      display:flex;
+      justify-content:center;
+      padding:16px;
+      padding-top: calc(16px + env(safe-area-inset-top));
+      padding-bottom: calc(16px + env(safe-area-inset-bottom));
+    }
+    .app{
+      width:min(980px, 100%);
+      height:100%;
+      border-radius:20px;
+      border:1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      background: linear-gradient(180deg, var(--panel), var(--panel2));
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
 
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0;
-  color:var(--txt);
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Arial;
-  overflow:hidden;
-  background: url("/static/bg.jpg") center/cover no-repeat fixed;
-}
-body::before{
-  content:"";
-  position:fixed; inset:0;
-  background: rgba(2,6,23,.62);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  z-index:-1;
-}
+    @media (max-width: 640px){
+      .shell{ padding:0; }
+      .app{
+        width:100%;
+        border-radius:0;
+        border:none;
+        box-shadow:none;
+      }
+    }
 
-/* Outer shell */
-.shell{
-  height:100dvh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:16px;
-  padding-top: calc(16px + env(safe-area-inset-top));
-  padding-bottom: calc(16px + env(safe-area-inset-bottom));
-}
+    /* Top bar (ChatGPT-like) */
+    .topbar{
+      flex:0 0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:12px 14px;
+      border-bottom:1px solid rgba(148,163,184,.16);
+      background: rgba(5,10,20,.35);
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:900;
+      letter-spacing:.3px;
+    }
+    .brand .dot{
+      width:10px;height:10px;border-radius:999px;
+      background: linear-gradient(135deg,#60a5fa,#a78bfa);
+      box-shadow: 0 0 24px rgba(96,165,250,.35);
+    }
+    .sub{
+      font-size:12px;
+      color:var(--mut);
+      margin-top:2px;
+      font-weight:600;
+    }
+    .actions{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .pill{
+      border:1px solid rgba(148,163,184,.18);
+      background: rgba(5,10,20,.25);
+      color:var(--txt);
+      padding:8px 12px;
+      border-radius:999px;
+      cursor:pointer;
+      font-size:12px;
+      user-select:none;
+    }
+    .pill:hover{ background: rgba(5,10,20,.35); }
 
-/* App card */
-.app{
-  width:min(980px, 100%);
-  height:min(820px, 100dvh);
-  border-radius:22px;
-  border: var(--stroke);
-  box-shadow: var(--shadow);
-  background: linear-gradient(180deg, var(--glassA), var(--glassB));
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  overflow:hidden;
-  display:flex;
-  flex-direction:column;
-}
+    /* Login panel */
+    .login{
+      flex:1 1 auto;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:22px;
+    }
+    .card{
+      width:min(560px, 92vw);
+      border-radius:18px;
+      border:1px solid var(--stroke);
+      background: rgba(5,10,20,.35);
+      box-shadow: 0 18px 60px rgba(0,0,0,.45);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding:18px;
+    }
+    .h1{
+      font-size:18px;
+      font-weight:900;
+      margin:6px 0 10px;
+    }
+    .p{
+      font-size:13px;
+      color:var(--mut);
+      line-height:1.55;
+      margin:0 0 14px;
+    }
+    .btn{
+      width:100%;
+      padding:14px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.18);
+      background: rgba(5,10,20,.25);
+      color:var(--txt);
+      cursor:pointer;
+      font-weight:800;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+    }
+    .btn:hover{ background: rgba(5,10,20,.35); }
+    .btn.google{
+      background: rgba(255,255,255,.95);
+      color:#0b1220;
+      border:none;
+      font-weight:900;
+    }
+    .btn.google:hover{ background:#fff; }
+    .small{
+      margin-top:12px;
+      text-align:center;
+      font-size:12px;
+      color:var(--mut);
+    }
 
-/* Mobile: take full height */
-@media (max-width: 640px){
-  .shell{ padding:0; }
-  .app{
-    width:100%;
-    height:100dvh;
-    border-radius:0;
-    border:none;
-    box-shadow:none;
-  }
-}
+    /* Chat area */
+    .chat{
+      flex:1 1 auto;
+      display:none;
+      min-height:0;
+    }
 
-/* Header */
-.header{
-  flex:0 0 auto;
-  padding:14px 16px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  border-bottom: 1px solid rgba(148,163,184,.18);
-  background: var(--panel2);
-}
-.brand{
-  display:flex; flex-direction:column; gap:2px;
-}
-.brand .title{
-  font-weight:900;
-  letter-spacing:.4px;
-  display:flex;
-  gap:10px;
-  align-items:center;
-}
-.badge{
-  font-size:11px;
-  color:var(--mut);
-  border:1px solid rgba(148,163,184,.22);
-  padding:4px 10px;
-  border-radius:999px;
-  background: rgba(2,6,23,.22);
-}
-.brand .sub{ font-size:12px; color:var(--mut); }
+    .messages{
+      flex:1 1 auto;
+      min-height:0;
+      overflow-y:auto;
+      -webkit-overflow-scrolling: touch;
+      padding:18px 14px 140px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
 
-.actions{ display:flex; gap:10px; align-items:center; }
-.pill{
-  border:1px solid rgba(148,163,184,.20);
-  background: rgba(2,6,23,.22);
-  color: var(--txt);
-  padding:8px 12px;
-  border-radius:999px;
-  cursor:pointer;
-  font-size:12px;
-  user-select:none;
-}
-.pill:hover{ background: rgba(2,6,23,.34); }
+    .row{
+      width:100%;
+      display:flex;
+    }
+    .row.user{ justify-content:flex-end; }
+    .row.ai{ justify-content:flex-start; }
 
-/* Login */
-.login{
-  flex:1 1 auto;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:22px;
-}
-.login-card{
-  width:min(560px, 92vw);
-  border-radius:22px;
-  border: var(--stroke);
-  background: rgba(2,6,23,.38);
-  box-shadow: 0 18px 60px rgba(0,0,0,.45);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  padding:18px;
-}
-.login-title{
-  font-size:18px;
-  font-weight:900;
-  margin: 6px 0 10px;
-}
-.login-desc{
-  font-size:13px;
-  color:var(--mut);
-  line-height:1.55;
-  margin-bottom:14px;
-}
-.btn{
-  width:100%;
-  padding:14px 14px;
-  border-radius:16px;
-  border: 1px solid rgba(148,163,184,.20);
-  background: rgba(2,6,23,.30);
-  color: var(--txt);
-  cursor:pointer;
-  font-size:15px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
-}
-.btn:hover{ background: rgba(2,6,23,.42); }
-.btn-google{
-  background: rgba(255,255,255,.96);
-  color:#0b1220;
-  border:none;
-  font-weight:900;
-}
-.btn-google:hover{ background:#fff; }
-.sep{ height:10px; }
-.small{ font-size:12px; color:var(--mut); text-align:center; margin-top:12px; }
+    .bubble{
+      max-width: 760px;
+      width: fit-content;
+      padding:12px 14px;
+      border-radius:14px;
+      border: 1px solid rgba(148,163,184,.14);
+      box-shadow: 0 12px 35px rgba(0,0,0,.30);
+      line-height:1.6;
+      white-space:pre-wrap;
+      word-wrap:break-word;
+      font-size:15px;
+    }
+    .row.user .bubble{
+      background: rgba(29,78,216,.20);
+      border-color: rgba(29,78,216,.35);
+    }
+    .row.ai .bubble{
+      background: var(--ai);
+    }
 
-/* Chat layout */
-.chat{
-  flex:1 1 auto;
-  display:none;
-  min-height:0;
-  position:relative;
-}
+    .meta{
+      font-size:11px;
+      color: rgba(229,231,235,.65);
+      margin-top:6px;
+    }
+    .row.user .meta{ text-align:right; }
 
-/* Message area */
-.messages{
-  flex:1 1 auto;
-  min-height:0;
-  overflow-y:auto;
-  -webkit-overflow-scrolling: touch;
-  padding:16px;
-  padding-bottom:140px; /* input space */
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
+    .typing{
+      font-size:12px;
+      color: var(--mut);
+      margin: 4px 2px 0;
+      display:none;
+    }
 
-/* Row align */
-.row{
-  display:flex;
-  width:100%;
-}
-.row.user{ justify-content:flex-end; }
-.row.ai{ justify-content:flex-start; }
+    /* Composer like ChatGPT */
+    .composer{
+      position: sticky;
+      bottom:0;
+      padding:12px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
+      border-top: 1px solid rgba(148,163,184,.16);
+      background: rgba(5,10,20,.40);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .inputwrap{
+      display:flex;
+      gap:10px;
+      align-items:flex-end;
+      border: 1px solid rgba(148,163,184,.18);
+      background: rgba(5,10,20,.25);
+      border-radius:16px;
+      padding:10px;
+    }
+    textarea{
+      flex:1 1 auto;
+      resize:none;
+      border:none;
+      outline:none;
+      background: transparent;
+      color: var(--txt);
+      font-size:16px; /* iOS zoom fix */
+      line-height:1.5;
+      min-height:26px;
+      max-height:180px;
+    }
+    textarea::placeholder{ color: rgba(148,163,184,.85); }
 
-/* Bubble (WhatsApp vibe) */
-.bubble{
-  max-width: 78%;
-  position:relative;
-  padding:12px 14px;
-  border-radius:18px;
-  line-height:1.55;
-  border:1px solid rgba(148,163,184,.14);
-  box-shadow: 0 12px 35px rgba(0,0,0,.35);
-  white-space:pre-wrap;
-  word-wrap:break-word;
-}
-@media (min-width: 768px){
-  .bubble{ max-width: 64%; }
-}
-.user .bubble{
-  background: linear-gradient(135deg, var(--user1), var(--user2));
-  border-bottom-right-radius:8px;
-}
-.ai .bubble{
-  background: var(--aiBg);
-  border-bottom-left-radius:8px;
-}
+    .send{
+      width:40px;
+      height:40px;
+      border-radius:12px;
+      border:none;
+      cursor:pointer;
+      font-weight:900;
+      color:#0b1220;
+      background: linear-gradient(135deg,#60a5fa,#a78bfa);
+    }
+    .send:hover{ filter: brightness(1.05); }
 
-/* bubble tail */
-.user .bubble::after{
-  content:"";
-  position:absolute;
-  right:-6px;
-  bottom:10px;
-  width:12px;
-  height:12px;
-  background: linear-gradient(135deg, var(--user1), var(--user2));
-  transform: rotate(45deg);
-  border-radius:3px;
-}
-.ai .bubble::after{
-  content:"";
-  position:absolute;
-  left:-6px;
-  bottom:10px;
-  width:12px;
-  height:12px;
-  background: var(--aiBg);
-  transform: rotate(45deg);
-  border-radius:3px;
-}
-
-/* Time under bubble */
-.time{
-  margin-top:6px;
-  font-size:11px;
-  color: rgba(229,231,235,.70);
-}
-.row.user .time{ text-align:right; }
-
-/* typing */
-.typing{
-  font-size:13px;
-  color:var(--mut);
-  margin: 6px 0 0 2px;
-}
-
-/* Input bar pinned */
-.inputbar{
-  position:sticky;
-  bottom:0;
-  padding:12px;
-  padding-bottom: calc(12px + env(safe-area-inset-bottom));
-  border-top: 1px solid rgba(148,163,184,.18);
-  background: var(--panel);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-}
-
-.composer{
-  display:flex;
-  gap:10px;
-  align-items:flex-end;
-}
-textarea{
-  flex:1 1 auto;
-  resize:none;
-  min-height:46px;
-  max-height:170px;
-  padding:12px 14px;
-  border-radius:16px;
-  border: 1px solid rgba(148,163,184,.22);
-  background: rgba(2,6,23,.35);
-  color: var(--txt);
-  outline:none;
-  font-size:16px; /* iOS zoom fix */
-}
-textarea::placeholder{ color: rgba(148,163,184,.85); }
-
-.send{
-  width:46px;
-  height:46px;
-  border-radius:16px;
-  border: 1px solid rgba(148,163,184,.22);
-  background: rgba(2,6,23,.35);
-  color: var(--txt);
-  cursor:pointer;
-}
-.send:hover{ background: rgba(2,6,23,.48); }
-</style>
+    .hint{
+      margin-top:10px;
+      color: var(--mut);
+      font-size:12px;
+      text-align:center;
+    }
+    .hint code{
+      padding:2px 6px;
+      border-radius:8px;
+      background: rgba(148,163,184,.10);
+      border: 1px solid rgba(148,163,184,.14);
+      color: rgba(229,231,235,.85);
+    }
+  </style>
 </head>
 
-<body>
-<div class="shell">
-  <div class="app">
-    <div class="header">
-      <div class="brand">
-        <div class="title">✨ Berke AI <span class="badge">WP Style</span></div>
-        <div class="sub">Glass • Dark • PC + Mobile Perfect</div>
-      </div>
-
-      <div class="actions">
-        <div class="pill" id="adminBtn" style="display:none;">Admin</div>
-        <div class="pill" onclick="hardRefreshHint()">Cache</div>
-      </div>
-    </div>
-
-    <!-- LOGIN -->
-    <div class="login" id="login">
-      <div class="login-card">
-        <div class="login-title">Devam etmek için giriş yap</div>
-        <div class="login-desc">
-          Google ile giriş yaparsan hafızan sana özel tutulur. Misafir modunda sohbet çalışır ama sadece misafir sayımı tutulur.
+<body class="has-bg">
+  <div class="shell">
+    <div class="app">
+      <div class="topbar">
+        <div>
+          <div class="brand"><span class="dot"></span> Berke AI</div>
+          <div class="sub">ChatGPT tarzı • PC + Mobil sağlam</div>
         </div>
-
-        <button class="btn btn-google" onclick="location.href='/auth/google'">
-          <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
-            <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.6 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.2 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.3-.4-3.5z"/>
-            <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.2 6.1 29.3 4 24 4 16.3 4 9.6 8.4 6.3 14.7z"/>
-            <path fill="#4CAF50" d="M24 44c5.1 0 9.8-2 13.3-5.2l-6.1-5.2C29.1 35.4 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.6 5.1C9.4 39.6 16.3 44 24 44z"/>
-            <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.1 3-3.4 5.3-6.3 6.6l6.1 5.2C38.7 36.5 44 31.1 44 24c0-1.2-.1-2.3-.4-3.5z"/>
-          </svg>
-          Google ile devam et
-        </button>
-
-        <div class="sep"></div>
-
-        <button class="btn" onclick="guest()">Misafir olarak devam et</button>
-
-        <div class="small">Edge eski arayüzü cache’leyebilir. Ctrl+F5 deneyebilirsin.</div>
+        <div class="actions">
+          <div class="pill" id="adminBtn" style="display:none;">Admin</div>
+          <div class="pill" onclick="hardRefreshHint()">Cache</div>
+        </div>
       </div>
-    </div>
 
-    <!-- CHAT -->
-    <div class="chat" id="chat">
-      <div class="messages" id="msgs"></div>
+      <!-- LOGIN -->
+      <div class="login" id="login">
+        <div class="card">
+          <div class="h1">Devam etmek için giriş yap</div>
+          <p class="p">Google ile giriş yaparsan hafızan sana özel tutulur. Misafir modunda sohbet çalışır.</p>
 
-      <div class="inputbar">
-        <form class="composer" onsubmit="send(event)">
-          <textarea id="m" rows="1" placeholder="Mesaj yaz… (Enter gönder, Shift+Enter satır)"></textarea>
-          <button class="send" type="submit" title="Gönder">➤</button>
-        </form>
-        <div class="typing" id="typing" style="display:none;">Berke AI yazıyor…</div>
+          <button class="btn google" onclick="location.href='/auth/google'">
+            <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+              <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.6 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.2 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.3-.4-3.5z"/>
+              <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.2 6.1 29.3 4 24 4 16.3 4 9.6 8.4 6.3 14.7z"/>
+              <path fill="#4CAF50" d="M24 44c5.1 0 9.8-2 13.3-5.2l-6.1-5.2C29.1 35.4 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.6 5.1C9.4 39.6 16.3 44 24 44z"/>
+              <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.1 3-3.4 5.3-6.3 6.6l6.1 5.2C38.7 36.5 44 31.1 44 24c0-1.2-.1-2.3-.4-3.5z"/>
+            </svg>
+            Google ile devam et
+          </button>
+
+          <div style="height:10px"></div>
+
+          <button class="btn" onclick="guest()">Misafir olarak devam et</button>
+
+          <div class="small">Edge bazen eski UI’yi cache’ler. Ctrl+F5 işe yarar.</div>
+        </div>
+      </div>
+
+      <!-- CHAT -->
+      <div class="chat" id="chat">
+        <div class="messages" id="msgs"></div>
+
+        <div class="composer">
+          <form class="inputwrap" onsubmit="send(event)">
+            <textarea id="m" rows="1" placeholder="Mesaj yaz… (Enter gönder, Shift+Enter satır)"></textarea>
+            <button class="send" type="submit" title="Gönder">➤</button>
+          </form>
+          <div class="typing" id="typing">Berke AI yazıyor…</div>
+          <div class="hint"><code>Enter</code> gönderir • <code>Shift+Enter</code> satır</div>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
 <script>
-const msgs = document.getElementById("msgs");
-const typing = document.getElementById("typing");
-const ta = document.getElementById("m");
+  const msgs = document.getElementById("msgs");
+  const typing = document.getElementById("typing");
+  const ta = document.getElementById("m");
 
-const params = new URLSearchParams(location.search);
-const email = params.get("email") || "";
-const loginType = params.get("login") || "";
+  const params = new URLSearchParams(location.search);
+  const email = params.get("email") || "";
+  const loginType = params.get("login") || "";
 
-function showChat(){
-  document.getElementById("login").style.display="none";
-  document.getElementById("chat").style.display="flex";
+  function showChat(){
+    document.getElementById("login").style.display="none";
+    document.getElementById("chat").style.display="flex";
 
-  if(email === "berkekarakulak@gmail.com"){
-    const a = document.getElementById("adminBtn");
-    a.style.display="inline-block";
-    a.onclick = () => location.href = `/admin?email=${encodeURIComponent(email)}`;
+    if(email === "berkekarakulak@gmail.com"){
+      const a = document.getElementById("adminBtn");
+      a.style.display="inline-block";
+      a.onclick = () => location.href = `/admin?email=${encodeURIComponent(email)}`;
+    }
+    scrollBottom();
   }
-  scrollBottom();
-}
 
-if(loginType==="google" && email){
-  showChat();
-}
-
-function guest(){
-  fetch("/guest",{method:"POST"}).catch(()=>{});
-  history.replaceState(null,"", "/");
-  showChat();
-}
-
-// Enter send / Shift+Enter newline
-ta.addEventListener("keydown", (e)=>{
-  if(e.key==="Enter" && !e.shiftKey){
-    e.preventDefault();
-    ta.form.requestSubmit();
+  if(loginType==="google" && email){
+    showChat();
   }
-});
 
-// Auto-grow textarea
-ta.addEventListener("input", ()=>{
-  ta.style.height = "auto";
-  ta.style.height = Math.min(170, ta.scrollHeight) + "px";
-});
-
-// On focus, keep at bottom (mobile keyboard)
-ta.addEventListener("focus", ()=>{
-  setTimeout(scrollBottom, 160);
-});
-
-function nowTime(){
-  return new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"});
-}
-
-function addBubble(role, text){
-  const row = document.createElement("div");
-  row.className = "row " + role;
-
-  const box = document.createElement("div");
-  box.className = "bubble";
-  box.textContent = text;
-
-  const time = document.createElement("div");
-  time.className = "time";
-  time.textContent = nowTime();
-
-  const wrap = document.createElement("div");
-  wrap.style.display = "flex";
-  wrap.style.flexDirection = "column";
-  wrap.appendChild(box);
-  wrap.appendChild(time);
-
-  row.appendChild(wrap);
-  msgs.appendChild(row);
-  scrollBottom();
-}
-
-function scrollBottom(){
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-function typingOn(){ typing.style.display="block"; scrollBottom(); }
-function typingOff(){ typing.style.display="none"; }
-
-async function send(e){
-  if(e) e.preventDefault();
-  const text = (ta.value || "").trim();
-  if(!text) return;
-
-  ta.value = "";
-  ta.style.height = "auto";
-  addBubble("user", text);
-  typingOn();
-
-  try{
-    const r = await fetch("/chat",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({message:text, email: email})
-    });
-    const j = await r.json();
-    typingOff();
-    addBubble("ai", j.reply || "Boş cevap geldi 😅");
-  }catch(err){
-    typingOff();
-    addBubble("ai", "Bağlantı hatası oldu. Tekrar dener misin?");
+  function guest(){
+    fetch("/guest",{method:"POST"}).catch(()=>{});
+    history.replaceState(null,"", "/");
+    showChat();
   }
-}
 
-function hardRefreshHint(){
-  alert("Edge bazen eski UI kalabilir.\nCtrl+F5 yap veya URL’ye ?v=2 ekle.");
-}
+  // Enter send, Shift+Enter newline
+  ta.addEventListener("keydown", (e)=>{
+    if(e.key==="Enter" && !e.shiftKey){
+      e.preventDefault();
+      ta.form.requestSubmit();
+    }
+  });
+
+  // Auto-grow
+  ta.addEventListener("input", ()=>{
+    ta.style.height = "auto";
+    ta.style.height = Math.min(180, ta.scrollHeight) + "px";
+  });
+
+  // Mobile keyboard keep bottom
+  ta.addEventListener("focus", ()=>{
+    setTimeout(scrollBottom, 160);
+  });
+
+  function nowTime(){
+    return new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"});
+  }
+
+  function addMsg(role, text){
+    const row = document.createElement("div");
+    row.className = "row " + role;
+
+    const wrap = document.createElement("div");
+    wrap.style.display="flex";
+    wrap.style.flexDirection="column";
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = text;
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.textContent = nowTime();
+
+    wrap.appendChild(bubble);
+    wrap.appendChild(meta);
+    row.appendChild(wrap);
+
+    msgs.appendChild(row);
+    scrollBottom();
+  }
+
+  function scrollBottom(){
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function typingOn(){ typing.style.display="block"; scrollBottom(); }
+  function typingOff(){ typing.style.display="none"; }
+
+  async function send(e){
+    if(e) e.preventDefault();
+    const text = (ta.value || "").trim();
+    if(!text) return;
+
+    ta.value = "";
+    ta.style.height = "auto";
+
+    addMsg("user", text);
+    typingOn();
+
+    try{
+      const r = await fetch("/chat",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({message:text, email: email})
+      });
+      const j = await r.json();
+      typingOff();
+      addMsg("ai", j.reply || "Boş cevap geldi 😅");
+    }catch(err){
+      typingOff();
+      addMsg("ai", "Bağlantı hatası oldu. Tekrar dener misin?");
+    }
+  }
+
+  function hardRefreshHint(){
+    alert("Edge bazen eski arayüzü cache’ler.\nCtrl+F5 yap veya URL’ye ?v=2 ekle.");
+  }
 </script>
 </body>
 </html>
