@@ -8,45 +8,49 @@
 
   <style>
     :root{
-      --bg0:#050a14;
-      --bg1:#0b1220;
-      --panel: rgba(12,18,32,.70);
-      --panel2: rgba(12,18,32,.50);
+      --bg0:#050a14; --bg1:#0b1220;
+      --txt:#e5e7eb; --mut:#94a3b8;
       --stroke: rgba(148,163,184,.18);
-      --txt:#e5e7eb;
-      --mut:#94a3b8;
-
-      --user1:#2563eb;
-      --user2:#1d4ed8;
-      --aiBg: rgba(30,41,59,.75);
-
+      --card: rgba(12,18,32,.65);
+      --card2: rgba(12,18,32,.45);
       --shadow: 0 24px 80px rgba(0,0,0,.55);
+
+      --aiBg: rgba(5,10,20,.30);
+      --aiBorder: rgba(148,163,184,.14);
+
+      --me1:#60a5fa;
+      --me2:#a78bfa;
+
+      --focus: rgba(96,165,250,.35);
     }
+
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
       margin:0;
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Arial;
       color:var(--txt);
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Arial;
+      background:
+        radial-gradient(1200px 700px at 20% 10%, rgba(29,78,216,.22), transparent 60%),
+        radial-gradient(900px 600px at 80% 0%, rgba(168,85,247,.14), transparent 60%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
       overflow:hidden;
-      background: radial-gradient(1200px 700px at 20% 10%, rgba(29,78,216,.22), transparent 60%),
-                  radial-gradient(900px 600px at 80% 0%, rgba(168,85,247,.14), transparent 60%),
-                  linear-gradient(180deg, var(--bg0), var(--bg1));
     }
 
+    /* optional background image */
     body.has-bg{
       background: url("/static/bg.jpg") center/cover no-repeat fixed;
     }
     body.has-bg::before{
       content:"";
       position:fixed; inset:0;
-      background: rgba(5,10,20,.68);
+      background: rgba(5,10,20,.70);
       backdrop-filter: blur(2px);
       -webkit-backdrop-filter: blur(2px);
       z-index:-1;
     }
 
-    .shell{
+    .wrap{
       height:100dvh;
       display:flex;
       justify-content:center;
@@ -55,12 +59,12 @@
       padding-bottom: calc(16px + env(safe-area-inset-bottom));
     }
     .app{
-      width:min(980px, 100%);
+      width:min(1000px, 100%);
       height:100%;
       border-radius:20px;
       border:1px solid var(--stroke);
+      background: linear-gradient(180deg, var(--card), var(--card2));
       box-shadow: var(--shadow);
-      background: linear-gradient(180deg, var(--panel), var(--panel2));
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       overflow:hidden;
@@ -68,31 +72,42 @@
       flex-direction:column;
     }
     @media (max-width: 640px){
-      .shell{ padding:0; }
-      .app{ width:100%; border-radius:0; border:none; box-shadow:none; }
+      .wrap{padding:0}
+      .app{border-radius:0;border:none;box-shadow:none}
     }
 
-    .topbar{
+    /* TOPBAR (admin panel vibe) */
+    .top{
       flex:0 0 auto;
       display:flex;
-      align-items:center;
       justify-content:space-between;
+      align-items:center;
       padding:12px 14px;
       border-bottom:1px solid rgba(148,163,184,.16);
-      background: rgba(5,10,20,.35);
+      background: rgba(5,10,20,.25);
     }
-    .left{ display:flex; flex-direction:column; gap:2px; }
-    .brand{ display:flex; align-items:center; gap:10px; font-weight:900; letter-spacing:.3px; }
-    .brand .dot{
-      width:10px;height:10px;border-radius:999px;
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      font-weight:900;
+      letter-spacing:.3px;
+    }
+    .dot{
+      width:10px; height:10px; border-radius:999px;
       background: linear-gradient(135deg,#60a5fa,#a78bfa);
       box-shadow: 0 0 24px rgba(96,165,250,.35);
     }
-    .sub{ font-size:12px; color:var(--mut); font-weight:600; }
-    .actions{ display:flex; gap:10px; align-items:center; }
+    .sub{
+      margin-top:2px;
+      font-size:12px;
+      color:var(--mut);
+      font-weight:700;
+    }
+    .right{
+      display:flex; gap:10px; align-items:center;
+    }
     .pill{
-      border:1px solid rgba(148,163,184,.18);
-      background: rgba(5,10,20,.25);
+      border:1px solid var(--stroke);
+      background: rgba(5,10,20,.20);
       color:var(--txt);
       padding:8px 12px;
       border-radius:999px;
@@ -100,8 +115,9 @@
       font-size:12px;
       user-select:none;
     }
-    .pill:hover{ background: rgba(5,10,20,.35); }
+    .pill:hover{ background: rgba(5,10,20,.32); }
 
+    /* LOGIN CARD */
     .login{
       flex:1 1 auto;
       display:flex;
@@ -111,48 +127,49 @@
     }
     .card{
       width:min(560px, 92vw);
-      border-radius:18px;
       border:1px solid var(--stroke);
-      background: rgba(5,10,20,.35);
-      box-shadow: 0 18px 60px rgba(0,0,0,.45);
+      background: rgba(5,10,20,.25);
+      border-radius:18px;
+      box-shadow: var(--shadow);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       padding:18px;
     }
     .h1{ font-size:18px; font-weight:900; margin:6px 0 10px; }
     .p{ font-size:13px; color:var(--mut); line-height:1.55; margin:0 0 14px; }
+
     .btn{
       width:100%;
       padding:14px;
       border-radius:14px;
       border:1px solid rgba(148,163,184,.18);
-      background: rgba(5,10,20,.25);
+      background: rgba(5,10,20,.20);
       color:var(--txt);
       cursor:pointer;
-      font-weight:800;
+      font-weight:900;
       display:flex;
       align-items:center;
       justify-content:center;
       gap:10px;
     }
-    .btn:hover{ background: rgba(5,10,20,.35); }
+    .btn:hover{ background: rgba(5,10,20,.32); }
+
     .btn.google{
       background: rgba(255,255,255,.95);
       color:#0b1220;
       border:none;
-      font-weight:900;
     }
     .btn.google:hover{ background:#fff; }
     .small{ margin-top:12px; text-align:center; font-size:12px; color:var(--mut); }
 
+    /* CHAT */
     .chat{
       flex:1 1 auto;
-      display:none;
       min-height:0;
-      display:flex;
+      display:none;
       flex-direction:column;
     }
-    .messages{
+    .msgs{
       flex:1 1 auto;
       min-height:0;
       overflow-y:auto;
@@ -162,120 +179,111 @@
       flex-direction:column;
       gap:14px;
     }
-    .row{ width:100%; display:flex; }
-    .row.user{ justify-content:flex-end; }
-    .row.ai{ justify-content:flex-start; }
 
-    .bubblewrap{
+    .row{ display:flex; width:100%; }
+    .row.ai{ justify-content:flex-start; }
+    .row.me{ justify-content:flex-end; }
+
+    .bubbleWrap{
+      max-width:82%;
       display:flex;
       flex-direction:column;
-      max-width: 82%;
+      gap:6px;
     }
-    @media (min-width: 768px){ .bubblewrap{ max-width: 64%; } }
+    @media (min-width: 860px){
+      .bubbleWrap{ max-width: 64%; }
+    }
 
     .bubble{
-      position:relative;
-      padding:12px 14px;
       border-radius:18px;
-      border: 1px solid rgba(148,163,184,.14);
-      box-shadow: 0 12px 35px rgba(0,0,0,.30);
+      padding:12px 14px;
       line-height:1.6;
       white-space:pre-wrap;
       word-wrap:break-word;
       font-size:15px;
-    }
-    .row.user .bubble{
-      background: linear-gradient(135deg, var(--user1), var(--user2));
-      border-color: rgba(37,99,235,.35);
-      border-bottom-right-radius:8px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.30);
+      border:1px solid var(--aiBorder);
+      background: rgba(5,10,20,.25);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
     .row.ai .bubble{
-      background: var(--aiBg);
+      background: rgba(5,10,20,.22);
       border-bottom-left-radius:8px;
     }
-    .row.user .bubble::after{
-      content:"";
-      position:absolute;
-      right:-6px;
-      bottom:10px;
-      width:12px;
-      height:12px;
-      background: linear-gradient(135deg, var(--user1), var(--user2));
-      transform: rotate(45deg);
-      border-radius:3px;
+    .row.me .bubble{
+      background: linear-gradient(135deg, rgba(96,165,250,.95), rgba(167,139,250,.95));
+      border:1px solid rgba(96,165,250,.30);
+      color:#081021;
+      border-bottom-right-radius:8px;
     }
-    .row.ai .bubble::after{
-      content:"";
-      position:absolute;
-      left:-6px;
-      bottom:10px;
-      width:12px;
-      height:12px;
-      background: var(--aiBg);
-      transform: rotate(45deg);
-      border-radius:3px;
-    }
+
     .meta{
       font-size:11px;
-      color: rgba(229,231,235,.70);
-      margin-top:6px;
+      color: rgba(229,231,235,.68);
     }
-    .row.user .meta{ text-align:right; }
+    .row.me .meta{ text-align:right; }
 
-    .typing{
-      font-size:12px;
-      color: var(--mut);
-      margin: 8px 2px 0;
-      display:none;
-    }
-
+    /* COMPOSER */
     .composer{
       position: sticky;
       bottom:0;
       padding:12px;
       padding-bottom: calc(12px + env(safe-area-inset-bottom));
-      border-top: 1px solid rgba(148,163,184,.16);
-      background: rgba(5,10,20,.55);
+      border-top:1px solid rgba(148,163,184,.16);
+      background: rgba(5,10,20,.40);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
     }
-    .inputwrap{
+    .inputWrap{
       display:flex;
       gap:10px;
       align-items:flex-end;
-      border: 1px solid rgba(148,163,184,.18);
-      background: rgba(5,10,20,.25);
+      border:1px solid rgba(148,163,184,.18);
+      background: rgba(5,10,20,.22);
       border-radius:16px;
       padding:10px;
+      box-shadow: 0 16px 45px rgba(0,0,0,.35);
+    }
+    .inputWrap:focus-within{
+      border-color: rgba(96,165,250,.35);
+      box-shadow: 0 0 0 6px rgba(96,165,250,.10), 0 16px 45px rgba(0,0,0,.35);
     }
     textarea{
       flex:1 1 auto;
-      resize:none;
       border:none;
       outline:none;
       background: transparent;
-      color: var(--txt);
+      color:var(--txt);
       font-size:16px;
       line-height:1.5;
       min-height:26px;
       max-height:180px;
+      resize:none;
     }
     textarea::placeholder{ color: rgba(148,163,184,.85); }
     .send{
-      width:40px;
-      height:40px;
-      border-radius:12px;
+      width:42px;
+      height:42px;
       border:none;
+      border-radius:14px;
       cursor:pointer;
       font-weight:900;
-      color:#0b1220;
-      background: linear-gradient(135deg,#60a5fa,#a78bfa);
+      color:#081021;
+      background: linear-gradient(135deg, var(--me1), var(--me2));
+      box-shadow: 0 18px 50px rgba(96,165,250,.20);
     }
     .send:hover{ filter: brightness(1.05); }
-
-    .hint{
+    .typing{
       margin-top:10px;
-      color: var(--mut);
+      font-size:12px;
+      color:var(--mut);
+      display:none;
+      text-align:center;
+    }
+    .hint{
+      margin-top:8px;
+      color:var(--mut);
       font-size:12px;
       text-align:center;
     }
@@ -283,30 +291,31 @@
       padding:2px 6px;
       border-radius:8px;
       background: rgba(148,163,184,.10);
-      border: 1px solid rgba(148,163,184,.14);
+      border:1px solid rgba(148,163,184,.14);
       color: rgba(229,231,235,.85);
     }
   </style>
 </head>
 
 <body class="has-bg">
-  <div class="shell">
+  <div class="wrap">
     <div class="app">
-      <div class="topbar">
-        <div class="left">
+      <div class="top">
+        <div>
           <div class="brand"><span class="dot"></span> Berke AI</div>
-          <div class="sub">Hibrit UI • ChatGPT düzeni + WP balon</div>
+          <div class="sub" id="subtitle">Premium Dark • Glass UI</div>
         </div>
-        <div class="actions">
+        <div class="right">
           <div class="pill" id="adminBtn" style="display:none;">Admin</div>
-          <div class="pill" onclick="alert('Edge cache için: Ctrl+F5 veya linke ?v=2 ekle')">Cache</div>
+          <div class="pill" onclick="hardRefresh()">Hard Refresh</div>
         </div>
       </div>
 
+      <!-- LOGIN -->
       <div class="login" id="login">
         <div class="card">
           <div class="h1">Devam etmek için giriş yap</div>
-          <p class="p">Google ile giriş yaparsan hafızan sana özel tutulur. Misafir modunda sohbet çalışır.</p>
+          <p class="p">Google ile giriş yaparsan hafızan sana özel tutulur. Misafir modunda sohbet çalışır (hafıza yok).</p>
 
           <button class="btn google" onclick="location.href='/auth/google'">
             <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
@@ -321,15 +330,17 @@
           <div style="height:10px"></div>
 
           <button class="btn" onclick="guest()">Misafir olarak devam et</button>
-          <div class="small">Not: Google girişte sohbet açılmazsa linke tekrar girip Ctrl+F5 yap.</div>
+
+          <div class="small">Not: Edge cache bazen sapıtıyor. Çalışmazsa Ctrl+F5 ya da gizli sekme.</div>
         </div>
       </div>
 
+      <!-- CHAT -->
       <div class="chat" id="chat">
-        <div class="messages" id="msgs"></div>
+        <div class="msgs" id="msgs"></div>
 
         <div class="composer">
-          <form class="inputwrap" onsubmit="send(event)">
+          <form class="inputWrap" onsubmit="send(event)">
             <textarea id="m" rows="1" placeholder="Mesaj yaz… (Enter gönder, Shift+Enter satır)"></textarea>
             <button class="send" type="submit" title="Gönder">➤</button>
           </form>
@@ -337,6 +348,7 @@
           <div class="hint"><code>Enter</code> gönderir • <code>Shift+Enter</code> satır</div>
         </div>
       </div>
+
     </div>
   </div>
 
@@ -344,56 +356,68 @@
   const msgs = document.getElementById("msgs");
   const typing = document.getElementById("typing");
   const ta = document.getElementById("m");
+  const subtitle = document.getElementById("subtitle");
 
   const params = new URLSearchParams(location.search);
   const email = params.get("email") || "";
   const loginType = params.get("login") || "";
 
+  function hardRefresh(){
+    const u = new URL(location.href);
+    u.searchParams.set("v", String(Date.now()));
+    location.href = u.toString();
+  }
+
   function showChat(){
     document.getElementById("login").style.display="none";
     document.getElementById("chat").style.display="flex";
 
-    if(email === "berkekarakulak@gmail.com"){
+    subtitle.textContent = email ? ("Giriş: " + email) : "Misafir Modu";
+
+    // Admin butonu sadece sana
+    if(email && email.toLowerCase() === "berkekarakulak@gmail.com"){
       const a = document.getElementById("adminBtn");
       a.style.display="inline-block";
       a.onclick = () => {
-        const key = prompt("Admin key (Render'da ADMIN_PANEL_KEY verdiysen)","");
-        const u = key ? `/admin-ui?email=${encodeURIComponent(email)}&key=${encodeURIComponent(key)}` :
-                        `/admin-ui?email=${encodeURIComponent(email)}`;
-        location.href = u;
+        const key = prompt("Admin key (Render ENV: ADMIN_PANEL_KEY)","");
+        const url = key
+          ? `/admin-ui?email=${encodeURIComponent(email)}&key=${encodeURIComponent(key)}`
+          : `/admin-ui?email=${encodeURIComponent(email)}`;
+        location.href = url;
       };
     }
-    scrollBottom();
+    scrollBottom(true);
   }
 
-  if(loginType==="google" && email){
+  if(loginType === "google" && email){
     showChat();
   }
 
-  function guest(){
-    fetch("/guest",{method:"POST"}).catch(()=>{});
+  async function guest(){
+    fetch("/guest", {method:"POST"}).catch(()=>{});
     history.replaceState(null,"", "/");
     showChat();
   }
 
+  // Enter gönder / Shift+Enter satır
   ta.addEventListener("keydown", (e)=>{
-    if(e.key==="Enter" && !e.shiftKey){
+    if(e.key === "Enter" && !e.shiftKey){
       e.preventDefault();
       ta.form.requestSubmit();
     }
   });
 
+  // Auto-grow textarea
   ta.addEventListener("input", ()=>{
     ta.style.height = "auto";
     ta.style.height = Math.min(180, ta.scrollHeight) + "px";
   });
 
-  ta.addEventListener("focus", ()=>{
-    setTimeout(scrollBottom, 160);
-  });
+  // iOS/Android keyboard scroll fix
+  ta.addEventListener("focus", ()=> setTimeout(()=>scrollBottom(true), 200));
 
-  function nowTime(){
-    return new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"});
+  function timeNow(){
+    return new Date().toLocaleTimeString("tr-TR", {hour:"2-digit", minute:"2-digit"});
   }
 
   function addMsg(role, text){
@@ -401,7 +425,7 @@
     row.className = "row " + role;
 
     const wrap = document.createElement("div");
-    wrap.className = "bubblewrap";
+    wrap.className = "bubbleWrap";
 
     const bubble = document.createElement("div");
     bubble.className = "bubble";
@@ -409,32 +433,39 @@
 
     const meta = document.createElement("div");
     meta.className = "meta";
-    meta.textContent = nowTime();
+    meta.textContent = timeNow();
 
     wrap.appendChild(bubble);
     wrap.appendChild(meta);
     row.appendChild(wrap);
-
     msgs.appendChild(row);
-    scrollBottom();
+
+    scrollBottom(false);
   }
 
-  function scrollBottom(){
-    msgs.scrollTop = msgs.scrollHeight;
+  function scrollBottom(force){
+    if(force){
+      msgs.scrollTop = msgs.scrollHeight;
+      return;
+    }
+    // kullanıcı yukarı scroll ediyorsa zorlamayalım
+    const nearBottom = (msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight) < 220;
+    if(nearBottom) msgs.scrollTop = msgs.scrollHeight;
   }
 
-  function typingOn(){ typing.style.display="block"; scrollBottom(); }
+  function typingOn(){ typing.style.display="block"; scrollBottom(true); }
   function typingOff(){ typing.style.display="none"; }
 
   async function send(e){
     if(e) e.preventDefault();
+
     const text = (ta.value || "").trim();
     if(!text) return;
 
     ta.value = "";
     ta.style.height = "auto";
 
-    addMsg("user", text);
+    addMsg("me", text);
     typingOn();
 
     try{
