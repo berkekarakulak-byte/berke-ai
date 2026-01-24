@@ -1,603 +1,362 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0b1220" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Berke AI</title>
-
   <style>
     :root{
-      --bg0:#050a14; --bg1:#0b1220;
-      --txt:#e5e7eb; --mut:#94a3b8;
-      --stroke: rgba(148,163,184,.16);
-      --glass: blur(18px);
-      --shadow: 0 24px 80px rgba(0,0,0,.55);
-
-      --aiBg: rgba(5,10,20,.22);
-      --aiBorder: rgba(148,163,184,.14);
-
-      --meGrad1:#60a5fa; --meGrad2:#a78bfa;
-
-      --btnBg: rgba(5,10,20,.12);
-      --btnStroke: rgba(148,163,184,.18);
+      --bg:#0b0f19;
+      --panel:#0f1629;
+      --card:#121b33;
+      --text:#e8eefc;
+      --muted:#a7b4d1;
+      --line:rgba(255,255,255,.08);
+      --accent:#6ea8ff;
+      --shadow: 0 20px 60px rgba(0,0,0,.35);
+      --radius:16px;
     }
-
-    body.light{
-      --bg0:#f3f5fb; --bg1:#e9eefc;
-      --txt:#0b1220; --mut:#475569;
-      --stroke: rgba(15,23,42,.12);
-      --shadow: 0 24px 80px rgba(2,6,23,.14);
-      --aiBg: rgba(255,255,255,.85);
-      --aiBorder: rgba(15,23,42,.10);
-      --btnBg: rgba(255,255,255,.65);
-      --btnStroke: rgba(15,23,42,.12);
-    }
-
     *{box-sizing:border-box}
-    html,body{height:100%}
     body{
       margin:0;
-      color:var(--txt);
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Arial;
       background:
-        radial-gradient(1200px 700px at 20% 10%, rgba(29,78,216,.22), transparent 60%),
-        radial-gradient(900px 600px at 80% 0%, rgba(168,85,247,.14), transparent 60%),
-        linear-gradient(180deg, var(--bg0), var(--bg1));
-      overflow:hidden;
+        radial-gradient(1200px 600px at 20% -10%, rgba(110,168,255,.18), transparent 60%),
+        radial-gradient(900px 500px at 90% 0%, rgba(51,209,122,.10), transparent 55%),
+        var(--bg);
+      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
     }
-
-    /* container */
-    .wrap{
-      height:100dvh;
-      display:flex;
-      justify-content:center;
-      padding:16px;
-      padding-top: calc(16px + env(safe-area-inset-top));
-      padding-bottom: calc(16px + env(safe-area-inset-bottom));
-    }
-    .app{
-      width:min(1024px, 100%);
-      height:100%;
-      border-radius:20px;
-      border:1px solid var(--stroke);
-      background: linear-gradient(180deg, rgba(12,18,32,.70), rgba(12,18,32,.45));
+    .app{height:100dvh;display:flex;justify-content:center;align-items:center;padding:14px}
+    .shell{
+      width:min(980px, 100%);
+      height:min(860px, 100%);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--line);
+      border-radius:22px;
       box-shadow: var(--shadow);
-      backdrop-filter: var(--glass);
-      -webkit-backdrop-filter: var(--glass);
       overflow:hidden;
       display:flex;
       flex-direction:column;
-      position:relative;
     }
-    body.light .app{
-      background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.55));
-    }
-    @media (max-width: 640px){
-      .wrap{padding:0}
-      .app{border-radius:0;border:none;box-shadow:none}
-    }
-
-    /* top */
-    .top{
-      display:flex; justify-content:space-between; align-items:center;
-      padding:12px 14px;
-      border-bottom:1px solid rgba(148,163,184,.14);
-      background: rgba(5,10,20,.12);
-      backdrop-filter: var(--glass);
-      -webkit-backdrop-filter: var(--glass);
-      z-index:10;
-    }
-    body.light .top{ background: rgba(255,255,255,.35); }
-
-    .brand{display:flex; align-items:center; gap:10px; font-weight:900; letter-spacing:.3px;}
-    .dot{
-      width:10px;height:10px;border-radius:999px;
-      background: linear-gradient(135deg,#60a5fa,#a78bfa);
-      box-shadow: 0 0 24px rgba(96,165,250,.35);
-    }
-    .sub{margin-top:2px;font-size:12px;color:var(--mut);font-weight:700;max-width: 72vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .right{display:flex; gap:10px; align-items:center;}
-
-    .pill{
-      border:1px solid var(--btnStroke);
-      background: var(--btnBg);
-      color:var(--txt);
-      padding:8px 12px;
-      border-radius:999px;
-      cursor:pointer;
-      font-size:12px;
-      user-select:none;
-      display:flex; align-items:center; gap:8px;
-    }
-
-    /* messages */
-    .chat{flex:1 1 auto; min-height:0; display:flex; flex-direction:column;}
-    .msgs{
-      flex:1 1 auto; min-height:0;
-      overflow-y:auto; -webkit-overflow-scrolling: touch;
-      padding:18px 14px 220px;
-      display:flex; flex-direction:column; gap:14px;
-    }
-
-    .row{display:flex;width:100%;}
-    .row.ai{justify-content:flex-start;}
-    .row.me{justify-content:flex-end;}
-    .bubbleWrap{max-width:82%; display:flex; flex-direction:column; gap:6px;}
-    @media (min-width:860px){ .bubbleWrap{max-width:64%;} }
-
-    .bubble{
-      border-radius:18px;
-      padding:12px 14px;
-      line-height:1.6;
-      white-space:pre-wrap;
-      word-wrap:break-word;
-      font-size:15px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.20);
-      border:1px solid var(--aiBorder);
-      background: var(--aiBg);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-    .row.ai .bubble{border-bottom-left-radius:8px;}
-    .row.me .bubble{
-      background: linear-gradient(135deg, rgba(96,165,250,.95), rgba(167,139,250,.95));
-      border:1px solid rgba(96,165,250,.30);
-      color:#081021;
-      border-bottom-right-radius:8px;
-    }
-
-    .meta{
-      font-size:11px;
-      color: rgba(229,231,235,.68);
-      display:flex; gap:8px; align-items:center;
-    }
-    body.light .meta{ color: rgba(2,6,23,.65); }
-    .row.me .meta{ justify-content:flex-end; }
-
-    /* typing */
-    .typing{
-      margin:10px 14px 0;
-      display:none;
-      align-items:center;
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:14px 16px;background: rgba(15,22,41,.75);
+      border-bottom:1px solid var(--line);backdrop-filter: blur(10px);
       gap:10px;
-      color:var(--mut);
-      font-size:12px;
-      font-weight:800;
     }
-    .dots{display:inline-flex;gap:4px;align-items:center;}
-    .dot3{width:6px;height:6px;border-radius:999px;background: rgba(148,163,184,.85);animation: b 1.1s infinite ease-in-out;}
-    .dot3:nth-child(2){animation-delay:.15s;}
-    .dot3:nth-child(3){animation-delay:.3s;}
-    @keyframes b{0%,80%,100%{transform:translateY(0);opacity:.55;}40%{transform:translateY(-4px);opacity:1;}}
-
-    /* COMPOSER: fixed + ultra z-index + pointer events */
-    .composer{
-      position: fixed;
-      left:0; right:0; bottom:0;
-      padding:12px;
-      padding-bottom: calc(12px + env(safe-area-inset-bottom));
-      border-top:1px solid rgba(148,163,184,.16);
-      background: rgba(5,10,20,.18);
-      backdrop-filter: var(--glass);
-      -webkit-backdrop-filter: var(--glass);
-      z-index: 2147483647;
-      pointer-events: auto;
-    }
-    body.light .composer{ background: rgba(255,255,255,.55); }
-    .composerInner{ width:min(1024px, 100%); margin:0 auto; }
-
-    .inputWrap{
-      display:flex; gap:10px; align-items:flex-end;
-      border:1px solid rgba(148,163,184,.18);
-      background: rgba(5,10,20,.10);
-      border-radius:16px;
-      padding:10px;
-      box-shadow: 0 16px 45px rgba(0,0,0,.25);
-      z-index: 2147483647;
-      pointer-events: auto;
-    }
-    body.light .inputWrap{ background: rgba(255,255,255,.65); }
-
-    textarea{
-      flex:1 1 auto;
-      border:none; outline:none;
-      background: transparent;
-      color:var(--txt);
-      font-size:16px;
-      line-height:1.5;
-      min-height:26px;
-      max-height:180px;
-      resize:none;
-      pointer-events:auto;
-    }
-    textarea::placeholder{ color: rgba(148,163,184,.85); }
-
-    .toolbtn{
-      width:42px;height:42px;
-      border:none;border-radius:14px;
-      cursor:pointer;
-      background: var(--btnBg);
-      color: var(--txt);
-      border:1px solid var(--btnStroke);
-      pointer-events:auto;
-    }
-    .send{
-      width:42px;height:42px;
-      border:none;border-radius:14px;
-      cursor:pointer;
-      font-weight:900;
-      color:#081021;
-      background: linear-gradient(135deg, #60a5fa, #a78bfa);
-      pointer-events:auto;
-    }
-
-    /* image bubble */
-    .imgCard{ padding:10px; }
-    .imgCard img{ width:100%; display:block; border-radius:14px; cursor:pointer; }
-    .imgActions{ display:flex; gap:8px; margin-top:8px; justify-content:flex-end; flex-wrap:wrap; }
-    .mini{
-      border:1px solid var(--btnStroke);
-      background: var(--btnBg);
-      color: var(--txt);
-      padding:8px 10px;
+    .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.4px}
+    .logo{width:34px;height:34px;border-radius:12px;background:linear-gradient(135deg, rgba(110,168,255,.95), rgba(51,209,122,.7));box-shadow:0 8px 20px rgba(110,168,255,.25)}
+    .who{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:55%}
+    .pill{border:1px solid var(--line);background: rgba(255,255,255,.03);padding:6px 10px;border-radius:999px}
+    .actions{display:flex;gap:8px;align-items:center}
+    .btn{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      padding:9px 12px;
       border-radius:12px;
       cursor:pointer;
-      font-weight:900;
-      font-size:12px;
+      font-weight:800;
+      font-size:13px;
     }
+    .btn:hover{border-color:rgba(110,168,255,.35)}
+    .btn.danger{border-color:rgba(255,92,92,.35);background:rgba(255,92,92,.10)}
 
-    /* modal */
-    .modal{
-      position: fixed; inset:0;
-      background: rgba(0,0,0,.65);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:16px;
-      z-index: 2147483647;
-    }
-    .modalInner{
-      width:min(980px, 96vw);
-      border:1px solid rgba(148,163,184,.18);
-      background: rgba(10,15,30,.55);
-      border-radius:18px;
-      box-shadow: 0 30px 100px rgba(0,0,0,.7);
-      backdrop-filter: blur(18px);
-      overflow:hidden;
-    }
-    body.light .modalInner{ background: rgba(255,255,255,.75); }
-    .modalTop{ display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid rgba(148,163,184,.16); }
-    .modalTop b{ font-size:13px; color:var(--mut); }
-    .close{
-      border:none; cursor:pointer; font-size:18px;
-      width:40px;height:40px;border-radius:12px;
-      background: var(--btnBg); color: var(--txt);
-      border:1px solid var(--btnStroke);
-    }
-    .modalBody{ padding:12px; }
-    .modalBody img{ width:100%; display:block; border-radius:14px; }
-
-    /* toast */
-    .toast{
-      position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 88px;
-      background: rgba(0,0,0,.55);
-      color: #fff;
+    .chat{flex:1;display:flex;flex-direction:column;background: rgba(11,15,25,.65)}
+    .messages{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+    .bubbleWrap{display:flex;flex-direction:column;gap:6px}
+    .bubble{
+      max-width:min(78%, 680px);
       padding:10px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.12);
-      display:none;
-      z-index: 2147483647;
-      max-width: min(560px, 92vw);
-      font-size: 13px;
-      line-height: 1.35;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background: rgba(255,255,255,.03);
+      line-height:1.35;
+      font-size:14px;
+      white-space:pre-wrap;
+      word-wrap:break-word;
+      position:relative;
     }
+    .bubble.me{align-self:flex-end;background:rgba(110,168,255,.12);border-color:rgba(110,168,255,.22)}
+    .bubble.ai{align-self:flex-start;background:rgba(255,255,255,.035)}
+    .meta{font-size:11px;color: rgba(231,238,252,.55);display:flex;justify-content:flex-end;gap:8px}
+    .tools{
+      position:absolute; top:8px; right:8px;
+      display:none; gap:6px;
+    }
+    .bubble:hover .tools{display:flex}
+    .toolBtn{
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.25);
+      color: var(--text);
+      font-size:11px;
+      padding:4px 6px;
+      border-radius:10px;
+      cursor:pointer;
+    }
+    .toolBtn.pinOn{border-color:rgba(51,209,122,.5);background:rgba(51,209,122,.12)}
+
+    .composer{
+      border-top:1px solid var(--line);
+      padding:12px;
+      background: rgba(15,22,41,.65);
+      display:flex;gap:10px;align-items:flex-end;
+    }
+    textarea{
+      flex:1;resize:none;min-height:44px;max-height:140px;
+      border-radius:14px;border:1px solid var(--line);
+      background: rgba(255,255,255,.03);color:var(--text);
+      padding:10px 12px;font-size:14px;outline:none;
+    }
+    textarea:focus{border-color:rgba(110,168,255,.45)}
+    .send{
+      width:52px;height:44px;border-radius:14px;
+      display:grid;place-items:center;
+      border:1px solid rgba(110,168,255,.45);
+      background: rgba(110,168,255,.16);
+      cursor:pointer;font-weight:900;
+    }
+
+    .overlay{
+      position:fixed; inset:0; display:none;
+      align-items:center; justify-content:center; padding:16px;
+      background: rgba(0,0,0,.55); backdrop-filter: blur(10px);
+    }
+    .overlay.show{display:flex}
+    .cardBox{
+      width:min(520px, 100%);
+      background: rgba(15,22,41,.85);
+      border:1px solid var(--line);
+      border-radius:22px;
+      box-shadow: var(--shadow);
+      padding:18px;
+    }
+    .cardBox h2{margin:0 0 8px;font-size:18px}
+    .cardBox p{margin:0 0 14px;color:var(--muted);font-size:13px;line-height:1.35}
+    .stack{display:flex;flex-direction:column;gap:10px}
+    .bigbtn{
+      width:100%;
+      padding:12px 14px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:900;
+      display:flex;align-items:center;justify-content:center;gap:10px;
+    }
+    .bigbtn.primary{border-color:rgba(110,168,255,.45);background: rgba(110,168,255,.14)}
+    .gicon{width:18px;height:18px;border-radius:4px;background:#fff;display:grid;place-items:center;color:#111;font-weight:900;font-family:Arial}
+    .hint{margin-top:10px;font-size:12px;color:rgba(231,238,252,.55)}
   </style>
 </head>
-
 <body>
-  <div class="wrap">
-    <div class="app">
-      <div class="top">
-        <div>
-          <div class="brand"><span class="dot"></span> Berke AI</div>
-          <div class="sub" id="subtitle">Chat + Image • Premium</div>
+  <div class="app">
+    <div class="shell">
+      <div class="topbar">
+        <div class="brand"><div class="logo"></div><span>Berke AI</span></div>
+        <div class="who">
+          <span class="pill" id="whoPill">Misafir</span>
+          <span id="emailText" style="overflow:hidden;text-overflow:ellipsis;"></span>
         </div>
-        <div class="right">
-          <div class="pill" id="themeBtn"><span id="themeIcon">🌙</span><span id="themeLabel">Dark</span></div>
+        <div class="actions">
+          <button class="btn" id="adminBtn" style="display:none;">Admin</button>
+          <button class="btn danger" id="logoutBtn" style="display:none;">Çıkış</button>
         </div>
       </div>
 
       <div class="chat">
-        <div class="msgs" id="msgs"></div>
-        <div class="typing" id="typing">
-          <span>Yazıyor</span>
-          <span class="dots"><span class="dot3"></span><span class="dot3"></span><span class="dot3"></span></span>
+        <div class="messages" id="messages"></div>
+        <div class="composer">
+          <textarea id="input" placeholder="Mesaj yaz..." rows="1"></textarea>
+          <div class="send" id="sendBtn">➤</div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="composer">
-    <div class="composerInner">
-      <div class="inputWrap">
-        <textarea id="m" rows="1" placeholder="Mesaj yaz… (Enter gönder, Shift+Enter satır)"></textarea>
-        <button class="toolbtn" id="imgBtn" type="button" title="Görsel oluştur">🖼️</button>
-        <button class="send" id="sendBtn" type="button" title="Gönder">➤</button>
+  <div class="overlay" id="overlay">
+    <div class="cardBox">
+      <h2>Devam etmek için</h2>
+      <p>Google ile giriş yaparsan seni tanır ve tekrar uğraştırmaz. İstersen misafir de devam edebilirsin.</p>
+      <div class="stack">
+        <button class="bigbtn primary" id="googleBtn"><span class="gicon">G</span> Google ile giriş yap</button>
+        <button class="bigbtn" id="guestBtn">Misafir olarak devam et</button>
       </div>
-    </div>
-  </div>
-
-  <div class="toast" id="toast"></div>
-
-  <div class="modal" id="modal">
-    <div class="modalInner">
-      <div class="modalTop">
-        <b>Görsel Önizleme</b>
-        <button class="close" id="closeModal">✕</button>
-      </div>
-      <div class="modalBody">
-        <img id="modalImg" src="" alt="preview" />
-      </div>
-      <div class="modalTop" style="border-top:1px solid rgba(148,163,184,.16); border-bottom:none; justify-content:flex-end;">
-        <button class="mini" id="downloadModal">Kaydet</button>
-      </div>
+      <div class="hint">Çıkış yaparsan tekrar giriş sorar.</div>
     </div>
   </div>
 
 <script>
-  const msgs = document.getElementById("msgs");
-  const typing = document.getElementById("typing");
-  const ta = document.getElementById("m");
-  const toast = document.getElementById("toast");
+  const $ = (id)=>document.getElementById(id);
+  const messagesEl = $("messages");
+  const overlayEl = $("overlay");
+  const whoPill = $("whoPill");
+  const emailText = $("emailText");
+  const logoutBtn = $("logoutBtn");
+  const adminBtn = $("adminBtn");
 
-  function showToast(text){
-    toast.textContent = text;
-    toast.style.display = "block";
-    clearTimeout(window.__t);
-    window.__t = setTimeout(()=> toast.style.display="none", 4200);
+  // Basit click sesi
+  const clickSound = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=");
+  function playClick(){ try{ clickSound.currentTime=0; clickSound.play(); }catch(e){} }
+
+  function timeHHMM(d=new Date()){
+    return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
   }
 
-  // theme
-  const LS_THEME = "berke_ai_theme";
-  let theme = localStorage.getItem(LS_THEME) || "dark";
-  const themeBtn = document.getElementById("themeBtn");
-  const themeIcon = document.getElementById("themeIcon");
-  const themeLabel = document.getElementById("themeLabel");
-
-  function applyTheme(){
-    if(theme === "light"){
-      document.body.classList.add("light");
-      themeLabel.textContent = "Light";
-      themeIcon.textContent = "☀️";
-    } else {
-      document.body.classList.remove("light");
-      themeLabel.textContent = "Dark";
-      themeIcon.textContent = "🌙";
-    }
-  }
-  applyTheme();
-
-  themeBtn.addEventListener("click", ()=>{
-    theme = (theme === "dark") ? "light" : "dark";
-    localStorage.setItem(LS_THEME, theme);
-    applyTheme();
-  });
-
-  function typingOn(){ typing.style.display="flex"; scrollBottom(true); }
-  function typingOff(){ typing.style.display="none"; }
-
-  function scrollBottom(force){
-    if(force){ msgs.scrollTop = msgs.scrollHeight; return; }
-    const nearBottom = (msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight) < 240;
-    if(nearBottom) msgs.scrollTop = msgs.scrollHeight;
+  async function api(path, opts={}){
+    const res = await fetch(path, {
+      credentials: "include",
+      headers: {"Content-Type":"application/json"},
+      ...opts
+    });
+    const data = await res.json().catch(()=> ({}));
+    if(!res.ok) throw new Error(data.detail || "API error");
+    return data;
   }
 
-  function timeNow(){
-    return new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"});
-  }
-
-  function addMsg(role, text){
-    const row = document.createElement("div");
-    row.className = "row " + role;
-
+  function addBubble({id=null, text, who, pinned=false, created_at=null}){
     const wrap = document.createElement("div");
     wrap.className = "bubbleWrap";
 
     const bubble = document.createElement("div");
-    bubble.className = "bubble";
+    bubble.className = "bubble " + (who==="me" ? "me":"ai");
     bubble.textContent = text;
+    bubble.dataset.mid = id || "";
+
+    const tools = document.createElement("div");
+    tools.className = "tools";
+
+    // Copy
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "toolBtn";
+    copyBtn.textContent = "Kopyala";
+    copyBtn.onclick = async (e)=>{
+      e.stopPropagation();
+      playClick();
+      await navigator.clipboard.writeText(text);
+      copyBtn.textContent = "Kopyalandı";
+      setTimeout(()=>copyBtn.textContent="Kopyala", 900);
+    };
+
+    // Pin
+    const pinBtn = document.createElement("button");
+    pinBtn.className = "toolBtn" + (pinned ? " pinOn":"");
+    pinBtn.textContent = pinned ? "Pinned":"Pin";
+    pinBtn.onclick = async (e)=>{
+      e.stopPropagation();
+      playClick();
+      if(!id) return; // eski mesaj id yoksa pinleme yok
+      const next = !(pinBtn.classList.contains("pinOn"));
+      await api("/pin", {method:"POST", body: JSON.stringify({message_id:id, pinned: next})});
+      pinBtn.classList.toggle("pinOn", next);
+      pinBtn.textContent = next ? "Pinned":"Pin";
+    };
+
+    tools.appendChild(copyBtn);
+    tools.appendChild(pinBtn);
+    bubble.appendChild(tools);
 
     const meta = document.createElement("div");
     meta.className = "meta";
-    meta.textContent = timeNow();
+    meta.textContent = created_at ? created_at.replace("T"," ").slice(11,16) : timeHHMM();
 
     wrap.appendChild(bubble);
     wrap.appendChild(meta);
-    row.appendChild(wrap);
-    msgs.appendChild(row);
-    scrollBottom(false);
+
+    messagesEl.appendChild(wrap);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
   }
 
-  // modal
-  const modal = document.getElementById("modal");
-  const modalImg = document.getElementById("modalImg");
-  const closeModal = document.getElementById("closeModal");
-  const downloadModal = document.getElementById("downloadModal");
-  let lastModalSrc = "";
-
-  function openModal(src){
-    lastModalSrc = src;
-    modalImg.src = src;
-    modal.style.display = "flex";
-  }
-  function hideModal(){
-    modal.style.display = "none";
-    modalImg.src = "";
-    lastModalSrc = "";
-  }
-  closeModal.addEventListener("click", hideModal);
-  modal.addEventListener("click",(e)=>{ if(e.target===modal) hideModal(); });
-  downloadModal.addEventListener("click", ()=>{
-    if(!lastModalSrc) return;
-    const a=document.createElement("a");
-    a.href=lastModalSrc;
-    a.download="berke-ai.png";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  });
-
-  function addImageCard(src){
-    const row = document.createElement("div");
-    row.className = "row ai";
-
-    const wrap = document.createElement("div");
-    wrap.className = "bubbleWrap";
-
-    const card = document.createElement("div");
-    card.className = "bubble imgCard";
-
-    const img = document.createElement("img");
-    img.src = src;
-    img.alt = "Generated image";
-    img.addEventListener("click", ()=> openModal(src));
-
-    const actions = document.createElement("div");
-    actions.className = "imgActions";
-
-    const btnOpen = document.createElement("button");
-    btnOpen.className = "mini";
-    btnOpen.textContent = "Büyüt";
-    btnOpen.addEventListener("click", ()=> openModal(src));
-
-    const btnSave = document.createElement("button");
-    btnSave.className = "mini";
-    btnSave.textContent = "Kaydet";
-    btnSave.addEventListener("click", ()=>{
-      const a=document.createElement("a");
-      a.href=src;
-      a.download="berke-ai.png";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    });
-
-    actions.appendChild(btnOpen);
-    actions.appendChild(btnSave);
-
-    card.appendChild(img);
-    card.appendChild(actions);
-
-    wrap.appendChild(card);
-    row.appendChild(wrap);
-    msgs.appendChild(row);
-    scrollBottom(true);
-  }
-
-  // textarea auto height
-  ta.addEventListener("input", ()=>{
-    ta.style.height="auto";
-    ta.style.height = Math.min(180, ta.scrollHeight) + "px";
-  });
-
-  async function safeJson(r){
-    try{ return await r.json(); }catch(e){ return {detail: "Sunucudan JSON gelmedi."}; }
-  }
-
-  async function sendMessage(){
-    const text = (ta.value||"").trim();
-    if(!text) return;
-    ta.value=""; ta.style.height="auto";
-    addMsg("me", text);
-    typingOn();
-
-    try{
-      const r = await fetch("/chat",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({message:text})
-      });
-      const j = await safeJson(r);
-      typingOff();
-
-      if(!r.ok){
-        addMsg("ai", "Hata: " + (j.detail || "bilinmeyen"));
-        showToast("Chat hata: " + (j.detail || "bilinmeyen"));
-        return;
-      }
-      addMsg("ai", j.reply || "Boş cevap geldi 😅");
-    }catch(e){
-      typingOff();
-      addMsg("ai", "Bağlantı hatası oldu.");
-      showToast("Bağlantı hatası (chat).");
-    }
-  }
-
-  async function sendImage(){
-    const prompt = (ta.value||"").trim();
-    if(!prompt){
-      showToast("Önce görsel için bir prompt yaz kanka 😄");
+  async function refreshMe(){
+    const me = await api("/me");
+    if(!me.logged_in){
+      overlayEl.classList.add("show");
+      whoPill.textContent = "Misafir";
+      emailText.textContent = "";
+      logoutBtn.style.display = "none";
+      adminBtn.style.display = "none";
       return;
     }
+    overlayEl.classList.remove("show");
+    logoutBtn.style.display = "inline-flex";
 
-    ta.value=""; ta.style.height="auto";
-    addMsg("me", "🖼️ " + prompt);
-    typingOn();
+    if(me.guest){
+      whoPill.textContent = "Misafir";
+      emailText.textContent = "";
+    }else{
+      whoPill.textContent = "Giriş yapıldı";
+      emailText.textContent = me.email ? ("• " + me.email) : "";
+    }
 
-    try{
-      const r = await fetch("/image",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({prompt, size:"1024x1024"})
+    adminBtn.style.display = me.is_admin ? "inline-flex" : "none";
+  }
+
+  async function loadHistory(){
+    const h = await api("/history");
+    messagesEl.innerHTML = "";
+    for(const m of h.messages){
+      addBubble({
+        id: m.id,
+        text: m.content,
+        who: (m.role === "ai" ? "ai" : "me"),
+        pinned: !!m.is_pinned,
+        created_at: m.created_at
       });
-      const j = await safeJson(r);
-      typingOff();
-
-      if(!r.ok){
-        addMsg("ai", "Görsel hatası: " + (j.detail || "bilinmeyen"));
-        showToast("Görsel hata: " + (j.detail || "bilinmeyen"));
-        return;
-      }
-
-      if(j.url){
-        addImageCard(j.url);
-        showToast("Görsel hazır ✅");
-        return;
-      }
-      if(j.b64){
-        addImageCard("data:image/png;base64," + j.b64);
-        showToast("Görsel hazır ✅");
-        return;
-      }
-
-      addMsg("ai","Görsel geldi ama veri boş 😅");
-      showToast("Görsel veri boş döndü.");
-    }catch(e){
-      typingOff();
-      addMsg("ai","Görsel üretiminde bağlantı hatası.");
-      showToast("Bağlantı hatası (image).");
+    }
+    if(h.messages.length === 0){
+      addBubble({text:"Selam kanka 😄 Hazırım. Ne yapıyoruz?", who:"ai"});
     }
   }
 
-  // click handlers (guaranteed)
-  document.getElementById("sendBtn").addEventListener("click",(e)=>{ e.preventDefault(); sendMessage(); });
-  document.getElementById("imgBtn").addEventListener("click",(e)=>{ e.preventDefault(); sendImage(); });
+  // Buttons
+  $("googleBtn").onclick = ()=> { playClick(); window.location.href = "/auth/google"; };
+  $("guestBtn").onclick = async ()=> {
+    playClick();
+    await api("/guest", {method:"POST", body: JSON.stringify({})});
+    await refreshMe();
+    await loadHistory();
+  };
 
-  // enter send
-  ta.addEventListener("keydown",(e)=>{
-    if(e.key==="Enter" && !e.shiftKey){
+  logoutBtn.onclick = async ()=>{
+    playClick();
+    await api("/logout", {method:"POST", body: JSON.stringify({})});
+    await refreshMe();
+  };
+
+  adminBtn.onclick = ()=> { playClick(); window.location.href = "/admin-ui"; };
+
+  // Chat send
+  async function send(){
+    const input = $("input");
+    const text = input.value.trim();
+    if(!text) return;
+
+    playClick();
+    input.value = "";
+    addBubble({text, who:"me"});
+
+    try{
+      const out = await api("/chat", {method:"POST", body: JSON.stringify({message:text})});
+      addBubble({text: out.reply || "…", who:"ai"});
+    }catch(e){
+      addBubble({text:"Şu an teknik bir sorun var ama buradayım.", who:"ai"});
+    }
+  }
+
+  // ENTER gönder, SHIFT+ENTER alt satır
+  $("input").addEventListener("keydown", (e)=>{
+    if(e.key === "Enter" && !e.shiftKey){
       e.preventDefault();
-      sendMessage();
+      send();
     }
   });
+  $("sendBtn").onclick = send;
 
-  // starter msg
-  addMsg("ai","Hazırım kanka 😄 Mesaj at ya da 🖼️ ile görsel iste. (Prompt yazıp 🖼️'ye bas)");
-  showToast("UI güncellendi ✅ Eğer görsel çıkmıyorsa, hata mesajını burada göreceksin.");
+  (async ()=>{
+    await refreshMe();
+    await loadHistory();
+  })();
 </script>
 </body>
 </html>
