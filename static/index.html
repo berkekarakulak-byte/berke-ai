@@ -20,15 +20,17 @@
 
       --me1:#60a5fa;
       --me2:#a78bfa;
+
+      --glass: blur(16px);
     }
 
     body.light{
       --bg0:#f3f5fb; --bg1:#e9eefc;
       --txt:#0b1220; --mut:#475569;
       --stroke: rgba(15,23,42,.12);
-      --card: rgba(255,255,255,.70);
-      --card2: rgba(255,255,255,.55);
-      --shadow: 0 24px 80px rgba(2,6,23,.15);
+      --card: rgba(255,255,255,.72);
+      --card2: rgba(255,255,255,.56);
+      --shadow: 0 24px 80px rgba(2,6,23,.14);
 
       --aiBg: rgba(255,255,255,.85);
       --aiBorder: rgba(15,23,42,.10);
@@ -47,6 +49,7 @@
       overflow:hidden;
     }
 
+    /* ---- Layout ---- */
     .wrap{
       height:100dvh;
       display:flex;
@@ -62,11 +65,12 @@
       border:1px solid var(--stroke);
       background: linear-gradient(180deg, var(--card), var(--card2));
       box-shadow: var(--shadow);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: var(--glass);
+      -webkit-backdrop-filter: var(--glass);
       overflow:hidden;
       display:flex;
       flex-direction:column;
+      position:relative;
     }
     @media (max-width: 640px){
       .wrap{padding:0}
@@ -81,6 +85,10 @@
       padding:12px 14px;
       border-bottom:1px solid rgba(148,163,184,.16);
       background: rgba(5,10,20,.12);
+      backdrop-filter: var(--glass);
+      -webkit-backdrop-filter: var(--glass);
+      position:relative;
+      z-index:10;
     }
     body.light .top{ background: rgba(255,255,255,.35); }
 
@@ -121,12 +129,15 @@
     body.light .pill{ background: rgba(255,255,255,.55); }
     .pill:hover{ filter: brightness(1.05); }
 
+    /* ---- Login ---- */
     .login{
       flex:1 1 auto;
       display:flex;
       align-items:center;
       justify-content:center;
       padding:22px;
+      position:relative;
+      z-index:5;
     }
     .card{
       width:min(560px, 92vw);
@@ -134,8 +145,8 @@
       background: rgba(5,10,20,.10);
       border-radius:18px;
       box-shadow: var(--shadow);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: var(--glass);
+      -webkit-backdrop-filter: var(--glass);
       padding:18px;
     }
     body.light .card{ background: rgba(255,255,255,.55); }
@@ -165,21 +176,23 @@
       color:#0b1220;
       border:none;
     }
-
     .small{ margin-top:12px; text-align:center; font-size:12px; color:var(--mut); }
 
+    /* ---- Chat ---- */
     .chat{
       flex:1 1 auto;
       min-height:0;
       display:none;
       flex-direction:column;
+      position:relative;
+      z-index:5;
     }
     .msgs{
       flex:1 1 auto;
       min-height:0;
       overflow-y:auto;
       -webkit-overflow-scrolling: touch;
-      padding:18px 14px 200px;
+      padding:18px 14px 210px;
       display:flex;
       flex-direction:column;
       gap:14px;
@@ -230,6 +243,7 @@
     body.light .meta{ color: rgba(2,6,23,.65); }
     .row.me .meta{ justify-content:flex-end; }
 
+    /* ---- Composer ---- */
     .composer{
       position: sticky;
       bottom:0;
@@ -237,8 +251,9 @@
       padding-bottom: calc(12px + env(safe-area-inset-bottom));
       border-top:1px solid rgba(148,163,184,.16);
       background: rgba(5,10,20,.18);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: var(--glass);
+      -webkit-backdrop-filter: var(--glass);
+      z-index:50;
     }
     body.light .composer{ background: rgba(255,255,255,.55); }
 
@@ -251,6 +266,8 @@
       border-radius:16px;
       padding:10px;
       box-shadow: 0 16px 45px rgba(0,0,0,.25);
+      position:relative;
+      z-index:60;
     }
     body.light .inputWrap{ background: rgba(255,255,255,.65); }
 
@@ -276,6 +293,9 @@
       background: rgba(5,10,20,.10);
       color: var(--txt);
       border:1px solid rgba(148,163,184,.18);
+      position:relative;
+      z-index:9999; /* click fix */
+      pointer-events:auto; /* click fix */
     }
     body.light .toolbtn{ background: rgba(255,255,255,.65); }
     .toolbtn:hover{ filter: brightness(1.08); }
@@ -290,6 +310,9 @@
       color:#081021;
       background: linear-gradient(135deg, #60a5fa, #a78bfa);
       box-shadow: 0 18px 50px rgba(96,165,250,.20);
+      position:relative;
+      z-index:9999; /* click fix */
+      pointer-events:auto; /* click fix */
     }
     .send:hover{ filter: brightness(1.05); }
 
@@ -302,6 +325,8 @@
       color:var(--mut);
       font-size:12px;
       font-weight:800;
+      position:relative;
+      z-index:60;
     }
     .dots{ display:inline-flex; gap:4px; align-items:center; }
     .dot3{
@@ -315,6 +340,83 @@
       0%,80%,100%{ transform: translateY(0); opacity:.55; }
       40%{ transform: translateY(-4px); opacity:1; }
     }
+
+    /* ---- Image bubble ---- */
+    .imgCard{
+      padding:10px;
+    }
+    .imgCard img{
+      width:100%;
+      display:block;
+      border-radius:14px;
+      cursor:pointer;
+    }
+    .imgActions{
+      display:flex;
+      gap:8px;
+      margin-top:8px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+    }
+    .mini{
+      border:1px solid rgba(148,163,184,.18);
+      background: rgba(5,10,20,.10);
+      color: var(--txt);
+      padding:8px 10px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:900;
+      font-size:12px;
+    }
+    body.light .mini{ background: rgba(255,255,255,.60); }
+    .mini:hover{ filter: brightness(1.06); }
+
+    /* ---- Modal (image preview) ---- */
+    .modal{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.65);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      z-index:99999;
+    }
+    .modalInner{
+      width: min(980px, 96vw);
+      border:1px solid rgba(148,163,184,.18);
+      background: rgba(10,15,30,.55);
+      border-radius:18px;
+      box-shadow: 0 30px 100px rgba(0,0,0,.7);
+      backdrop-filter: blur(18px);
+      overflow:hidden;
+    }
+    body.light .modalInner{ background: rgba(255,255,255,.75); }
+    .modalTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:10px 12px;
+      border-bottom:1px solid rgba(148,163,184,.16);
+    }
+    .modalTop b{ font-size:13px; color:var(--mut); }
+    .close{
+      border:none;
+      cursor:pointer;
+      font-size:18px;
+      width:40px;height:40px;
+      border-radius:12px;
+      background: rgba(5,10,20,.12);
+      color: var(--txt);
+      border:1px solid rgba(148,163,184,.18);
+    }
+    body.light .close{ background: rgba(255,255,255,.65); }
+    .modalBody{ padding:12px; }
+    .modalBody img{ width:100%; display:block; border-radius:14px; }
+
+    /* ---- CLICK FIX (global) ---- */
+    .composer, .composer * { pointer-events: auto; }
+    #imgBtn, #sendBtn { pointer-events: auto !important; z-index: 9999 !important; position: relative; }
   </style>
 </head>
 
@@ -383,6 +485,22 @@
     </div>
   </div>
 
+  <!-- Modal -->
+  <div class="modal" id="modal">
+    <div class="modalInner">
+      <div class="modalTop">
+        <b>Görsel Önizleme</b>
+        <button class="close" id="closeModal" title="Kapat">✕</button>
+      </div>
+      <div class="modalBody">
+        <img id="modalImg" src="" alt="preview" />
+      </div>
+      <div class="modalTop" style="border-top:1px solid rgba(148,163,184,.16); border-bottom:none; justify-content:flex-end;">
+        <button class="mini" id="downloadModal">Kaydet</button>
+      </div>
+    </div>
+  </div>
+
 <script>
   const msgs = document.getElementById("msgs");
   const typing = document.getElementById("typing");
@@ -444,7 +562,7 @@
     applySound();
   });
 
-  // WebAudio SFX (çok kısa - takılma yapmaz)
+  // WebAudio SFX
   let audioCtx;
   function sfx(freq=440, dur=0.06, type="sine", gain=0.06){
     if(!soundOn) return;
@@ -499,6 +617,38 @@
     scrollBottom(false);
   }
 
+  function downloadBlobUrl(url, filename="berke-ai-image.png"){
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  // Modal
+  const modal = document.getElementById("modal");
+  const modalImg = document.getElementById("modalImg");
+  const closeModal = document.getElementById("closeModal");
+  const downloadModal = document.getElementById("downloadModal");
+  let lastModalSrc = "";
+
+  function openModal(src){
+    lastModalSrc = src;
+    modalImg.src = src;
+    modal.style.display = "flex";
+  }
+  function hideModal(){
+    modal.style.display = "none";
+    modalImg.src = "";
+    lastModalSrc = "";
+  }
+  closeModal.addEventListener("click", ()=>{ clickSfx(); hideModal(); });
+  modal.addEventListener("click", (e)=>{ if(e.target === modal){ hideModal(); } });
+  downloadModal.addEventListener("click", ()=>{
+    if(lastModalSrc) downloadBlobUrl(lastModalSrc, "berke-ai.png");
+  });
+
   function addImageCard(src){
     const row = document.createElement("div");
     row.className = "row ai";
@@ -507,17 +657,32 @@
     wrap.className = "bubbleWrap";
 
     const card = document.createElement("div");
-    card.className = "bubble";
-    card.style.padding = "10px";
+    card.className = "bubble imgCard";
 
     const img = document.createElement("img");
     img.src = src;
     img.alt = "Generated image";
-    img.style.width = "100%";
-    img.style.borderRadius = "14px";
-    img.style.display = "block";
+    img.addEventListener("click", ()=>{ clickSfx(); openModal(src); });
+
+    const actions = document.createElement("div");
+    actions.className = "imgActions";
+
+    const btnOpen = document.createElement("button");
+    btnOpen.className = "mini";
+    btnOpen.textContent = "Büyüt";
+    btnOpen.addEventListener("click", ()=>{ clickSfx(); openModal(src); });
+
+    const btnSave = document.createElement("button");
+    btnSave.className = "mini";
+    btnSave.textContent = "Kaydet";
+    btnSave.addEventListener("click", ()=>{ clickSfx(); downloadBlobUrl(src, "berke-ai.png"); });
+
+    actions.appendChild(btnOpen);
+    actions.appendChild(btnSave);
 
     card.appendChild(img);
+    card.appendChild(actions);
+
     wrap.appendChild(card);
     row.appendChild(wrap);
     msgs.appendChild(row);
@@ -544,12 +709,12 @@
     showChat("Misafir Modu");
   });
 
-  // google callback sonrası: chat aç, URL paramlarını temizle (login kalıcı olmasın)
+  // google callback sonrası
   let sessionEmail = "";
   if(loginType === "google" && emailFromUrl){
     sessionEmail = emailFromUrl;
     showChat("Giriş: " + sessionEmail);
-    history.replaceState(null,"","/"); // URL temizle -> tekrar gelince tekrar sorar
+    history.replaceState(null,"","/");
   }
 
   // textarea auto height
