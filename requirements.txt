@@ -10,4 +10,4 @@ itsdangerous==2.2.0
 python-dotenv==1.2.1
 
 SQLAlchemy==2.0.36
-psycopg2-binary==2.9.9
+psycopg[binary]==3.2.3
