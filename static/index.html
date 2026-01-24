@@ -2,682 +2,720 @@
 <html lang="tr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Berke AI</title>
   <style>
     :root{
-      --bg:#0b0f14;
-      --panel:#0f1620;
-      --panel2:#0b121a;
-      --border:rgba(255,255,255,.08);
-      --text:rgba(255,255,255,.92);
-      --muted:rgba(255,255,255,.6);
-      --accent:#3b82f6;
-      --good:#22c55e;
+      --bg:#0b0f17;
+      --panel:#111827;
+      --panel2:#0f172a;
+      --border:#243042;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --accent:#22c55e;
+      --danger:#ef4444;
       --warn:#f59e0b;
-      --shadow: 0 20px 60px rgba(0,0,0,.45);
-      --radius:18px;
-      --bubbleUser:#1f2a37;
-      --bubbleAI:#0e1b2a;
-    }
-    [data-theme="light"]{
-      --bg:#f6f7fb;
-      --panel:#ffffff;
-      --panel2:#f1f3f7;
-      --border:rgba(0,0,0,.08);
-      --text:rgba(0,0,0,.88);
-      --muted:rgba(0,0,0,.55);
-      --accent:#2563eb;
-      --shadow: 0 20px 60px rgba(0,0,0,.12);
-      --bubbleUser:#eef2ff;
-      --bubbleAI:#f1f5f9;
+      --shadow: 0 12px 40px rgba(0,0,0,.35);
+      --radius:16px;
     }
     *{box-sizing:border-box}
-    html,body{height:100%}
     body{
       margin:0;
-      background: radial-gradient(1200px 700px at 15% 10%, rgba(59,130,246,.18), transparent 55%),
-                  radial-gradient(900px 600px at 85% 20%, rgba(34,197,94,.10), transparent 55%),
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(1200px 800px at 20% -10%, rgba(34,197,94,.12), transparent 60%),
+                  radial-gradient(900px 600px at 80% 0%, rgba(59,130,246,.12), transparent 55%),
                   var(--bg);
       color:var(--text);
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      overflow:hidden;
     }
-
-    /* Layout */
-    .app{
-      height:100%;
-      display:flex;
-      align-items:stretch;
-      justify-content:center;
-      padding:18px;
-      gap:16px;
-    }
-    .shell{
-      width:min(1100px, 100%);
-      height:100%;
-      display:flex;
-      flex-direction:column;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.02);
-      backdrop-filter: blur(10px);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow:hidden;
+    a{color:inherit}
+    .wrap{
+      max-width: 1100px;
+      margin: 28px auto;
+      padding: 0 16px;
     }
     .topbar{
       display:flex;
       align-items:center;
       justify-content:space-between;
-      padding:14px 16px;
-      border-bottom:1px solid var(--border);
-      background: linear-gradient(to bottom, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      gap:12px;
+      margin-bottom:14px;
     }
     .brand{
-      display:flex;align-items:center;gap:12px;min-width:0;
+      display:flex; align-items:center; gap:10px;
     }
     .logo{
-      width:38px;height:38px;border-radius:12px;
-      background: radial-gradient(circle at 30% 25%, rgba(59,130,246,.95), rgba(59,130,246,.15) 55%),
-                  radial-gradient(circle at 70% 75%, rgba(34,197,94,.75), rgba(34,197,94,.10) 60%),
-                  rgba(255,255,255,.06);
-      border:1px solid var(--border);
+      width:40px;height:40px;border-radius:12px;
+      background: linear-gradient(135deg, rgba(34,197,94,.9), rgba(59,130,246,.9));
+      box-shadow: var(--shadow);
     }
-    .brand h1{
-      font-size:14px;margin:0;letter-spacing:.2px;font-weight:700;
-      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    .title{
+      line-height:1.1;
     }
-    .brand .sub{
-      font-size:12px;color:var(--muted);
-      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-    }
-    .right{
-      display:flex;align-items:center;gap:10px;
-    }
+    .title b{display:block;font-size:16px}
+    .title span{font-size:12px;color:var(--muted)}
     .pill{
-      display:flex;align-items:center;gap:10px;
-      padding:8px 10px;border:1px solid var(--border);border-radius:999px;
-      background:rgba(255,255,255,.04);
-      max-width:320px;
-    }
-    .avatar{
-      width:26px;height:26px;border-radius:999px;background:rgba(255,255,255,.08);
-      border:1px solid var(--border); overflow:hidden; flex:0 0 auto;
-    }
-    .avatar img{width:100%;height:100%;object-fit:cover}
-    .who{min-width:0}
-    .who .name{font-size:12px;font-weight:650;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .who .mail{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-    button{
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.05);
-      color:var(--text);
-      border-radius:12px;
-      padding:10px 12px;
-      font-weight:650;
-      cursor:pointer;
-      transition:.15s ease;
-    }
-    button:hover{transform:translateY(-1px);background:rgba(255,255,255,.08)}
-    button:active{transform:translateY(0px)}
-    .btnAccent{background:rgba(59,130,246,.18);border-color:rgba(59,130,246,.35)}
-    .btnAccent:hover{background:rgba(59,130,246,.25)}
-    .btnGhost{background:transparent}
-    .btnSmall{padding:8px 10px;border-radius:10px;font-size:12px}
-    .iconBtn{width:40px;height:40px;display:grid;place-items:center;padding:0;border-radius:12px}
-
-    .content{
-      display:flex;
-      flex:1 1 auto;
-      min-height:0;
-      background: linear-gradient(to bottom, rgba(0,0,0,.0), rgba(0,0,0,.05));
-    }
-
-    /* Chat */
-    .chat{
-      flex:1 1 auto;
-      display:flex;
-      flex-direction:column;
-      min-width:0;
-    }
-    .messages{
-      flex:1 1 auto;
-      overflow:auto;
-      padding:18px 14px 10px 14px;
-      scroll-behavior:smooth;
-    }
-    .row{
-      display:flex;
-      margin:10px 0;
-      gap:10px;
-      align-items:flex-end;
-    }
-    .row.user{justify-content:flex-end}
-    .row.ai{justify-content:flex-start}
-
-    .bubble{
-      max-width:min(760px, 92%);
-      border:1px solid var(--border);
-      border-radius:16px;
-      padding:10px 12px;
-      line-height:1.35;
-      white-space:pre-wrap;
-      word-wrap:break-word;
-      position:relative;
-    }
-    .row.user .bubble{background:var(--bubbleUser)}
-    .row.ai .bubble{background:var(--bubbleAI)}
-    .meta{
-      display:flex;gap:8px;align-items:center;
-      margin-top:6px;
-      font-size:11px;color:var(--muted);
-      justify-content:space-between;
-    }
-    .actions{
-      display:flex;gap:6px;align-items:center;
-    }
-    .chip{
-      font-size:11px;
-      padding:5px 8px;
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 12px;
       border:1px solid var(--border);
       border-radius:999px;
-      background:rgba(255,255,255,.04);
-      cursor:pointer;
-      user-select:none;
+      background: rgba(17,24,39,.7);
+      backdrop-filter: blur(6px);
+      max-width: 520px;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
-    .chip:hover{background:rgba(255,255,255,.07)}
-    .pinned{
-      border-color:rgba(245,158,11,.45) !important;
-      box-shadow:0 0 0 2px rgba(245,158,11,.12) inset;
+    .pill small{color:var(--muted)}
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 360px;
+      gap:14px;
     }
-
-    .composer{
-      padding:12px;
-      border-top:1px solid var(--border);
-      background: linear-gradient(to top, rgba(255,255,255,.05), rgba(255,255,255,.02));
-      display:flex;gap:10px;align-items:flex-end;
-    }
-    textarea{
-      flex:1 1 auto;
-      min-height:46px;
-      max-height:160px;
-      resize:none;
-      padding:12px 12px;
-      border-radius:14px;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.04);
-      color:var(--text);
-      outline:none;
-      font-size:14px;
-      line-height:1.35;
-    }
-    textarea:focus{border-color:rgba(59,130,246,.45);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
-    .sendBtn{height:46px;width:52px;border-radius:14px}
-    .hint{font-size:11px;color:var(--muted);padding:0 14px 12px 14px}
-
-    /* Drawer */
-    .side{
-      width:340px;
-      border-left:1px solid var(--border);
-      background:rgba(255,255,255,.02);
-      display:flex;flex-direction:column;
-    }
-    .sideHead{
-      padding:14px 14px 10px 14px;border-bottom:1px solid var(--border);
-      display:flex;align-items:center;justify-content:space-between;
-    }
-    .sideHead .t{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.2px}
-    .panel{
-      padding:12px 14px;
-      overflow:auto;
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr}
     }
     .card{
+      background: rgba(17,24,39,.75);
       border:1px solid var(--border);
-      border-radius:16px;
-      padding:12px;
-      background:rgba(255,255,255,.03);
-      margin-bottom:12px;
-    }
-    .card h3{margin:0 0 8px 0;font-size:13px}
-    .card p{margin:0;color:var(--muted);font-size:12px;line-height:1.4}
-    .rowBtns{display:flex;gap:10px;margin-top:10px}
-    .rowBtns button{flex:1}
-
-    /* Login overlay */
-    .overlay{
-      position:fixed;inset:0;
-      display:flex;align-items:center;justify-content:center;
-      padding:18px;
-      background:rgba(0,0,0,.55);
-      backdrop-filter: blur(6px);
-      z-index:50;
-    }
-    .modal{
-      width:min(520px, 100%);
-      border:1px solid var(--border);
-      border-radius:22px;
-      background:linear-gradient(to bottom, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding:18px;
+      overflow:hidden;
     }
-    .modalTop{display:flex;align-items:center;gap:12px}
-    .modalTop .logo{width:44px;height:44px;border-radius:14px}
-    .modal h2{margin:0;font-size:16px}
-    .modal .desc{margin:6px 0 0 0;color:var(--muted);font-size:12px;line-height:1.4}
-    .stack{display:flex;flex-direction:column;gap:10px;margin-top:14px}
-    .bigBtn{
-      width:100%;
-      padding:12px 14px;
-      border-radius:16px;
-      display:flex;align-items:center;justify-content:center;
+    .cardHeader{
+      padding:14px 14px 12px;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
       gap:10px;
+    }
+    .cardHeader h2{
+      margin:0;
       font-size:14px;
+      letter-spacing:.3px;
     }
-    .googleIcon{
-      width:18px;height:18px;border-radius:6px;
-      background:conic-gradient(from 0deg, #ea4335, #fbbc05, #34a853, #4285f4, #ea4335);
-      border:1px solid rgba(255,255,255,.25);
-    }
-
-    .toast{
-      position:fixed;bottom:16px;left:50%;
-      transform:translateX(-50%);
-      background:rgba(0,0,0,.70);
-      color:white;
-      border:1px solid rgba(255,255,255,.16);
-      border-radius:999px;
-      padding:10px 12px;
+    .cardHeader .sub{
+      color:var(--muted);
       font-size:12px;
+      margin-top:2px;
+    }
+    .cardBody{padding:14px}
+    .row{display:flex; gap:10px; flex-wrap:wrap}
+    .btn{
+      appearance:none;
+      border:1px solid var(--border);
+      background: rgba(15,23,42,.7);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 12px;
+      cursor:pointer;
+      transition:.15s;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-weight:600;
+      font-size:13px;
+    }
+    .btn:hover{transform: translateY(-1px); border-color:#334155}
+    .btn.primary{background: rgba(34,197,94,.15); border-color: rgba(34,197,94,.35)}
+    .btn.danger{background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.3)}
+    .btn.warn{background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.35)}
+    .btn:disabled{opacity:.5; cursor:not-allowed; transform:none}
+    .input{
+      width:100%;
+      border:1px solid var(--border);
+      background: rgba(15,23,42,.7);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 12px;
+      outline:none;
+      font-size: 14px;
+    }
+    .muted{color:var(--muted)}
+    .divider{height:1px;background:var(--border); margin:12px 0}
+    .chat{
+      height: 540px;
+      display:flex;
+      flex-direction:column;
+    }
+    .chatList{
+      flex:1;
+      overflow:auto;
+      padding: 14px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .msg{
+      border:1px solid var(--border);
+      background: rgba(15,23,42,.55);
+      border-radius: 14px;
+      padding: 10px 10px 8px;
+      position:relative;
+    }
+    .msg.user{border-color: rgba(34,197,94,.25)}
+    .msg.assistant{border-color: rgba(59,130,246,.25)}
+    .meta{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      margin-bottom:6px;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .meta .left{display:flex; gap:8px; align-items:center}
+    .tag{
+      font-size:11px;
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(17,24,39,.6);
+      color: var(--muted);
+    }
+    .actions{
+      display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;
+      margin-top:8px;
+    }
+    .iconBtn{
+      border:1px solid var(--border);
+      background: rgba(17,24,39,.5);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 7px 10px;
+      cursor:pointer;
+      font-size: 12px;
+      font-weight:700;
+    }
+    .iconBtn:hover{border-color:#334155}
+    .iconBtn.pinOn{border-color: rgba(245,158,11,.5); background: rgba(245,158,11,.12)}
+    .composer{
+      border-top:1px solid var(--border);
+      padding: 12px;
+      display:flex;
+      gap:10px;
+      align-items:flex-end;
+      background: rgba(17,24,39,.55);
+    }
+    textarea{
+      resize:none;
+      min-height:44px;
+      max-height:140px;
+      width:100%;
+    }
+    .toast{
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(17,24,39,.92);
+      border:1px solid var(--border);
+      border-radius: 999px;
+      padding: 10px 14px;
+      box-shadow: var(--shadow);
+      color: var(--text);
+      font-size: 13px;
       display:none;
-      z-index:60;
+      gap:10px;
+      align-items:center;
+      z-index: 9999;
     }
+    .toast.show{display:flex}
+    .badge{
+      display:inline-flex; align-items:center; gap:6px;
+      font-size:12px; color:var(--muted);
+    }
+    .dot{width:8px;height:8px;border-radius:999px;background: var(--accent)}
+    .dangerDot{background: var(--danger)}
+    .warnDot{background: var(--warn)}
 
-    /* Mobile */
-    @media (max-width: 980px){
-      .side{display:none}
-      .shell{border-radius:16px}
-      .messages{padding:14px 10px 10px 10px}
-      .composer{padding:10px}
+    .adminTable{
+      width:100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      overflow:hidden;
+      border-radius: 12px;
+      border:1px solid var(--border);
     }
+    .adminTable th, .adminTable td{
+      padding: 8px 10px;
+      border-bottom:1px solid var(--border);
+      color: var(--text);
+      vertical-align: top;
+    }
+    .adminTable th{
+      background: rgba(15,23,42,.6);
+      text-align:left;
+      color: var(--muted);
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+    .adminTable tr:last-child td{border-bottom:none}
+    .small{font-size:12px}
+    .hidden{display:none !important}
   </style>
 </head>
+
 <body>
-<div class="app">
-  <div class="shell">
+  <div class="wrap">
     <div class="topbar">
       <div class="brand">
         <div class="logo"></div>
-        <div style="min-width:0">
-          <h1 id="brandTitle">Berke AI</h1>
-          <div class="sub" id="brandSub">Ultra premium • Dark edition</div>
+        <div class="title">
+          <b>Berke AI</b>
+          <span>Google login + DB + pin/kopyala/ses + admin panel</span>
         </div>
       </div>
 
-      <div class="right">
-        <button class="iconBtn" id="themeBtn" title="Tema">
-          🌙
-        </button>
-
-        <div class="pill" id="whoPill" style="display:none;">
-          <div class="avatar" id="avatarBox"></div>
-          <div class="who">
-            <div class="name" id="whoName">Kullanıcı</div>
-            <div class="mail" id="whoMail">—</div>
-          </div>
-        </div>
-
-        <button class="btnSmall btnGhost" id="adminBtn" style="display:none;">Admin</button>
-        <button class="btnSmall" id="logoutBtn" style="display:none;">Çıkış</button>
+      <div class="pill" id="userPill">
+        <span class="badge" id="statusBadge"><span class="dot"></span><span id="statusText">Kontrol ediliyor...</span></span>
+        <span style="opacity:.45">•</span>
+        <small id="userText">-</small>
       </div>
     </div>
 
-    <div class="content">
-      <div class="chat">
-        <div class="messages" id="messages"></div>
+    <div class="grid">
+      <!-- LEFT: CHAT -->
+      <div class="card chat">
+        <div class="cardHeader">
+          <div>
+            <h2>Sohbet</h2>
+            <div class="sub">Pin / Kopyala / Ses (TTS)</div>
+          </div>
+          <div class="row">
+            <button class="btn danger" id="logoutBtn">Çıkış</button>
+          </div>
+        </div>
 
-        <div class="hint" id="typingHint" style="display:none;">AI yazıyor…</div>
+        <div class="chatList" id="chatList"></div>
 
         <div class="composer">
-          <textarea id="input" placeholder="Mesaj yaz… (Enter: gönder • Shift+Enter: yeni satır)"></textarea>
-          <button class="sendBtn btnAccent" id="sendBtn" title="Gönder">➤</button>
+          <textarea class="input" id="msgInput" placeholder="Mesaj yaz..." rows="2"></textarea>
+          <button class="btn primary" id="sendBtn">Gönder</button>
         </div>
       </div>
 
-      <div class="side">
-        <div class="sideHead">
-          <div class="t">Araçlar</div>
-          <div style="display:flex;gap:8px">
-            <button class="btnSmall" id="soundBtn" title="Ses">🔊</button>
-            <button class="btnSmall" id="imgBtn" title="Görsel">🖼️</button>
+      <!-- RIGHT: AUTH + ADMIN -->
+      <div class="card">
+        <div class="cardHeader">
+          <div>
+            <h2>Giriş</h2>
+            <div class="sub">Google / Misafir</div>
           </div>
         </div>
-        <div class="panel">
-          <div class="card">
-            <h3>🧠 Pin + Kopyala</h3>
-            <p>Mesajların sağındaki “Pin” ile sabitleyebilir, “Kopyala” ile tek tık kopyalayabilirsin.</p>
+        <div class="cardBody">
+          <div id="authBox">
+            <div class="row">
+              <button class="btn primary" id="googleBtn">Google ile giriş</button>
+              <button class="btn" id="guestBtn">Misafir olarak devam et</button>
+            </div>
+            <div class="divider"></div>
+            <div class="muted small">
+              Not: Giriş yaptıktan sonra mailin üstte görünecek ve oturum (session) kalıcı kalacak.
+            </div>
           </div>
-          <div class="card">
-            <h3>🖼️ Görsel üretim</h3>
-            <p>Sağ üstteki “Görsel” butonuna basınca prompt sorar. (Bütçe limiti varsa hata gösterebilir.)</p>
+
+          <div id="loggedBox" class="hidden">
+            <div class="muted small">Giriş yaptın:</div>
+            <div style="margin-top:8px">
+              <div><b id="meName">-</b></div>
+              <div class="muted" id="meEmail">-</div>
+            </div>
+            <div class="divider"></div>
+            <div class="row">
+              <button class="btn" id="refreshBtn">Yenile</button>
+              <button class="btn danger" id="logoutBtn2">Çıkış</button>
+            </div>
           </div>
-          <div class="card">
-            <h3>👀 Okundu / Yazıyor</h3>
-            <p>AI cevap üretirken “AI yazıyor…” görünür.</p>
+
+          <div class="divider"></div>
+
+          <!-- IMAGE DISABLED -->
+          <div>
+            <h3 style="margin:0 0 6px;font-size:13px">Görsel (şimdilik kapalı)</h3>
+            <div class="muted small">
+              Şu an görsel üretimini kapattık. (Billing limit yüzünden). İstediğinde tekrar açarız.
+            </div>
           </div>
+
+          <div class="divider"></div>
+
+          <!-- ADMIN -->
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+              <h3 style="margin:0;font-size:13px">Admin</h3>
+              <span class="tag" id="adminState">Kapalı</span>
+            </div>
+
+            <div id="adminLoginBox" style="margin-top:10px">
+              <input class="input" id="adminPw" type="password" placeholder="Admin şifresi" />
+              <div class="row" style="margin-top:10px">
+                <button class="btn warn" id="adminLoginBtn">Admin Giriş</button>
+                <button class="btn" id="adminLoadBtn" disabled>Paneli Yükle</button>
+              </div>
+              <div class="muted small" style="margin-top:8px">
+                Render ENV: <code>ADMIN_PASSWORD</code> set olmalı.
+              </div>
+            </div>
+
+            <div id="adminPanel" class="hidden" style="margin-top:12px">
+              <div class="row">
+                <button class="btn" id="adminRefreshBtn">Yenile</button>
+                <button class="btn danger" id="adminLogoutBtn">Admin Çıkış</button>
+              </div>
+              <div class="divider"></div>
+
+              <div class="row" style="justify-content:space-between">
+                <div>
+                  <div class="muted small">Toplam Kullanıcı</div>
+                  <div style="font-size:20px;font-weight:900" id="totalUsers">-</div>
+                </div>
+                <div>
+                  <div class="muted small">Toplam Giriş</div>
+                  <div style="font-size:20px;font-weight:900" id="totalLogins">-</div>
+                </div>
+              </div>
+
+              <div class="divider"></div>
+
+              <div class="muted small" style="margin-bottom:8px">Son 20 giriş</div>
+              <div style="overflow:auto; max-height: 240px">
+                <table class="adminTable">
+                  <thead>
+                    <tr>
+                      <th>Zaman</th>
+                      <th>Email</th>
+                      <th>Provider</th>
+                      <th>IP</th>
+                    </tr>
+                  </thead>
+                  <tbody id="adminRows"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
+
+    <div class="toast" id="toast"></div>
   </div>
-</div>
-
-<!-- Login Overlay -->
-<div class="overlay" id="overlay" style="display:none;">
-  <div class="modal">
-    <div class="modalTop">
-      <div class="logo"></div>
-      <div>
-        <h2>Giriş yap</h2>
-        <p class="desc">Google ile giriş yap veya misafir olarak devam et. (Admin paneli sadece yetkili mailde görünür.)</p>
-      </div>
-    </div>
-
-    <div class="stack">
-      <button class="bigBtn btnAccent" id="googleBtn">
-        <span class="googleIcon"></span>
-        Google ile giriş yap
-      </button>
-      <button class="bigBtn" id="guestBtn">
-        Misafir olarak devam et
-      </button>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
 
 <script>
-  // -----------------------------
+  // ---------------------------
   // helpers
-  // -----------------------------
-  const $ = (id)=>document.getElementById(id);
-  const messagesEl = $("messages");
-  const inputEl = $("input");
-  const typingHint = $("typingHint");
-  const toastEl = $("toast");
-  const overlayEl = $("overlay");
+  // ---------------------------
+  const $ = (id) => document.getElementById(id);
 
-  const state = {
-    history: [],
-    sound: JSON.parse(localStorage.getItem("soundOn") || "true"),
-    theme: localStorage.getItem("theme") || "dark",
-    pinned: JSON.parse(localStorage.getItem("pinned") || "[]"), // array of message ids
-  };
-
-  function toast(msg){
-    toastEl.textContent = msg;
-    toastEl.style.display = "block";
-    setTimeout(()=>toastEl.style.display="none", 2200);
+  function toast(msg, type="ok"){
+    const t = $("toast");
+    const dot = type==="ok" ? "dot" : (type==="warn" ? "warnDot" : "dangerDot");
+    t.innerHTML = `<span class="${dot}" style="display:inline-block;width:10px;height:10px;border-radius:999px;"></span><span>${escapeHtml(msg)}</span>`;
+    t.classList.add("show");
+    setTimeout(()=>t.classList.remove("show"), 2600);
   }
 
-  function setTheme(theme){
-    state.theme = theme;
-    localStorage.setItem("theme", theme);
-    document.documentElement.setAttribute("data-theme", theme === "light" ? "light" : "dark");
-    $("themeBtn").textContent = theme === "light" ? "☀️" : "🌙";
+  function escapeHtml(s){
+    return (s ?? "").toString()
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
   }
 
-  function playSend(){
-    if(!state.sound) return;
+  async function api(url, method="GET", body=null){
+    const opts = { method, headers: {} };
+    if(body !== null){
+      opts.headers["Content-Type"] = "application/json";
+      opts.body = JSON.stringify(body);
+    }
+    const res = await fetch(url, opts);
+    const data = await res.json().catch(()=> ({}));
+    if(!res.ok){
+      const msg = data?.detail || data?.error || ("HTTP " + res.status);
+      throw new Error(msg);
+    }
+    return data;
+  }
+
+  function setStatus(loggedIn, user){
+    const badge = $("statusBadge");
+    const statusText = $("statusText");
+    const userText = $("userText");
+
+    if(loggedIn){
+      badge.innerHTML = `<span class="dot"></span><span>Online</span>`;
+      statusText.textContent = "Online";
+      const label = user?.email || (user?.provider === "guest" ? "Guest" : "User");
+      userText.textContent = label;
+    } else {
+      badge.innerHTML = `<span class="dangerDot" style="display:inline-block;width:8px;height:8px;border-radius:999px"></span><span>Offline</span>`;
+      statusText.textContent = "Offline";
+      userText.textContent = "Giriş yap";
+    }
+  }
+
+  // ---------------------------
+  // AUTH
+  // ---------------------------
+  async function loadMe(){
+    const data = await api("/api/me");
+    const user = data.user;
+    const loggedIn = !!user;
+
+    setStatus(loggedIn, user);
+
+    $("authBox").classList.toggle("hidden", loggedIn);
+    $("loggedBox").classList.toggle("hidden", !loggedIn);
+
+    $("logoutBtn").disabled = !loggedIn;
+    $("logoutBtn2").disabled = !loggedIn;
+
+    if(loggedIn){
+      $("meName").textContent = user?.name || (user?.provider === "guest" ? "Guest" : "User");
+      $("meEmail").textContent = user?.email || (user?.provider === "guest" ? "Misafir" : "-");
+      await loadHistory();
+    } else {
+      $("chatList").innerHTML = "";
+    }
+  }
+
+  $("googleBtn").addEventListener("click", () => {
+    window.location.href = "/auth/google";
+  });
+
+  $("guestBtn").addEventListener("click", async () => {
     try{
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = "sine";
-      o.frequency.value = 720;
-      g.gain.value = 0.04;
-      o.connect(g); g.connect(ctx.destination);
-      o.start();
-      setTimeout(()=>{o.stop(); ctx.close()}, 90);
-    }catch(e){}
-  }
-
-  function formatTime(ts){
-    const d = new Date(ts);
-    const hh = String(d.getHours()).padStart(2,'0');
-    const mm = String(d.getMinutes()).padStart(2,'0');
-    return `${hh}:${mm}`;
-  }
-
-  function renderMessage(msg){
-    const row = document.createElement("div");
-    row.className = "row " + (msg.role === "user" ? "user" : "ai");
-
-    const bubble = document.createElement("div");
-    bubble.className = "bubble";
-    bubble.textContent = msg.content;
-
-    // pinned state
-    if(state.pinned.includes(msg.id)){
-      bubble.classList.add("pinned");
-    }
-
-    const meta = document.createElement("div");
-    meta.className = "meta";
-
-    const left = document.createElement("div");
-    left.textContent = formatTime(msg.ts);
-
-    const actions = document.createElement("div");
-    actions.className = "actions";
-
-    const copy = document.createElement("span");
-    copy.className = "chip";
-    copy.textContent = "Kopyala";
-    copy.onclick = async ()=>{
-      try{
-        await navigator.clipboard.writeText(msg.content);
-        toast("Kopyalandı ✅");
-      }catch(e){
-        toast("Kopyalanamadı");
-      }
-    };
-
-    const pin = document.createElement("span");
-    pin.className = "chip";
-    pin.textContent = state.pinned.includes(msg.id) ? "Unpin" : "Pin";
-    pin.onclick = ()=>{
-      const idx = state.pinned.indexOf(msg.id);
-      if(idx >= 0){
-        state.pinned.splice(idx,1);
-        bubble.classList.remove("pinned");
-        pin.textContent = "Pin";
-      }else{
-        state.pinned.push(msg.id);
-        bubble.classList.add("pinned");
-        pin.textContent = "Unpin";
-      }
-      localStorage.setItem("pinned", JSON.stringify(state.pinned));
-    };
-
-    actions.appendChild(copy);
-    actions.appendChild(pin);
-
-    meta.appendChild(left);
-    meta.appendChild(actions);
-
-    bubble.appendChild(meta);
-    row.appendChild(bubble);
-    messagesEl.appendChild(row);
-  }
-
-  function pushMessage(role, content){
-    const msg = { id: crypto.randomUUID(), role, content, ts: Date.now() };
-    state.history.push({ role, content }); // server'a giden history sade
-    renderMessage(msg);
-    messagesEl.scrollTop = messagesEl.scrollHeight;
-  }
-
-  async function apiMe(){
-    const r = await fetch("/api/me");
-    return await r.json();
-  }
-
-  function showUser(me){
-    $("whoPill").style.display = "flex";
-    $("logoutBtn").style.display = "inline-flex";
-    $("whoName").textContent = me.name || (me.kind === "guest" ? "Misafir" : "Kullanıcı");
-    $("whoMail").textContent = me.email ? me.email : (me.kind === "guest" ? "guest" : "—");
-
-    $("avatarBox").innerHTML = "";
-    if(me.picture){
-      const img = document.createElement("img");
-      img.src = me.picture;
-      $("avatarBox").appendChild(img);
-    }else{
-      $("avatarBox").textContent = me.kind === "guest" ? "G" : "🙂";
-      $("avatarBox").style.display = "grid";
-      $("avatarBox").style.placeItems = "center";
-      $("avatarBox").style.fontSize = "12px";
-    }
-
-    if(me.is_admin){
-      $("adminBtn").style.display = "inline-flex";
-    }else{
-      $("adminBtn").style.display = "none";
-    }
-  }
-
-  async function ensureLogin(){
-    const me = await apiMe();
-    if(!me.logged_in){
-      overlayEl.style.display = "flex";
-      $("whoPill").style.display = "none";
-      $("logoutBtn").style.display = "none";
-      $("adminBtn").style.display = "none";
-      return null;
-    }
-    overlayEl.style.display = "none";
-    showUser(me);
-    return me;
-  }
-
-  // -----------------------------
-  // send logic (ENTER FIX)
-  // -----------------------------
-  async function send(){
-    const text = inputEl.value.trim();
-    if(!text) return;
-    inputEl.value = "";
-    playSend();
-    pushMessage("user", text);
-
-    typingHint.style.display = "block";
-
-    try{
-      const r = await fetch("/chat", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ message: text, history: state.history })
-      });
-      const data = await r.json();
-      typingHint.style.display = "none";
-
-      if(!r.ok){
-        pushMessage("assistant", (data.detail || "Hata oluştu."));
-        return;
-      }
-
-      pushMessage("assistant", data.reply || "");
+      await api("/auth/guest", "POST", {});
+      toast("Misafir girişi tamam.", "ok");
+      await loadMe();
     }catch(e){
-      typingHint.style.display = "none";
-      pushMessage("assistant", "Bağlantı hatası oldu. Tekrar dener misin?");
-    }
-  }
-
-  inputEl.addEventListener("keydown", (e)=>{
-    if(e.key === "Enter" && !e.shiftKey){
-      e.preventDefault();
-      send();
+      toast(e.message, "err");
     }
   });
-  $("sendBtn").onclick = send;
 
-  // -----------------------------
-  // buttons
-  // -----------------------------
-  $("themeBtn").onclick = ()=>{
-    setTheme(state.theme === "light" ? "dark" : "light");
-  };
-
-  $("soundBtn").onclick = ()=>{
-    state.sound = !state.sound;
-    localStorage.setItem("soundOn", JSON.stringify(state.sound));
-    toast(state.sound ? "Ses açık 🔊" : "Ses kapalı 🔇");
-    $("soundBtn").textContent = state.sound ? "🔊" : "🔇";
-  };
-
-  $("imgBtn").onclick = async ()=>{
-    const prompt = window.prompt("Görsel için kısa bir prompt yaz:");
-    if(!prompt) return;
-
-    typingHint.style.display = "block";
+  async function logout(){
     try{
-      const r = await fetch("/api/image", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ prompt })
-      });
-      const data = await r.json();
-      typingHint.style.display = "none";
-
-      if(!r.ok){
-        toast(data.detail || "Görsel hatası");
-        return;
-      }
-
-      // b64 -> göster
-      const url = "data:image/png;base64," + data.b64;
-      const w = window.open();
-      w.document.write(`<img src="${url}" style="max-width:100%;height:auto;display:block;margin:0 auto;background:#111"/>`);
-      toast("Görsel hazır ✅");
+      await api("/auth/logout", "POST", {});
+      toast("Çıkış yapıldı.", "ok");
+      await loadMe();
     }catch(e){
-      typingHint.style.display = "none";
-      toast("Görsel üretim bağlantı hatası");
+      toast(e.message, "err");
     }
-  };
+  }
+  $("logoutBtn").addEventListener("click", logout);
+  $("logoutBtn2").addEventListener("click", logout);
+  $("refreshBtn").addEventListener("click", loadMe);
 
-  $("logoutBtn").onclick = async ()=>{
-    await fetch("/logout", {method:"POST"});
-    toast("Çıkış yapıldı");
-    location.href = "/";
-  };
+  // ---------------------------
+  // CHAT
+  // ---------------------------
+  function renderMsg(m){
+    const roleLabel = m.role === "user" ? "Sen" : (m.role === "assistant" ? "Berke AI" : m.role);
+    const pinned = !!m.pinned;
 
-  $("adminBtn").onclick = ()=> location.href = "/admin-ui";
+    const el = document.createElement("div");
+    el.className = "msg " + (m.role === "user" ? "user" : "assistant");
+    el.dataset.id = m.id;
 
-  $("googleBtn").onclick = ()=> location.href = "/auth/google";
-  $("guestBtn").onclick = async ()=>{
-    const r = await fetch("/auth/guest", {method:"POST"});
-    if(r.ok){
-      location.href = "/#chat";
-    }else{
-      toast("Misafir girişi hata");
+    el.innerHTML = `
+      <div class="meta">
+        <div class="left">
+          <span class="tag">${escapeHtml(roleLabel)}</span>
+          ${pinned ? `<span class="tag" style="border-color: rgba(245,158,11,.45); background: rgba(245,158,11,.1)">PIN</span>` : ``}
+        </div>
+        <div class="muted">${m.created_at ? escapeHtml(new Date(m.created_at).toLocaleString()) : ""}</div>
+      </div>
+      <div class="content">${escapeHtml(m.content).replaceAll("\n","<br>")}</div>
+      <div class="actions">
+        <button class="iconBtn ${pinned ? "pinOn":""}" data-act="pin">${pinned ? "Unpin":"Pin"}</button>
+        <button class="iconBtn" data-act="copy">Kopyala</button>
+        <button class="iconBtn" data-act="tts">Ses</button>
+      </div>
+    `;
+    return el;
+  }
+
+  async function loadHistory(){
+    try{
+      const data = await api("/api/history");
+      const list = $("chatList");
+      list.innerHTML = "";
+      for(const m of data.messages || []){
+        list.appendChild(renderMsg(m));
+      }
+      list.scrollTop = list.scrollHeight;
+    }catch(e){
+      // not logged in
     }
-  };
+  }
 
-  // -----------------------------
+  $("sendBtn").addEventListener("click", sendMessage);
+  $("msgInput").addEventListener("keydown", (e)=>{
+    if(e.key === "Enter" && !e.shiftKey){
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  async function sendMessage(){
+    const ta = $("msgInput");
+    const text = (ta.value || "").trim();
+    if(!text) return;
+
+    $("sendBtn").disabled = true;
+    ta.disabled = true;
+
+    try{
+      const data = await api("/api/chat", "POST", { message: text });
+      ta.value = "";
+
+      const list = $("chatList");
+      list.appendChild(renderMsg(data.user_message));
+      list.appendChild(renderMsg(data.assistant_message));
+      list.scrollTop = list.scrollHeight;
+    }catch(e){
+      toast(e.message, "err");
+    }finally{
+      $("sendBtn").disabled = false;
+      ta.disabled = false;
+      ta.focus();
+    }
+  }
+
+  // Actions: pin/copy/tts
+  $("chatList").addEventListener("click", async (e)=>{
+    const btn = e.target.closest("button");
+    if(!btn) return;
+    const act = btn.dataset.act;
+    if(!act) return;
+    const msgEl = e.target.closest(".msg");
+    const msgId = parseInt(msgEl?.dataset?.id || "0", 10);
+    if(!msgId) return;
+
+    const contentEl = msgEl.querySelector(".content");
+    const rawText = contentEl ? contentEl.innerText : "";
+
+    if(act === "copy"){
+      try{
+        await navigator.clipboard.writeText(rawText);
+        toast("Kopyalandı.", "ok");
+      }catch(err){
+        toast("Kopyalama engellendi. Tarayıcı izinlerini kontrol et.", "warn");
+      }
+      return;
+    }
+
+    if(act === "tts"){
+      try{
+        if(!("speechSynthesis" in window)){
+          toast("Tarayıcı ses özelliği yok.", "warn");
+          return;
+        }
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(rawText);
+        u.lang = "tr-TR";
+        u.rate = 1.0;
+        u.pitch = 1.0;
+        window.speechSynthesis.speak(u);
+        toast("Seslendiriliyor...", "ok");
+      }catch(err){
+        toast("Ses çalışmadı.", "warn");
+      }
+      return;
+    }
+
+    if(act === "pin"){
+      const isPinned = btn.classList.contains("pinOn");
+      const next = !isPinned;
+      try{
+        await api("/api/pin", "POST", { id: msgId, pinned: next });
+        toast(next ? "Pinlendi." : "Pin kaldırıldı.", "ok");
+        await loadHistory();
+      }catch(err){
+        toast(err.message, "err");
+      }
+      return;
+    }
+  });
+
+  // ---------------------------
+  // ADMIN
+  // ---------------------------
+  async function adminLogin(){
+    const pw = ($("adminPw").value || "").trim();
+    if(!pw){
+      toast("Admin şifresi gir.", "warn");
+      return;
+    }
+    try{
+      await api("/admin/login", "POST", { password: pw });
+      $("adminState").textContent = "Açık";
+      $("adminState").style.borderColor = "rgba(34,197,94,.45)";
+      $("adminState").style.background = "rgba(34,197,94,.12)";
+      $("adminLoadBtn").disabled = false;
+      toast("Admin giriş başarılı.", "ok");
+      await loadAdmin();
+    }catch(e){
+      toast(e.message, "err");
+    }
+  }
+
+  async function loadAdmin(){
+    try{
+      const s = await api("/admin/stats");
+      $("adminPanel").classList.remove("hidden");
+      $("adminLoadBtn").disabled = false;
+
+      $("totalUsers").textContent = s.total_users ?? "-";
+      $("totalLogins").textContent = s.total_logins ?? "-";
+
+      const rows = $("adminRows");
+      rows.innerHTML = "";
+      for(const it of (s.last_20_logins || [])){
+        const tr = document.createElement("tr");
+        const dt = it.created_at ? new Date(it.created_at).toLocaleString() : "-";
+        tr.innerHTML = `
+          <td>${escapeHtml(dt)}</td>
+          <td>${escapeHtml(it.email || "-")}</td>
+          <td>${escapeHtml(it.provider || "-")}</td>
+          <td>${escapeHtml(it.ip || "-")}</td>
+        `;
+        rows.appendChild(tr);
+      }
+      toast("Admin panel güncellendi.", "ok");
+    }catch(e){
+      $("adminPanel").classList.add("hidden");
+      $("adminLoadBtn").disabled = true;
+      $("adminState").textContent = "Kapalı";
+      $("adminState").style.borderColor = "";
+      $("adminState").style.background = "";
+      toast("Admin değil / erişim yok: " + e.message, "warn");
+    }
+  }
+
+  async function adminLogout(){
+    try{
+      await api("/admin/logout", "POST", {});
+      $("adminPanel").classList.add("hidden");
+      $("adminLoadBtn").disabled = true;
+      $("adminState").textContent = "Kapalı";
+      $("adminState").style.borderColor = "";
+      $("adminState").style.background = "";
+      toast("Admin çıkış yapıldı.", "ok");
+    }catch(e){
+      toast(e.message, "err");
+    }
+  }
+
+  $("adminLoginBtn").addEventListener("click", adminLogin);
+  $("adminLoadBtn").addEventListener("click", loadAdmin);
+  $("adminRefreshBtn").addEventListener("click", loadAdmin);
+  $("adminLogoutBtn").addEventListener("click", adminLogout);
+
+  // ---------------------------
   // init
-  // -----------------------------
-  (async function init(){
-    setTheme(state.theme);
-    $("soundBtn").textContent = state.sound ? "🔊" : "🔇";
-
-    const me = await ensureLogin();
-    if(me){
-      // hoşgeldin
-      pushMessage("assistant", "Selam! Hazırım 😄");
-    }
-  })();
+  // ---------------------------
+  loadMe().catch(()=>{});
 </script>
 </body>
 </html>
