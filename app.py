@@ -7,7 +7,6 @@ from pydantic import BaseModel
 APP_TITLE = "Berke AI"
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 
-# OpenAI import'u güvenli yapıyoruz
 try:
     from openai import OpenAI
 except Exception:
@@ -23,23 +22,17 @@ class ChatReq(BaseModel):
 
 class ImgReq(BaseModel):
     prompt: str
+    size: str | None = "1024x1024"
 
 
 def get_client():
-    """
-    Client'ı import anında oluşturmak yerine burada oluşturuyoruz.
-    Böylece dependency sorunu olsa bile app start olur, endpoint hata döner.
-    """
     if OpenAI is None:
         raise HTTPException(status_code=500, detail="openai paketi import edilemedi. requirements.txt kontrol et.")
-
     if not OPENAI_API_KEY:
         raise HTTPException(status_code=500, detail="OPENAI_API_KEY ayarlı değil (Render Env'e ekle).")
-
     try:
         return OpenAI(api_key=OPENAI_API_KEY)
     except Exception as e:
-        # Bu hata artık Render'ı düşürmez, endpoint'ten görünür.
         raise HTTPException(status_code=500, detail=f"OpenAI client init hata: {e}")
 
 
@@ -61,6 +54,7 @@ def health():
         "ok": True,
         "openai_sdk_imported": bool(OpenAI is not None),
         "openai_key_set": bool(OPENAI_API_KEY),
+        "routes": ["/chat", "/image", "/health"],
     }
 
 
@@ -71,7 +65,6 @@ def chat(req: ChatReq):
         raise HTTPException(status_code=400, detail="message boş olamaz")
 
     client = get_client()
-
     try:
         resp = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -93,21 +86,24 @@ def image(req: ImgReq):
     if not prompt:
         raise HTTPException(status_code=400, detail="prompt boş olamaz")
 
-    client = get_client()
+    size = (req.size or "1024x1024").strip()
 
+    client = get_client()
     try:
+        # gpt-image-1 genelde base64 döndürür.
         img = client.images.generate(
             model="gpt-image-1",
             prompt=prompt,
-            size="1024x1024",
+            size=size,
         )
 
         if img.data and getattr(img.data[0], "b64_json", None):
-            return {"b64": img.data[0].b64_json}
+            return {"b64": img.data[0].b64_json, "size": size}
 
         if img.data and getattr(img.data[0], "url", None):
-            return {"url": img.data[0].url}
+            return {"url": img.data[0].url, "size": size}
 
         raise HTTPException(status_code=500, detail="Görsel üretildi ama veri dönmedi.")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Görsel hata: {e}")
+        # UI’de net görebilmen için detail'i büyütüyoruz
+        raise HTTPException(status_code=500, detail=f"Görsel üretim hata: {e}")

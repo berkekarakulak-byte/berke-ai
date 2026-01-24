@@ -5,29 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0b1220" />
   <title>Berke AI</title>
+
   <style>
     :root{
       --bg0:#050a14; --bg1:#0b1220;
       --txt:#e5e7eb; --mut:#94a3b8;
-      --stroke: rgba(148,163,184,.18);
-      --card: rgba(12,18,32,.65);
-      --card2: rgba(12,18,32,.45);
+      --stroke: rgba(148,163,184,.16);
+      --glass: blur(18px);
       --shadow: 0 24px 80px rgba(0,0,0,.55);
+
       --aiBg: rgba(5,10,20,.22);
       --aiBorder: rgba(148,163,184,.14);
-      --me1:#60a5fa; --me2:#a78bfa;
-      --glass: blur(16px);
+
+      --meGrad1:#60a5fa; --meGrad2:#a78bfa;
+
+      --btnBg: rgba(5,10,20,.12);
+      --btnStroke: rgba(148,163,184,.18);
     }
+
     body.light{
       --bg0:#f3f5fb; --bg1:#e9eefc;
       --txt:#0b1220; --mut:#475569;
       --stroke: rgba(15,23,42,.12);
-      --card: rgba(255,255,255,.72);
-      --card2: rgba(255,255,255,.56);
       --shadow: 0 24px 80px rgba(2,6,23,.14);
       --aiBg: rgba(255,255,255,.85);
       --aiBorder: rgba(15,23,42,.10);
+      --btnBg: rgba(255,255,255,.65);
+      --btnStroke: rgba(15,23,42,.12);
     }
+
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
@@ -40,6 +46,8 @@
         linear-gradient(180deg, var(--bg0), var(--bg1));
       overflow:hidden;
     }
+
+    /* container */
     .wrap{
       height:100dvh;
       display:flex;
@@ -49,11 +57,11 @@
       padding-bottom: calc(16px + env(safe-area-inset-bottom));
     }
     .app{
-      width:min(1000px, 100%);
+      width:min(1024px, 100%);
       height:100%;
       border-radius:20px;
       border:1px solid var(--stroke);
-      background: linear-gradient(180deg, var(--card), var(--card2));
+      background: linear-gradient(180deg, rgba(12,18,32,.70), rgba(12,18,32,.45));
       box-shadow: var(--shadow);
       backdrop-filter: var(--glass);
       -webkit-backdrop-filter: var(--glass);
@@ -62,14 +70,19 @@
       flex-direction:column;
       position:relative;
     }
+    body.light .app{
+      background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.55));
+    }
     @media (max-width: 640px){
       .wrap{padding:0}
       .app{border-radius:0;border:none;box-shadow:none}
     }
+
+    /* top */
     .top{
       display:flex; justify-content:space-between; align-items:center;
       padding:12px 14px;
-      border-bottom:1px solid rgba(148,163,184,.16);
+      border-bottom:1px solid rgba(148,163,184,.14);
       background: rgba(5,10,20,.12);
       backdrop-filter: var(--glass);
       -webkit-backdrop-filter: var(--glass);
@@ -78,12 +91,17 @@
     body.light .top{ background: rgba(255,255,255,.35); }
 
     .brand{display:flex; align-items:center; gap:10px; font-weight:900; letter-spacing:.3px;}
-    .dot{width:10px;height:10px;border-radius:999px;background: linear-gradient(135deg,#60a5fa,#a78bfa); box-shadow: 0 0 24px rgba(96,165,250,.35);}
-    .sub{margin-top:2px;font-size:12px;color:var(--mut);font-weight:700;max-width: 64vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .dot{
+      width:10px;height:10px;border-radius:999px;
+      background: linear-gradient(135deg,#60a5fa,#a78bfa);
+      box-shadow: 0 0 24px rgba(96,165,250,.35);
+    }
+    .sub{margin-top:2px;font-size:12px;color:var(--mut);font-weight:700;max-width: 72vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
     .right{display:flex; gap:10px; align-items:center;}
+
     .pill{
-      border:1px solid var(--stroke);
-      background: rgba(5,10,20,.10);
+      border:1px solid var(--btnStroke);
+      background: var(--btnBg);
       color:var(--txt);
       padding:8px 12px;
       border-radius:999px;
@@ -92,8 +110,8 @@
       user-select:none;
       display:flex; align-items:center; gap:8px;
     }
-    body.light .pill{ background: rgba(255,255,255,.55); }
 
+    /* messages */
     .chat{flex:1 1 auto; min-height:0; display:flex; flex-direction:column;}
     .msgs{
       flex:1 1 auto; min-height:0;
@@ -101,6 +119,7 @@
       padding:18px 14px 220px;
       display:flex; flex-direction:column; gap:14px;
     }
+
     .row{display:flex;width:100%;}
     .row.ai{justify-content:flex-start;}
     .row.me{justify-content:flex-end;}
@@ -114,7 +133,7 @@
       white-space:pre-wrap;
       word-wrap:break-word;
       font-size:15px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.22);
+      box-shadow: 0 10px 30px rgba(0,0,0,.20);
       border:1px solid var(--aiBorder);
       background: var(--aiBg);
       backdrop-filter: blur(10px);
@@ -127,6 +146,7 @@
       color:#081021;
       border-bottom-right-radius:8px;
     }
+
     .meta{
       font-size:11px;
       color: rgba(229,231,235,.68);
@@ -135,7 +155,23 @@
     body.light .meta{ color: rgba(2,6,23,.65); }
     .row.me .meta{ justify-content:flex-end; }
 
-    /* === COMPOSER HARD FIX: always clickable === */
+    /* typing */
+    .typing{
+      margin:10px 14px 0;
+      display:none;
+      align-items:center;
+      gap:10px;
+      color:var(--mut);
+      font-size:12px;
+      font-weight:800;
+    }
+    .dots{display:inline-flex;gap:4px;align-items:center;}
+    .dot3{width:6px;height:6px;border-radius:999px;background: rgba(148,163,184,.85);animation: b 1.1s infinite ease-in-out;}
+    .dot3:nth-child(2){animation-delay:.15s;}
+    .dot3:nth-child(3){animation-delay:.3s;}
+    @keyframes b{0%,80%,100%{transform:translateY(0);opacity:.55;}40%{transform:translateY(-4px);opacity:1;}}
+
+    /* COMPOSER: fixed + ultra z-index + pointer events */
     .composer{
       position: fixed;
       left:0; right:0; bottom:0;
@@ -146,9 +182,10 @@
       backdrop-filter: var(--glass);
       -webkit-backdrop-filter: var(--glass);
       z-index: 2147483647;
+      pointer-events: auto;
     }
     body.light .composer{ background: rgba(255,255,255,.55); }
-    .composerInner{ width:min(1000px, 100%); margin:0 auto; }
+    .composerInner{ width:min(1024px, 100%); margin:0 auto; }
 
     .inputWrap{
       display:flex; gap:10px; align-items:flex-end;
@@ -157,9 +194,8 @@
       border-radius:16px;
       padding:10px;
       box-shadow: 0 16px 45px rgba(0,0,0,.25);
-      position:relative;
       z-index: 2147483647;
-      pointer-events:auto;
+      pointer-events: auto;
     }
     body.light .inputWrap{ background: rgba(255,255,255,.65); }
 
@@ -173,22 +209,19 @@
       min-height:26px;
       max-height:180px;
       resize:none;
+      pointer-events:auto;
     }
     textarea::placeholder{ color: rgba(148,163,184,.85); }
-    body.light textarea::placeholder{ color: rgba(71,85,105,.85); }
 
     .toolbtn{
       width:42px;height:42px;
       border:none;border-radius:14px;
       cursor:pointer;
-      background: rgba(5,10,20,.10);
+      background: var(--btnBg);
       color: var(--txt);
-      border:1px solid rgba(148,163,184,.18);
-      z-index: 2147483647;
+      border:1px solid var(--btnStroke);
       pointer-events:auto;
     }
-    body.light .toolbtn{ background: rgba(255,255,255,.65); }
-
     .send{
       width:42px;height:42px;
       border:none;border-radius:14px;
@@ -196,32 +229,16 @@
       font-weight:900;
       color:#081021;
       background: linear-gradient(135deg, #60a5fa, #a78bfa);
-      z-index: 2147483647;
       pointer-events:auto;
     }
 
-    .typing{
-      margin:10px 0 0;
-      display:none;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      color:var(--mut);
-      font-size:12px;
-      font-weight:800;
-    }
-    .dots{display:inline-flex;gap:4px;align-items:center;}
-    .dot3{width:6px;height:6px;border-radius:999px;background: rgba(148,163,184,.85);animation: b 1.1s infinite ease-in-out;}
-    .dot3:nth-child(2){animation-delay:.15s;}
-    .dot3:nth-child(3){animation-delay:.3s;}
-    @keyframes b{0%,80%,100%{transform:translateY(0);opacity:.55;}40%{transform:translateY(-4px);opacity:1;}}
-
+    /* image bubble */
     .imgCard{ padding:10px; }
     .imgCard img{ width:100%; display:block; border-radius:14px; cursor:pointer; }
     .imgActions{ display:flex; gap:8px; margin-top:8px; justify-content:flex-end; flex-wrap:wrap; }
     .mini{
-      border:1px solid rgba(148,163,184,.18);
-      background: rgba(5,10,20,.10);
+      border:1px solid var(--btnStroke);
+      background: var(--btnBg);
       color: var(--txt);
       padding:8px 10px;
       border-radius:12px;
@@ -229,8 +246,8 @@
       font-weight:900;
       font-size:12px;
     }
-    body.light .mini{ background: rgba(255,255,255,.60); }
 
+    /* modal */
     .modal{
       position: fixed; inset:0;
       background: rgba(0,0,0,.65);
@@ -255,14 +272,32 @@
     .close{
       border:none; cursor:pointer; font-size:18px;
       width:40px;height:40px;border-radius:12px;
-      background: rgba(5,10,20,.12); color: var(--txt);
-      border:1px solid rgba(148,163,184,.18);
+      background: var(--btnBg); color: var(--txt);
+      border:1px solid var(--btnStroke);
     }
-    body.light .close{ background: rgba(255,255,255,.65); }
     .modalBody{ padding:12px; }
     .modalBody img{ width:100%; display:block; border-radius:14px; }
+
+    /* toast */
+    .toast{
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 88px;
+      background: rgba(0,0,0,.55);
+      color: #fff;
+      padding:10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.12);
+      display:none;
+      z-index: 2147483647;
+      max-width: min(560px, 92vw);
+      font-size: 13px;
+      line-height: 1.35;
+    }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <div class="app">
@@ -286,7 +321,6 @@
     </div>
   </div>
 
-  <!-- Fixed composer -->
   <div class="composer">
     <div class="composerInner">
       <div class="inputWrap">
@@ -297,7 +331,8 @@
     </div>
   </div>
 
-  <!-- Modal -->
+  <div class="toast" id="toast"></div>
+
   <div class="modal" id="modal">
     <div class="modalInner">
       <div class="modalTop">
@@ -317,6 +352,14 @@
   const msgs = document.getElementById("msgs");
   const typing = document.getElementById("typing");
   const ta = document.getElementById("m");
+  const toast = document.getElementById("toast");
+
+  function showToast(text){
+    toast.textContent = text;
+    toast.style.display = "block";
+    clearTimeout(window.__t);
+    window.__t = setTimeout(()=> toast.style.display="none", 4200);
+  }
 
   // theme
   const LS_THEME = "berke_ai_theme";
@@ -344,14 +387,15 @@
     applyTheme();
   });
 
-  // utils
   function typingOn(){ typing.style.display="flex"; scrollBottom(true); }
   function typingOff(){ typing.style.display="none"; }
+
   function scrollBottom(force){
     if(force){ msgs.scrollTop = msgs.scrollHeight; return; }
-    const nearBottom = (msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight) < 220;
+    const nearBottom = (msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight) < 240;
     if(nearBottom) msgs.scrollTop = msgs.scrollHeight;
   }
+
   function timeNow(){
     return new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"});
   }
@@ -460,6 +504,10 @@
     ta.style.height = Math.min(180, ta.scrollHeight) + "px";
   });
 
+  async function safeJson(r){
+    try{ return await r.json(); }catch(e){ return {detail: "Sunucudan JSON gelmedi."}; }
+  }
+
   async function sendMessage(){
     const text = (ta.value||"").trim();
     if(!text) return;
@@ -473,22 +521,29 @@
         headers:{"Content-Type":"application/json"},
         body: JSON.stringify({message:text})
       });
-      const j = await r.json();
+      const j = await safeJson(r);
       typingOff();
+
       if(!r.ok){
         addMsg("ai", "Hata: " + (j.detail || "bilinmeyen"));
+        showToast("Chat hata: " + (j.detail || "bilinmeyen"));
         return;
       }
       addMsg("ai", j.reply || "Boş cevap geldi 😅");
     }catch(e){
       typingOff();
       addMsg("ai", "Bağlantı hatası oldu.");
+      showToast("Bağlantı hatası (chat).");
     }
   }
 
   async function sendImage(){
     const prompt = (ta.value||"").trim();
-    if(!prompt) return;
+    if(!prompt){
+      showToast("Önce görsel için bir prompt yaz kanka 😄");
+      return;
+    }
+
     ta.value=""; ta.style.height="auto";
     addMsg("me", "🖼️ " + prompt);
     typingOn();
@@ -497,27 +552,42 @@
       const r = await fetch("/image",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({prompt})
+        body: JSON.stringify({prompt, size:"1024x1024"})
       });
-      const j = await r.json();
+      const j = await safeJson(r);
       typingOff();
 
       if(!r.ok){
         addMsg("ai", "Görsel hatası: " + (j.detail || "bilinmeyen"));
+        showToast("Görsel hata: " + (j.detail || "bilinmeyen"));
         return;
       }
-      if(j.url){ addImageCard(j.url); return; }
-      if(j.b64){ addImageCard("data:image/png;base64," + j.b64); return; }
+
+      if(j.url){
+        addImageCard(j.url);
+        showToast("Görsel hazır ✅");
+        return;
+      }
+      if(j.b64){
+        addImageCard("data:image/png;base64," + j.b64);
+        showToast("Görsel hazır ✅");
+        return;
+      }
+
       addMsg("ai","Görsel geldi ama veri boş 😅");
+      showToast("Görsel veri boş döndü.");
     }catch(e){
       typingOff();
       addMsg("ai","Görsel üretiminde bağlantı hatası.");
+      showToast("Bağlantı hatası (image).");
     }
   }
 
+  // click handlers (guaranteed)
   document.getElementById("sendBtn").addEventListener("click",(e)=>{ e.preventDefault(); sendMessage(); });
   document.getElementById("imgBtn").addEventListener("click",(e)=>{ e.preventDefault(); sendImage(); });
 
+  // enter send
   ta.addEventListener("keydown",(e)=>{
     if(e.key==="Enter" && !e.shiftKey){
       e.preventDefault();
@@ -525,7 +595,9 @@
     }
   });
 
-  addMsg("ai","Hazırım kanka 😄 Mesaj at ya da 🖼️ ile görsel iste.");
+  // starter msg
+  addMsg("ai","Hazırım kanka 😄 Mesaj at ya da 🖼️ ile görsel iste. (Prompt yazıp 🖼️'ye bas)");
+  showToast("UI güncellendi ✅ Eğer görsel çıkmıyorsa, hata mesajını burada göreceksin.");
 </script>
 </body>
 </html>
