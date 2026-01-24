@@ -3,7 +3,7 @@ import json
 import time
 import uuid
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, JSONResponse
@@ -11,16 +11,13 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from starlette.middleware.sessions import SessionMiddleware
-
-# Google OAuth (Authlib)
 from authlib.integrations.starlette_client import OAuth, OAuthError
 
-# OpenAI SDK
 from openai import OpenAI
 
 
 # =========================
-# Paths / Storage
+# Paths
 # =========================
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
@@ -37,54 +34,54 @@ MEM_INDEX_PATH = DATA_DIR / "memory_index.json"
 # =========================
 # ENV
 # =========================
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
+OPENAI_API_KEY = (os.getenv("OPENAI_API_KEY") or "").strip()
 
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "").strip()
-GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "").strip()
-GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "").strip()  # e.g. https://xxx.onrender.com/auth/google/callback
+GOOGLE_CLIENT_ID = (os.getenv("GOOGLE_CLIENT_ID") or "").strip()
+GOOGLE_CLIENT_SECRET = (os.getenv("GOOGLE_CLIENT_SECRET") or "").strip()
+GOOGLE_REDIRECT_URI = (os.getenv("GOOGLE_REDIRECT_URI") or "").strip()  # https://xxx.onrender.com/auth/google/callback
 
-SESSION_SECRET = os.getenv("SESSION_SECRET", "change-me").strip()
+SESSION_SECRET = (os.getenv("SESSION_SECRET") or "change-me-session-secret").strip()
 
-ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "berkekarakulak@gmail.com").strip().lower()
-ADMIN_PANEL_KEY = os.getenv("ADMIN_PANEL_KEY", "change-admin-key").strip()
+ADMIN_EMAIL = (os.getenv("ADMIN_EMAIL") or "berkekarakulak@gmail.com").strip().lower()
+ADMIN_PANEL_KEY = (os.getenv("ADMIN_PANEL_KEY") or "change-admin-key").strip()
 
 
 # =========================
-# App init
+# App
 # =========================
 app = FastAPI(title="Berke-AI")
 
-# Required for OAuth state/session
 app.add_middleware(
     SessionMiddleware,
     secret_key=SESSION_SECRET,
     same_site="lax",
-    https_only=True,   # Render is HTTPS
-    max_age=60 * 30,   # 30 min (login akışı için yeterli)
+    https_only=True,   # Render https
+    max_age=60 * 30,   # 30 dakika (oauth state için yeter)
 )
+
+if not STATIC_DIR.exists():
+    raise RuntimeError("static/ klasörü yok. static/index.html ve static/admin.html olmalı.")
 
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
 # =========================
-# OAuth init
+# OAuth (Google)
 # =========================
 oauth = OAuth()
 
-# Google OAuth registration
 if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
     oauth.register(
         name="google",
         client_id=GOOGLE_CLIENT_ID,
         client_secret=GOOGLE_CLIENT_SECRET,
         server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
-        client_kwargs={
-            "scope": "openid email profile",
-        },
+        client_kwargs={"scope": "openid email profile"},
     )
 
+
 # =========================
-# OpenAI init
+# OpenAI
 # =========================
 client: Optional[OpenAI] = None
 if OPENAI_API_KEY:
@@ -106,57 +103,44 @@ def load_json(path: Path, default: Any) -> Any:
         return default
 
 def save_json(path: Path, data: Any) -> None:
-    path.parent.mkdir(exist_ok=True, parents=True)
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 def get_stats() -> dict:
     stats = load_json(STATS_PATH, default={"guest_total": 0, "google_users": {}})
-    if "guest_total" not in stats:
-        stats["guest_total"] = 0
-    if "google_users" not in stats:
-        stats["google_users"] = {}
+    stats.setdefault("guest_total", 0)
+    stats.setdefault("google_users", {})
     return stats
 
 def inc_guest() -> None:
     stats = get_stats()
-    stats["guest_total"] += 1
+    stats["guest_total"] = int(stats.get("guest_total", 0)) + 1
     save_json(STATS_PATH, stats)
 
 def inc_google_user(email: str) -> None:
-    stats = get_stats()
     email = (email or "").strip().lower()
     if not email:
         return
+    stats = get_stats()
     users = stats.get("google_users", {})
     users[email] = int(users.get(email, 0)) + 1
     stats["google_users"] = users
     save_json(STATS_PATH, stats)
 
 def read_persona() -> str:
-    p = BASE_DIR / "persona.txt"
-    if p.exists():
-        try:
-            return p.read_text(encoding="utf-8").strip()
-        except Exception:
-            pass
-    # default persona
+    # samimi, dost canlısı
     return (
-        "Sen Berke-AI'sin. Samimi, dost canlısı, kısa ve net cevap ver. "
-        "Kullanıcıya 'kanka/dostum' gibi sıcak bir üslup kullanabilirsin ama abartma. "
-        "Gereksiz uzun uzatma, yardımcı ve pratik ol."
+        "Sen Berke-AI'sin. Samimi, dost canlısı ve pratik cevap ver. "
+        "Kullanıcıya gerektiğinde 'kanka' gibi sıcak bir üslup kullanabilirsin ama abartma. "
+        "Kısa ve net ol. Yararlı öneriler sun."
     )
 
 PERSONA = read_persona()
 
-
 def get_or_create_user_id(key: str) -> str:
-    """
-    key: email (google) veya guest_id
-    """
     idx = load_json(MEM_INDEX_PATH, default={})
     if key in idx:
         return idx[key]
-
     uid = str(uuid.uuid4())
     idx[key] = uid
     save_json(MEM_INDEX_PATH, idx)
@@ -166,8 +150,7 @@ def mem_path(user_id: str) -> Path:
     return MEMORIES_DIR / f"{user_id}.json"
 
 def load_memory(user_id: str) -> dict:
-    path = mem_path(user_id)
-    return load_json(path, default={"user_id": user_id, "created_at": now_ts(), "messages": []})
+    return load_json(mem_path(user_id), default={"user_id": user_id, "created_at": now_ts(), "messages": []})
 
 def save_memory(user_id: str, mem: dict) -> None:
     save_json(mem_path(user_id), mem)
@@ -181,10 +164,9 @@ def append_message(user_id: str, role: str, content: str, max_keep: int = 30) ->
 
 def build_context(user_id: str) -> List[Dict[str, str]]:
     mem = load_memory(user_id)
-    msgs = mem.get("messages", [])
     out = []
-    for m in msgs:
-        if "role" in m and "content" in m:
+    for m in mem.get("messages", []):
+        if isinstance(m, dict) and "role" in m and "content" in m:
             out.append({"role": m["role"], "content": m["content"]})
     return out
 
@@ -194,9 +176,8 @@ def build_context(user_id: str) -> List[Dict[str, str]]:
 # =========================
 class ChatReq(BaseModel):
     message: str
-    email: Optional[str] = ""       # google email
-    guest_id: Optional[str] = ""    # guest id
-
+    email: Optional[str] = ""
+    guest_id: Optional[str] = ""
 
 class ImageReq(BaseModel):
     prompt: str
@@ -205,51 +186,22 @@ class ImageReq(BaseModel):
 
 
 # =========================
-# Routes: UI
+# Basic routes
 # =========================
+@app.get("/health")
+def health():
+    return {
+        "ok": True,
+        "openai_key": bool(OPENAI_API_KEY),
+        "google_oauth": bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET and GOOGLE_REDIRECT_URI),
+        "time": now_ts(),
+    }
+
 @app.get("/", response_class=HTMLResponse)
 def home():
-    # index UI
-    index_path = STATIC_DIR / "index.html"
-    if not index_path.exists():
-        return HTMLResponse("<h2>static/index.html bulunamadı</h2>", status_code=500)
-    return FileResponse(index_path)
+    p = STATIC_DIR / "index.html"
+    return FileResponse(p)
 
-@app.get("/admin-ui", response_class=HTMLResponse)
-def admin_ui(email: str = "", key: str = ""):
-    email = (email or "").strip().lower()
-    if email != ADMIN_EMAIL or key != ADMIN_PANEL_KEY:
-        return JSONResponse({"detail": "403 Yetkisiz"}, status_code=403)
-
-    admin_path = STATIC_DIR / "admin.html"
-    if not admin_path.exists():
-        # basit fallback admin html
-        return HTMLResponse("<h2>admin.html bulunamadı (static/admin.html)</h2>", status_code=500)
-
-    return FileResponse(admin_path)
-
-@app.get("/admin-data")
-def admin_data(email: str = "", key: str = ""):
-    email = (email or "").strip().lower()
-    if email != ADMIN_EMAIL or key != ADMIN_PANEL_KEY:
-        raise HTTPException(status_code=403, detail="Yetkisiz")
-
-    stats = get_stats()
-    google_users = stats.get("google_users", {})
-    guest_total = stats.get("guest_total", 0)
-
-    # sıralı liste
-    users_sorted = sorted(
-        [{"email": k, "count": int(v)} for k, v in google_users.items()],
-        key=lambda x: x["count"],
-        reverse=True,
-    )
-    return {"guest_total": guest_total, "google_users": users_sorted}
-
-
-# =========================
-# Routes: Guest
-# =========================
 @app.post("/guest")
 def guest():
     inc_guest()
@@ -257,7 +209,37 @@ def guest():
 
 
 # =========================
-# Routes: Google OAuth
+# Admin
+# =========================
+def is_admin(email: str, key: str) -> bool:
+    return (email or "").strip().lower() == ADMIN_EMAIL and (key or "").strip() == ADMIN_PANEL_KEY
+
+@app.get("/admin-ui", response_class=HTMLResponse)
+def admin_ui(email: str = "", key: str = ""):
+    if not is_admin(email, key):
+        return JSONResponse({"detail": "403 Yetkisiz"}, status_code=403)
+    p = STATIC_DIR / "admin.html"
+    return FileResponse(p)
+
+@app.get("/admin-data")
+def admin_data(email: str = "", key: str = ""):
+    if not is_admin(email, key):
+        raise HTTPException(status_code=403, detail="Yetkisiz")
+
+    stats = get_stats()
+    users = stats.get("google_users", {})
+    guest_total = int(stats.get("guest_total", 0))
+
+    users_sorted = sorted(
+        [{"email": e, "count": int(c)} for e, c in users.items()],
+        key=lambda x: x["count"],
+        reverse=True,
+    )
+    return {"guest_total": guest_total, "google_users": users_sorted}
+
+
+# =========================
+# Google OAuth
 # =========================
 @app.get("/auth/google")
 async def auth_google(request: Request):
@@ -267,13 +249,10 @@ async def auth_google(request: Request):
             detail="Google OAuth ENV eksik: GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_REDIRECT_URI",
         )
 
-    redirect_uri = GOOGLE_REDIRECT_URI
-
-    # "prompt=select_account" -> her seferinde hesap seçtirir
-    # (Google bazen cookie ile yine otomatik geçebilir ama çoğu durumda sorar)
+    # her seferinde hesap seçtir
     return await oauth.google.authorize_redirect(
         request,
-        redirect_uri,
+        GOOGLE_REDIRECT_URI,
         prompt="select_account",
         access_type="online",
     )
@@ -285,36 +264,34 @@ async def auth_google_callback(request: Request):
     except OAuthError as e:
         raise HTTPException(status_code=400, detail=f"OAuth error: {str(e)}")
 
-    # OpenID Connect userinfo
-    userinfo = token.get("userinfo")
-    if not userinfo:
-        # fallback
+    userinfo = token.get("userinfo") or {}
+    email = (userinfo.get("email") or "").strip().lower()
+    if not email:
+        # bazen userinfo boş dönebilir; tekrar çekmeye çalış
         try:
             userinfo = await oauth.google.userinfo(token=token)
+            email = (userinfo.get("email") or "").strip().lower()
         except Exception:
-            userinfo = {}
-
-    email = (userinfo.get("email") or "").strip().lower()
+            email = ""
 
     if not email:
         raise HTTPException(status_code=400, detail="Google email alınamadı")
 
-    # log giriş sayısı
+    # giriş sayısı
     inc_google_user(email)
 
-    # IMPORTANT: Siteye tekrar gelince tekrar onboarding çıksın istiyorsun.
-    # O yüzden cookie/session ile "logged-in" tutmuyoruz.
-    # Callback'te direkt query param ile sohbet ekranına yönlendiriyoruz.
+    # login kalıcı olmasın istiyorsun -> session tutmuyoruz
+    # callback -> ana sayfaya parametreyle dön, UI chat'i açar
     return RedirectResponse(url=f"/?login=google&email={email}")
 
 
 # =========================
-# Routes: Chat
+# Chat
 # =========================
 @app.post("/chat")
 def chat(req: ChatReq):
     if client is None:
-        raise HTTPException(status_code=500, detail="OPENAI_API_KEY tanımlı değil (Render ENV)")
+        raise HTTPException(status_code=500, detail="OPENAI_API_KEY tanımlı değil (Render ENV).")
 
     msg = (req.message or "").strip()
     if not msg:
@@ -323,7 +300,6 @@ def chat(req: ChatReq):
     email = (req.email or "").strip().lower()
     guest_id = (req.guest_id or "").strip()
 
-    # user key -> email varsa email, yoksa guest_id, o da yoksa "guest"
     if email:
         user_key = f"google:{email}"
     elif guest_id:
@@ -333,16 +309,11 @@ def chat(req: ChatReq):
 
     user_id = get_or_create_user_id(user_key)
 
-    # memory'e yaz
     append_message(user_id, "user", msg)
-
-    # context
     ctx = build_context(user_id)
 
-    # System persona + context ile cevap
-    # model ismi hesabına göre değişebilir; çalışmazsa log at düzeltelim.
     try:
-        response = client.responses.create(
+        resp = client.responses.create(
             model="gpt-4.1-mini",
             input=[
                 {"role": "system", "content": PERSONA},
@@ -350,26 +321,21 @@ def chat(req: ChatReq):
             ],
         )
 
-        # text extraction
         reply = ""
-        # responses API: output_text helper çoğu sürümde var
-        if hasattr(response, "output_text") and response.output_text:
-            reply = response.output_text
+        if getattr(resp, "output_text", None):
+            reply = resp.output_text
         else:
-            # fallback parse
+            # fallback parse (nadiren gerekir)
             try:
-                for item in response.output:
+                for item in resp.output:
                     if item.type == "message":
                         for c in item.content:
                             if c.type == "output_text":
                                 reply += c.text
             except Exception:
-                reply = str(response)
+                reply = ""
 
-        reply = (reply or "").strip()
-        if not reply:
-            reply = "Şu an teknik bir sorun var ama buradayım. Tekrar dener misin?"
-
+        reply = (reply or "").strip() or "Şu an teknik bir sorun var ama buradayım. Tekrar dener misin?"
         append_message(user_id, "assistant", reply)
         return {"reply": reply}
 
@@ -378,12 +344,12 @@ def chat(req: ChatReq):
 
 
 # =========================
-# Routes: Image
+# Image
 # =========================
 @app.post("/image")
 def image(req: ImageReq):
     if client is None:
-        raise HTTPException(status_code=500, detail="OPENAI_API_KEY tanımlı değil (Render ENV)")
+        raise HTTPException(status_code=500, detail="OPENAI_API_KEY tanımlı değil (Render ENV).")
 
     prompt = (req.prompt or "").strip()
     if not prompt:
@@ -400,14 +366,11 @@ def image(req: ImageReq):
         user_key = "guest:anonymous"
 
     user_id = get_or_create_user_id(user_key)
-
-    # prompt'u hafızaya ekle (istersen)
     append_message(user_id, "user", f"[IMAGE PROMPT]\n{prompt}")
 
-    # kalite yükseltme (ChatGPT tarzı)
     final_prompt = (
         "Ultra premium, high-quality, cinematic image. "
-        "Clean composition, sharp subject, realistic lighting, high detail. "
+        "Clean composition, realistic lighting, high detail, sharp subject. "
         "No text, no watermark. "
         f"PROMPT: {prompt}"
     )
@@ -418,14 +381,11 @@ def image(req: ImageReq):
             prompt=final_prompt,
             size="1024x1024",
         )
-
-        # SDK bazen url bazen b64_json döndürür
-        data0 = img.data[0]
-        b64 = getattr(data0, "b64_json", None)
-        url = getattr(data0, "url", None)
+        d0 = img.data[0]
+        b64 = getattr(d0, "b64_json", None)
+        url = getattr(d0, "url", None)
 
         append_message(user_id, "assistant", "[IMAGE GENERATED]")
-
         return {"b64": b64, "url": url}
 
     except Exception as e:

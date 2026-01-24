@@ -2,136 +2,139 @@
 <html lang="tr">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <meta name="theme-color" content="#0b1220"/>
-  <title>Admin • Berke AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Berke AI • Admin</title>
   <style>
     :root{
       --bg0:#050a14; --bg1:#0b1220;
       --txt:#e5e7eb; --mut:#94a3b8;
       --stroke: rgba(148,163,184,.18);
       --card: rgba(12,18,32,.65);
+      --card2: rgba(12,18,32,.45);
       --shadow: 0 24px 80px rgba(0,0,0,.55);
     }
     *{box-sizing:border-box}
     body{
-      margin:0; color:var(--txt);
-      font-family:Inter,system-ui,-apple-system,Segoe UI,Arial;
+      margin:0;
       min-height:100vh;
-      background: radial-gradient(1200px 700px at 20% 10%, rgba(29,78,216,.22), transparent 60%),
-                  radial-gradient(900px 600px at 80% 0%, rgba(168,85,247,.14), transparent 60%),
-                  linear-gradient(180deg,var(--bg0),var(--bg1));
+      color:var(--txt);
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Arial;
+      background:
+        radial-gradient(1200px 700px at 20% 10%, rgba(29,78,216,.22), transparent 60%),
+        radial-gradient(900px 600px at 80% 0%, rgba(168,85,247,.14), transparent 60%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
       padding:18px;
     }
-    .wrap{ max-width:980px; margin:0 auto; }
-    .top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
-    .title{ font-weight:900; letter-spacing:.3px; }
-    .pill{
+    .wrap{max-width:980px;margin:0 auto;}
+    .top{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:14px 14px;
       border:1px solid var(--stroke);
-      background: rgba(5,10,20,.25);
-      color:var(--txt);
-      padding:8px 12px; border-radius:999px;
-      cursor:pointer; font-size:12px;
-    }
-    .grid{ display:grid; gap:12px; grid-template-columns: 1fr; }
-    @media (min-width: 900px){ .grid{ grid-template-columns: 1fr 1fr; } }
-    .card{
-      border:1px solid var(--stroke);
-      background: var(--card);
       border-radius:18px;
+      background: linear-gradient(180deg, var(--card), var(--card2));
       box-shadow: var(--shadow);
-      padding:14px;
       backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
     }
-    .kpi{ display:flex; gap:12px; flex-wrap:wrap; }
-    .kpi .box{
-      flex:1 1 180px;
-      border:1px solid rgba(148,163,184,.14);
-      background: rgba(5,10,20,.25);
-      border-radius:14px;
+    .brand{display:flex;align-items:center;gap:10px;font-weight:900;}
+    .dot{width:10px;height:10px;border-radius:999px;background:linear-gradient(135deg,#60a5fa,#a78bfa);}
+    .sub{margin-top:3px;font-size:12px;color:var(--mut);font-weight:700;}
+    .card{
+      margin-top:14px;
+      border:1px solid var(--stroke);
+      border-radius:18px;
+      background: linear-gradient(180deg, var(--card), var(--card2));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      padding:14px;
+    }
+    .row{display:flex;gap:12px;flex-wrap:wrap;}
+    .kpi{
+      flex:1 1 240px;
+      border:1px solid rgba(148,163,184,.16);
+      border-radius:16px;
       padding:12px;
+      background: rgba(5,10,20,.12);
     }
-    .big{ font-size:26px; font-weight:900; margin-top:6px; }
-    table{ width:100%; border-collapse:collapse; overflow:hidden; border-radius:14px; }
-    th,td{ padding:10px 10px; border-bottom:1px solid rgba(148,163,184,.12); font-size:13px; }
-    th{ color:var(--mut); text-align:left; font-weight:800; }
-    .mut{ color:var(--mut); font-size:12px; }
+    .kpi .t{font-size:12px;color:var(--mut);font-weight:800;}
+    .kpi .v{font-size:22px;font-weight:950;margin-top:6px;}
+    table{width:100%;border-collapse:collapse;margin-top:10px;overflow:hidden;}
+    th,td{padding:10px;border-bottom:1px solid rgba(148,163,184,.14);font-size:13px;}
+    th{color:var(--mut);text-align:left;font-weight:900;}
+    .hint{color:var(--mut);font-size:12px;margin-top:8px;}
   </style>
 </head>
-
 <body>
   <div class="wrap">
     <div class="top">
       <div>
-        <div class="title">Admin Panel • Berke AI</div>
-        <div class="mut" id="who"></div>
+        <div class="brand"><span class="dot"></span> Berke AI • Admin</div>
+        <div class="sub" id="sub">Yükleniyor…</div>
       </div>
-      <div class="pill" onclick="location.href='/'">← Sohbete dön</div>
+      <div class="sub" id="ts"></div>
     </div>
 
-    <div class="grid">
-      <div class="card">
-        <div class="title">Özet</div>
-        <div class="kpi" style="margin-top:12px">
-          <div class="box">
-            <div class="mut">Toplam Misafir</div>
-            <div class="big" id="guestTotal">-</div>
-          </div>
-          <div class="box">
-            <div class="mut">Google Kullanıcı Sayısı</div>
-            <div class="big" id="userCount">-</div>
-          </div>
+    <div class="card">
+      <div class="row">
+        <div class="kpi">
+          <div class="t">Misafir toplam giriş</div>
+          <div class="v" id="guestTotal">-</div>
+        </div>
+        <div class="kpi">
+          <div class="t">Google kullanıcı sayısı</div>
+          <div class="v" id="googleCount">-</div>
+        </div>
+        <div class="kpi">
+          <div class="t">Toplam Google giriş</div>
+          <div class="v" id="googleTotal">-</div>
         </div>
       </div>
 
-      <div class="card">
-        <div class="title">Google Girişleri</div>
-        <div class="mut" style="margin-top:6px">login sayısına göre sıralı</div>
-        <div style="overflow:auto; margin-top:10px">
-          <table>
-            <thead>
-              <tr>
-                <th>Email</th>
-                <th>Giriş</th>
-                <th>İlk</th>
-                <th>Son</th>
-              </tr>
-            </thead>
-            <tbody id="rows"></tbody>
-          </table>
-        </div>
-      </div>
+      <div class="hint">Google kullanıcıları (email + kaç defa giriş)</div>
+      <table>
+        <thead>
+          <tr><th>Email</th><th>Giriş sayısı</th></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
     </div>
   </div>
 
 <script>
-  const p = new URLSearchParams(location.search);
-  const email = p.get("email") || "";
-  const key = p.get("key") || "";
-  document.getElementById("who").textContent = "Admin: " + (email || "-");
+  const qs = new URLSearchParams(location.search);
+  const email = qs.get("email") || "";
+  const key = qs.get("key") || "";
+  document.getElementById("sub").textContent = email ? ("Admin: " + email) : "Admin";
+
+  function fmtTs(){
+    return new Date().toLocaleString("tr-TR");
+  }
+  document.getElementById("ts").textContent = fmtTs();
 
   async function load(){
     const r = await fetch(`/admin-data?email=${encodeURIComponent(email)}&key=${encodeURIComponent(key)}`);
     const j = await r.json();
+    if(!r.ok){
+      document.getElementById("sub").textContent = "Yetki yok / hata: " + (j.detail || r.status);
+      return;
+    }
+    document.getElementById("guestTotal").textContent = j.guest_total ?? 0;
+    document.getElementById("googleCount").textContent = (j.google_users || []).length;
 
-    document.getElementById("guestTotal").textContent = j.guests_total ?? 0;
-    document.getElementById("userCount").textContent = (j.users || []).length;
+    let total = 0;
+    (j.google_users || []).forEach(u => total += (u.count||0));
+    document.getElementById("googleTotal").textContent = total;
 
-    const tbody = document.getElementById("rows");
-    tbody.innerHTML = "";
-    (j.users || []).forEach(([mail, meta])=>{
+    const tb = document.getElementById("tbody");
+    tb.innerHTML = "";
+    (j.google_users || []).forEach(u=>{
       const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${mail}</td>
-        <td>${meta.logins ?? 0}</td>
-        <td>${(meta.first_login || "").slice(0,19).replace("T"," ")}</td>
-        <td>${(meta.last_login || "").slice(0,19).replace("T"," ")}</td>
-      `;
-      tbody.appendChild(tr);
+      tr.innerHTML = `<td>${u.email}</td><td>${u.count}</td>`;
+      tb.appendChild(tr);
     });
   }
-  load().catch(()=> alert("Admin verisi çekilemedi. 403 olabilir (email/key)."));
+
+  load().catch(()=>{});
+  setInterval(()=>{ document.getElementById("ts").textContent = fmtTs(); }, 1000);
 </script>
 </body>
 </html>
