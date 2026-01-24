@@ -20,7 +20,6 @@
 
       --me1:#60a5fa;
       --me2:#a78bfa;
-
       --glass: blur(16px);
     }
 
@@ -49,7 +48,6 @@
       overflow:hidden;
     }
 
-    /* ---- Layout ---- */
     .wrap{
       height:100dvh;
       display:flex;
@@ -78,7 +76,6 @@
     }
 
     .top{
-      flex:0 0 auto;
       display:flex;
       justify-content:space-between;
       align-items:center;
@@ -87,7 +84,6 @@
       background: rgba(5,10,20,.12);
       backdrop-filter: var(--glass);
       -webkit-backdrop-filter: var(--glass);
-      position:relative;
       z-index:10;
     }
     body.light .top{ background: rgba(255,255,255,.35); }
@@ -127,62 +123,12 @@
       gap:8px;
     }
     body.light .pill{ background: rgba(255,255,255,.55); }
-    .pill:hover{ filter: brightness(1.05); }
 
-    /* ---- Login ---- */
-    .login{
-      flex:1 1 auto;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:22px;
-      position:relative;
-      z-index:5;
-    }
-    .card{
-      width:min(560px, 92vw);
-      border:1px solid var(--stroke);
-      background: rgba(5,10,20,.10);
-      border-radius:18px;
-      box-shadow: var(--shadow);
-      backdrop-filter: var(--glass);
-      -webkit-backdrop-filter: var(--glass);
-      padding:18px;
-    }
-    body.light .card{ background: rgba(255,255,255,.55); }
-
-    .h1{ font-size:18px; font-weight:900; margin:6px 0 10px; }
-    .p{ font-size:13px; color:var(--mut); line-height:1.55; margin:0 0 14px; }
-
-    .btn{
-      width:100%;
-      padding:14px;
-      border-radius:14px;
-      border:1px solid rgba(148,163,184,.18);
-      background: rgba(5,10,20,.10);
-      color:var(--txt);
-      cursor:pointer;
-      font-weight:900;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-    }
-    body.light .btn{ background: rgba(255,255,255,.60); }
-    .btn:hover{ filter: brightness(1.05); }
-
-    .btn.google{
-      background: rgba(255,255,255,.95);
-      color:#0b1220;
-      border:none;
-    }
-    .small{ margin-top:12px; text-align:center; font-size:12px; color:var(--mut); }
-
-    /* ---- Chat ---- */
+    /* Chat */
     .chat{
       flex:1 1 auto;
       min-height:0;
-      display:none;
+      display:flex;
       flex-direction:column;
       position:relative;
       z-index:5;
@@ -243,19 +189,24 @@
     body.light .meta{ color: rgba(2,6,23,.65); }
     .row.me .meta{ justify-content:flex-end; }
 
-    /* ---- Composer ---- */
+    /* Composer (HARD FIX: fixed & top-most) */
     .composer{
-      position: sticky;
-      bottom:0;
+      position: fixed;
+      left:0; right:0; bottom:0;
       padding:12px;
       padding-bottom: calc(12px + env(safe-area-inset-bottom));
       border-top:1px solid rgba(148,163,184,.16);
       background: rgba(5,10,20,.18);
       backdrop-filter: var(--glass);
       -webkit-backdrop-filter: var(--glass);
-      z-index:50;
+      z-index: 2147483647;
     }
     body.light .composer{ background: rgba(255,255,255,.55); }
+
+    .composerInner{
+      width:min(1000px, 100%);
+      margin:0 auto;
+    }
 
     .inputWrap{
       display:flex;
@@ -267,7 +218,7 @@
       padding:10px;
       box-shadow: 0 16px 45px rgba(0,0,0,.25);
       position:relative;
-      z-index:60;
+      z-index: 2147483647;
     }
     body.light .inputWrap{ background: rgba(255,255,255,.65); }
 
@@ -293,28 +244,21 @@
       background: rgba(5,10,20,.10);
       color: var(--txt);
       border:1px solid rgba(148,163,184,.18);
-      position:relative;
-      z-index:9999; /* click fix */
-      pointer-events:auto; /* click fix */
+      z-index: 2147483647;
+      pointer-events:auto;
     }
     body.light .toolbtn{ background: rgba(255,255,255,.65); }
-    .toolbtn:hover{ filter: brightness(1.08); }
 
     .send{
-      width:42px;
-      height:42px;
-      border:none;
-      border-radius:14px;
+      width:42px;height:42px;
+      border:none;border-radius:14px;
       cursor:pointer;
       font-weight:900;
       color:#081021;
       background: linear-gradient(135deg, #60a5fa, #a78bfa);
-      box-shadow: 0 18px 50px rgba(96,165,250,.20);
-      position:relative;
-      z-index:9999; /* click fix */
-      pointer-events:auto; /* click fix */
+      z-index: 2147483647;
+      pointer-events:auto;
     }
-    .send:hover{ filter: brightness(1.05); }
 
     .typing{
       margin-top:10px;
@@ -325,8 +269,6 @@
       color:var(--mut);
       font-size:12px;
       font-weight:800;
-      position:relative;
-      z-index:60;
     }
     .dots{ display:inline-flex; gap:4px; align-items:center; }
     .dot3{
@@ -341,10 +283,8 @@
       40%{ transform: translateY(-4px); opacity:1; }
     }
 
-    /* ---- Image bubble ---- */
-    .imgCard{
-      padding:10px;
-    }
+    /* Image bubble + modal */
+    .imgCard{ padding:10px; }
     .imgCard img{
       width:100%;
       display:block;
@@ -369,9 +309,7 @@
       font-size:12px;
     }
     body.light .mini{ background: rgba(255,255,255,.60); }
-    .mini:hover{ filter: brightness(1.06); }
 
-    /* ---- Modal (image preview) ---- */
     .modal{
       position: fixed;
       inset: 0;
@@ -380,7 +318,7 @@
       align-items:center;
       justify-content:center;
       padding:16px;
-      z-index:99999;
+      z-index: 2147483647;
     }
     .modalInner{
       width: min(980px, 96vw);
@@ -414,9 +352,8 @@
     .modalBody{ padding:12px; }
     .modalBody img{ width:100%; display:block; border-radius:14px; }
 
-    /* ---- CLICK FIX (global) ---- */
-    .composer, .composer * { pointer-events: auto; }
-    #imgBtn, #sendBtn { pointer-events: auto !important; z-index: 9999 !important; position: relative; }
+    /* Safety: decorative layers never block clicks */
+    .wrap::before, .wrap::after, .app::before, .app::after { pointer-events:none !important; }
   </style>
 </head>
 
@@ -426,62 +363,32 @@
       <div class="top">
         <div>
           <div class="brand"><span class="dot"></span> Berke AI</div>
-          <div class="sub" id="subtitle">Premium Dark • Chat + Image</div>
+          <div class="sub" id="subtitle">Chat + Image (Premium)</div>
         </div>
-
         <div class="right">
-          <div class="pill" id="soundBtn" title="Ses aç/kapat"><span id="soundIcon">🔊</span><span id="soundLabel">On</span></div>
-          <div class="pill" id="themeBtn" title="Tema değiştir"><span id="themeIcon">🌙</span><span id="themeLabel">Dark</span></div>
+          <div class="pill" id="themeBtn" title="Tema"><span id="themeIcon">🌙</span><span id="themeLabel">Dark</span></div>
         </div>
       </div>
 
-      <!-- LOGIN -->
-      <div class="login" id="login">
-        <div class="card">
-          <div class="h1">Devam etmek için giriş yap</div>
-          <p class="p">
-            Google ile giriş yaparsan hafızan sana özel tutulur. Misafir modunda sohbet çalışır.
-            (Tekrar girince tekrar sorar — kalıcı login yok.)
-          </p>
-
-          <button class="btn google" id="googleBtn">
-            <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
-              <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.6 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.2 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.3-.4-3.5z"/>
-              <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.2 6.1 29.3 4 24 4 16.3 4 9.6 8.4 6.3 14.7z"/>
-              <path fill="#4CAF50" d="M24 44c5.1 0 9.8-2 13.3-5.2l-6.1-5.2C29.1 35.4 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.6 5.1C9.4 39.6 16.3 44 24 44z"/>
-              <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.1 3-3.4 5.3-6.3 6.6l6.1 5.2C38.7 36.5 44 31.1 44 24c0-1.2-.1-2.3-.4-3.5z"/>
-            </svg>
-            Google ile devam et
-          </button>
-
-          <div style="height:10px"></div>
-
-          <button class="btn" id="guestBtn">Misafir olarak devam et</button>
-
-          <div class="small">Edge cache yaparsa Ctrl+F5 dene.</div>
-        </div>
-      </div>
-
-      <!-- CHAT -->
-      <div class="chat" id="chat">
+      <div class="chat">
         <div class="msgs" id="msgs"></div>
 
-        <div class="composer">
-          <div class="inputWrap">
-            <textarea id="m" rows="1" placeholder="Mesaj yaz… (Enter gönder, Shift+Enter satır)"></textarea>
-            <button class="toolbtn" id="imgBtn" type="button" title="Görsel oluştur">🖼️</button>
-            <button class="send" id="sendBtn" type="button" title="Gönder">➤</button>
-          </div>
-
-          <div class="typing" id="typing">
-            <span>Yazıyor</span>
-            <span class="dots" aria-hidden="true">
-              <span class="dot3"></span><span class="dot3"></span><span class="dot3"></span>
-            </span>
-          </div>
+        <div class="typing" id="typing">
+          <span>Yazıyor</span>
+          <span class="dots"><span class="dot3"></span><span class="dot3"></span><span class="dot3"></span></span>
         </div>
       </div>
+    </div>
+  </div>
 
+  <!-- Composer fixed -->
+  <div class="composer">
+    <div class="composerInner">
+      <div class="inputWrap">
+        <textarea id="m" rows="1" placeholder="Mesaj yaz… (Enter gönder, Shift+Enter satır)"></textarea>
+        <button class="toolbtn" id="imgBtn" type="button" title="Görsel oluştur">🖼️</button>
+        <button class="send" id="sendBtn" type="button" title="Gönder">➤</button>
+      </div>
     </div>
   </div>
 
@@ -505,29 +412,10 @@
   const msgs = document.getElementById("msgs");
   const typing = document.getElementById("typing");
   const ta = document.getElementById("m");
-  const subtitle = document.getElementById("subtitle");
 
-  const params = new URLSearchParams(location.search);
-  const emailFromUrl = (params.get("email") || "").trim().toLowerCase();
-  const loginType = (params.get("login") || "").trim();
-
-  // guest id
-  const LS_GUEST = "berke_ai_guest_id";
-  let guestId = localStorage.getItem(LS_GUEST);
-  if(!guestId){
-    guestId = crypto.randomUUID ? crypto.randomUUID() : (Math.random().toString(16).slice(2) + Date.now());
-    localStorage.setItem(LS_GUEST, guestId);
-  }
-
-  // theme + sound
-  const LS_SOUND = "berke_ai_sound";
   const LS_THEME = "berke_ai_theme";
-  let soundOn = (localStorage.getItem(LS_SOUND) ?? "1") === "1";
   let theme = localStorage.getItem(LS_THEME) || "dark";
 
-  const soundBtn = document.getElementById("soundBtn");
-  const soundIcon = document.getElementById("soundIcon");
-  const soundLabel = document.getElementById("soundLabel");
   const themeBtn = document.getElementById("themeBtn");
   const themeIcon = document.getElementById("themeIcon");
   const themeLabel = document.getElementById("themeLabel");
@@ -543,44 +431,13 @@
       themeIcon.textContent = "🌙";
     }
   }
-  function applySound(){
-    soundLabel.textContent = soundOn ? "On" : "Off";
-    soundIcon.textContent = soundOn ? "🔊" : "🔇";
-  }
-  applyTheme(); applySound();
+  applyTheme();
 
   themeBtn.addEventListener("click", ()=>{
     theme = (theme === "dark") ? "light" : "dark";
     localStorage.setItem(LS_THEME, theme);
-    clickSfx();
     applyTheme();
   });
-  soundBtn.addEventListener("click", ()=>{
-    soundOn = !soundOn;
-    localStorage.setItem(LS_SOUND, soundOn ? "1" : "0");
-    clickSfx();
-    applySound();
-  });
-
-  // WebAudio SFX
-  let audioCtx;
-  function sfx(freq=440, dur=0.06, type="sine", gain=0.06){
-    if(!soundOn) return;
-    try{
-      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.type = type;
-      o.frequency.value = freq;
-      g.gain.value = gain;
-      o.connect(g); g.connect(audioCtx.destination);
-      o.start();
-      setTimeout(()=>{ o.stop(); }, dur*1000);
-    }catch(e){}
-  }
-  function sendSfx(){ sfx(740, 0.055, "triangle", 0.05); }
-  function recvSfx(){ sfx(520, 0.07, "sine", 0.05); }
-  function clickSfx(){ sfx(880, 0.03, "square", 0.03); }
 
   function typingOn(){ typing.style.display="flex"; scrollBottom(true); }
   function typingOff(){ typing.style.display="none"; }
@@ -626,7 +483,6 @@
     a.remove();
   }
 
-  // Modal
   const modal = document.getElementById("modal");
   const modalImg = document.getElementById("modalImg");
   const closeModal = document.getElementById("closeModal");
@@ -643,7 +499,7 @@
     modalImg.src = "";
     lastModalSrc = "";
   }
-  closeModal.addEventListener("click", ()=>{ clickSfx(); hideModal(); });
+  closeModal.addEventListener("click", hideModal);
   modal.addEventListener("click", (e)=>{ if(e.target === modal){ hideModal(); } });
   downloadModal.addEventListener("click", ()=>{
     if(lastModalSrc) downloadBlobUrl(lastModalSrc, "berke-ai.png");
@@ -662,7 +518,7 @@
     const img = document.createElement("img");
     img.src = src;
     img.alt = "Generated image";
-    img.addEventListener("click", ()=>{ clickSfx(); openModal(src); });
+    img.addEventListener("click", ()=> openModal(src));
 
     const actions = document.createElement("div");
     actions.className = "imgActions";
@@ -670,12 +526,12 @@
     const btnOpen = document.createElement("button");
     btnOpen.className = "mini";
     btnOpen.textContent = "Büyüt";
-    btnOpen.addEventListener("click", ()=>{ clickSfx(); openModal(src); });
+    btnOpen.addEventListener("click", ()=> openModal(src));
 
     const btnSave = document.createElement("button");
     btnSave.className = "mini";
     btnSave.textContent = "Kaydet";
-    btnSave.addEventListener("click", ()=>{ clickSfx(); downloadBlobUrl(src, "berke-ai.png"); });
+    btnSave.addEventListener("click", ()=> downloadBlobUrl(src, "berke-ai.png"));
 
     actions.appendChild(btnOpen);
     actions.appendChild(btnSave);
@@ -687,34 +543,6 @@
     row.appendChild(wrap);
     msgs.appendChild(row);
     scrollBottom(true);
-  }
-
-  function showChat(label){
-    document.getElementById("login").style.display="none";
-    document.getElementById("chat").style.display="flex";
-    subtitle.textContent = label;
-    setTimeout(()=>{ try{ ta.focus(); }catch(e){} }, 120);
-  }
-
-  // login buttons
-  document.getElementById("googleBtn").addEventListener("click", ()=>{
-    clickSfx();
-    location.href = "/auth/google";
-  });
-
-  document.getElementById("guestBtn").addEventListener("click", async ()=>{
-    clickSfx();
-    try{ await fetch("/guest", {method:"POST"}); }catch(e){}
-    history.replaceState(null,"","/");
-    showChat("Misafir Modu");
-  });
-
-  // google callback sonrası
-  let sessionEmail = "";
-  if(loginType === "google" && emailFromUrl){
-    sessionEmail = emailFromUrl;
-    showChat("Giriş: " + sessionEmail);
-    history.replaceState(null,"","/");
   }
 
   // textarea auto height
@@ -731,18 +559,16 @@
     ta.style.height = "auto";
 
     addMsg("me", text);
-    sendSfx();
     typingOn();
 
     try{
       const r = await fetch("/chat",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({message:text, email: sessionEmail, guest_id: guestId})
+        body: JSON.stringify({message:text})
       });
       const j = await r.json();
       typingOff();
-      recvSfx();
 
       if(!r.ok){
         addMsg("ai", "Hata: " + (j.detail || "bilinmeyen"));
@@ -751,7 +577,7 @@
       addMsg("ai", j.reply || "Boş cevap geldi 😅");
     }catch(e){
       typingOff();
-      addMsg("ai", "Bağlantı hatası oldu. Tekrar dener misin?");
+      addMsg("ai", "Bağlantı hatası oldu.");
     }
   }
 
@@ -763,18 +589,16 @@
     ta.style.height = "auto";
 
     addMsg("me", "🖼️ " + text);
-    sendSfx();
     typingOn();
 
     try{
       const r = await fetch("/image",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({prompt:text, email: sessionEmail, guest_id: guestId})
+        body: JSON.stringify({prompt:text})
       });
       const j = await r.json();
       typingOff();
-      recvSfx();
 
       if(!r.ok){
         addMsg("ai", "Görsel hatası: " + (j.detail || "bilinmeyen"));
@@ -793,8 +617,10 @@
     e.preventDefault();
     sendMessage();
   });
+
   document.getElementById("imgBtn").addEventListener("click", (e)=>{
     e.preventDefault();
+    console.log("IMG CLICK OK"); // debug
     sendImage();
   });
 
@@ -804,6 +630,9 @@
       sendMessage();
     }
   });
+
+  // hello
+  addMsg("ai", "Kanka hazırım 😄 Ne çizelim?");
 </script>
 </body>
 </html>
