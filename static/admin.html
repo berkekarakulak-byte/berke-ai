@@ -1,156 +1,137 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#020617">
-<title>Berke AI — Admin</title>
-
-<style>
-:root{
-  --txt:#e5e7eb;
-  --mut:#94a3b8;
-  --stroke: 1px solid rgba(148,163,184,.20);
-  --shadow: 0 25px 80px rgba(0,0,0,.55);
-}
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0;
-  color:var(--txt);
-  font-family: Inter, system-ui, Arial;
-  background: url("/static/bg.jpg") center/cover no-repeat fixed;
-}
-body::before{
-  content:"";
-  position:fixed; inset:0;
-  background: rgba(2,6,23,.62);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  z-index:-1;
-}
-.container{
-  max-width:1100px;
-  margin:24px auto;
-  padding:18px;
-}
-.card{
-  border-radius:22px;
-  border: var(--stroke);
-  box-shadow: var(--shadow);
-  background: rgba(2,6,23,.45);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  overflow:hidden;
-}
-.header{
-  padding:14px 16px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  border-bottom: 1px solid rgba(148,163,184,.18);
-}
-h1{margin:0;font-size:18px;font-weight:900;letter-spacing:.4px}
-.badges{display:flex;gap:10px;flex-wrap:wrap}
-.badge{
-  font-size:12px;
-  color:var(--mut);
-  border: 1px solid rgba(148,163,184,.20);
-  padding:8px 12px;
-  border-radius:999px;
-  background: rgba(2,6,23,.25);
-}
-.table{
-  width:100%;
-  border-collapse:collapse;
-}
-th,td{
-  padding:12px 14px;
-  border-bottom: 1px solid rgba(148,163,184,.14);
-  font-size:13px;
-}
-th{ color:var(--mut); font-weight:700; }
-tr:hover{ background: rgba(2,6,23,.22); }
-.count{ font-weight:900; color:#60a5fa; }
-.footer{
-  padding:12px 16px;
-  color:var(--mut);
-  font-size:12px;
-}
-.center{
-  text-align:center;
-  margin-top:80px;
-  font-size:18px;
-}
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta name="theme-color" content="#0b1220"/>
+  <title>Admin • Berke AI</title>
+  <style>
+    :root{
+      --bg0:#050a14; --bg1:#0b1220;
+      --txt:#e5e7eb; --mut:#94a3b8;
+      --stroke: rgba(148,163,184,.18);
+      --card: rgba(12,18,32,.65);
+      --shadow: 0 24px 80px rgba(0,0,0,.55);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--txt);
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Arial;
+      min-height:100vh;
+      background: radial-gradient(1200px 700px at 20% 10%, rgba(29,78,216,.22), transparent 60%),
+                  radial-gradient(900px 600px at 80% 0%, rgba(168,85,247,.14), transparent 60%),
+                  linear-gradient(180deg,var(--bg0),var(--bg1));
+      padding:18px;
+    }
+    .wrap{ max-width:980px; margin:0 auto; }
+    .top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+    .title{ font-weight:900; letter-spacing:.3px; }
+    .pill{
+      border:1px solid var(--stroke);
+      background: rgba(5,10,20,.25);
+      color:var(--txt);
+      padding:8px 12px; border-radius:999px;
+      cursor:pointer; font-size:12px;
+    }
+    .grid{ display:grid; gap:12px; grid-template-columns: 1fr; }
+    @media (min-width: 900px){ .grid{ grid-template-columns: 1fr 1fr; } }
+    .card{
+      border:1px solid var(--stroke);
+      background: var(--card);
+      border-radius:18px;
+      box-shadow: var(--shadow);
+      padding:14px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .kpi{ display:flex; gap:12px; flex-wrap:wrap; }
+    .kpi .box{
+      flex:1 1 180px;
+      border:1px solid rgba(148,163,184,.14);
+      background: rgba(5,10,20,.25);
+      border-radius:14px;
+      padding:12px;
+    }
+    .big{ font-size:26px; font-weight:900; margin-top:6px; }
+    table{ width:100%; border-collapse:collapse; overflow:hidden; border-radius:14px; }
+    th,td{ padding:10px 10px; border-bottom:1px solid rgba(148,163,184,.12); font-size:13px; }
+    th{ color:var(--mut); text-align:left; font-weight:800; }
+    .mut{ color:var(--mut); font-size:12px; }
+  </style>
 </head>
-<body>
 
-<div class="container">
-  <div class="card">
-    <div class="header">
-      <h1>📊 Admin Panel</h1>
-      <div class="badges">
-        <div class="badge" id="guestB">👻 Misafir: -</div>
-        <div class="badge" id="googleB">👤 Google: -</div>
-        <div class="badge" id="buildB">🔥 Build: -</div>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <div class="title">Admin Panel • Berke AI</div>
+        <div class="mut" id="who"></div>
       </div>
+      <div class="pill" onclick="location.href='/'">← Sohbete dön</div>
     </div>
 
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Mail</th>
-          <th>Giriş</th>
-          <th>İlk</th>
-          <th>Son</th>
-        </tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
+    <div class="grid">
+      <div class="card">
+        <div class="title">Özet</div>
+        <div class="kpi" style="margin-top:12px">
+          <div class="box">
+            <div class="mut">Toplam Misafir</div>
+            <div class="big" id="guestTotal">-</div>
+          </div>
+          <div class="box">
+            <div class="mut">Google Kullanıcı Sayısı</div>
+            <div class="big" id="userCount">-</div>
+          </div>
+        </div>
+      </div>
 
-    <div class="footer">Sadece yetkili admin görebilir.</div>
+      <div class="card">
+        <div class="title">Google Girişleri</div>
+        <div class="mut" style="margin-top:6px">login sayısına göre sıralı</div>
+        <div style="overflow:auto; margin-top:10px">
+          <table>
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Giriş</th>
+                <th>İlk</th>
+                <th>Son</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
 
 <script>
-const p = new URLSearchParams(location.search);
-const email = p.get("email") || "";
+  const p = new URLSearchParams(location.search);
+  const email = p.get("email") || "";
+  const key = p.get("key") || "";
+  document.getElementById("who").textContent = "Admin: " + (email || "-");
 
-async function load(){
-  try{
-    const h = await fetch("/health");
-    const hj = await h.json();
-    buildB.textContent = "🔥 Build: " + (hj.build || "-");
+  async function load(){
+    const r = await fetch(`/admin-data?email=${encodeURIComponent(email)}&key=${encodeURIComponent(key)}`);
+    const j = await r.json();
 
-    const r = await fetch(`/admin/data?email=${encodeURIComponent(email)}`);
-    if(!r.ok) throw new Error("Yetkisiz");
+    document.getElementById("guestTotal").textContent = j.guests_total ?? 0;
+    document.getElementById("userCount").textContent = (j.users || []).length;
 
-    const data = await r.json();
-    guestB.textContent = "👻 Misafir: " + (data.guest_count ?? 0);
-
-    const users = data.google_users || {};
-    const keys = Object.keys(users);
-    googleB.textContent = "👤 Google: " + keys.length;
-
-    rows.innerHTML = "";
-    keys.sort().forEach(mail=>{
-      const u = users[mail] || {};
+    const tbody = document.getElementById("rows");
+    tbody.innerHTML = "";
+    (j.users || []).forEach(([mail, meta])=>{
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${mail}</td>
-        <td class="count">${u.count ?? 0}</td>
-        <td>${u.first_login ?? "-"}</td>
-        <td>${u.last_login ?? "-"}</td>
+        <td>${meta.logins ?? 0}</td>
+        <td>${(meta.first_login || "").slice(0,19).replace("T"," ")}</td>
+        <td>${(meta.last_login || "").slice(0,19).replace("T"," ")}</td>
       `;
-      rows.appendChild(tr);
+      tbody.appendChild(tr);
     });
-  }catch(e){
-    document.body.innerHTML = "<div class='center'>⛔ Yetkisiz Erişim</div>";
   }
-}
-load();
+  load().catch(()=> alert("Admin verisi çekilemedi. 403 olabilir (email/key)."));
 </script>
-
 </body>
 </html>

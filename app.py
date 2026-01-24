@@ -11,7 +11,7 @@ from fastapi.responses import FileResponse, RedirectResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from starlette.middleware.sessions import SessionMiddleware  # ✅ MUST
+from starlette.middleware.sessions import SessionMiddleware  # ✅ REQUIRED for OAuth state/session
 from authlib.integrations.starlette_client import OAuth, OAuthError
 
 from openai import OpenAI
@@ -20,8 +20,6 @@ from openai import OpenAI
 # ----------------------------
 # Config
 # ----------------------------
-ADMIN_EMAIL = "berkekarakulak@gmail.com"
-
 BASE_DIR = Path(__file__).parent.resolve()
 STATIC_DIR = BASE_DIR / "static"
 DATA_DIR = BASE_DIR / "data"
@@ -32,19 +30,17 @@ MEMORIES_DIR.mkdir(exist_ok=True)
 
 ANALYTICS_PATH = DATA_DIR / "analytics.json"
 
+ADMIN_EMAIL = "berkekarakulak@gmail.com"  # admin sensin
+
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
-GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "")  # https://.../auth/google/callback
+GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "")  # https://<domain>/auth/google/callback
 
-ADMIN_PANEL_KEY = os.getenv("ADMIN_PANEL_KEY", "")
-
-# ✅ session secret
-SESSION_SECRET = os.getenv("SESSION_SECRET", "")
-if not SESSION_SECRET:
-    SESSION_SECRET = "dev-session-secret-change-me"
+ADMIN_PANEL_KEY = os.getenv("ADMIN_PANEL_KEY", "")  # önerilir
+SESSION_SECRET = os.getenv("SESSION_SECRET", "dev-session-secret-change-me")  # Render'da env ver
 
 
 # ----------------------------
@@ -52,10 +48,6 @@ if not SESSION_SECRET:
 # ----------------------------
 def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
-
-def safe_user_id(email: str) -> str:
-    h = hashlib.sha256(email.strip().lower().encode("utf-8")).hexdigest()[:24]
-    return f"u_{h}"
 
 def load_json(path: Path, default: Any):
     if not path.exists():
@@ -81,6 +73,8 @@ def bump_user_login(email: str):
     users = a.setdefault("users", {})
     u = users.setdefault(email, {"logins": 0, "first_login": now_iso(), "last_login": now_iso()})
     u["logins"] = int(u.get("logins", 0)) + 1
+    if "first_login" not in u:
+        u["first_login"] = now_iso()
     u["last_login"] = now_iso()
     users[email] = u
     a["users"] = users
@@ -89,12 +83,16 @@ def bump_user_login(email: str):
 def require_admin(email: str, key: str):
     if email.strip().lower() != ADMIN_EMAIL.lower():
         raise HTTPException(status_code=403, detail="Yetkisiz (admin email değil).")
-    if ADMIN_PANEL_KEY and key != ADMIN_PANEL_KEY:
-        raise HTTPException(status_code=403, detail="Yetkisiz (admin key yanlış).")
+    if ADMIN_PANEL_KEY:
+        if key != ADMIN_PANEL_KEY:
+            raise HTTPException(status_code=403, detail="Yetkisiz (admin key yanlış).")
+
+def safe_user_id(email: str) -> str:
+    h = hashlib.sha256(email.strip().lower().encode("utf-8")).hexdigest()[:24]
+    return f"u_{h}"
 
 def memory_path_for_email(email: str) -> Path:
-    uid = safe_user_id(email)
-    return MEMORIES_DIR / f"{uid}.json"
+    return MEMORIES_DIR / f"{safe_user_id(email)}.json"
 
 def load_history(email: str) -> List[Dict[str, str]]:
     p = memory_path_for_email(email)
@@ -121,13 +119,12 @@ def system_persona() -> str:
 # ----------------------------
 app = FastAPI()
 
-# ✅ If this middleware is active, request.session will work
-# NOTE: https_only=False to avoid local/test issues. Render already HTTPS.
+# ✅ must exist for OAuth flow
 app.add_middleware(
     SessionMiddleware,
     secret_key=SESSION_SECRET,
     same_site="lax",
-    https_only=False,
+    https_only=False,  # Render HTTPS; localde de sorun çıkarmasın diye False
 )
 
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
@@ -145,18 +142,18 @@ if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
 
 class ChatIn(BaseModel):
     message: str
-    email: Optional[str] = ""
+    email: Optional[str] = ""  # google login varsa front bunu gönderir
 
 
 @app.get("/health")
 def health(request: Request):
-    # ✅ This will prove whether SessionMiddleware is active
+    # session middleware aktif mi kontrol
     session_ok = "session" in request.scope
     return {
         "ok": True,
         "session_ok": session_ok,
         "has_google_env": bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET and GOOGLE_REDIRECT_URI),
-        "running_file": str(__file__),
+        "model": OPENAI_MODEL,
     }
 
 
@@ -198,6 +195,7 @@ async def auth_google_callback(request: Request):
 
         bump_user_login(email)
 
+        # login sonrası sohbet açılması için query param
         ts = str(int(time.time()))
         return RedirectResponse(url=f"/?login=google&email={email}&t={ts}", status_code=302)
 
@@ -210,10 +208,10 @@ async def auth_google_callback(request: Request):
 @app.get("/admin-ui")
 def admin_ui(email: str = "", key: str = ""):
     require_admin(email, key)
-    admin_path = STATIC_DIR / "admin.html"
-    if not admin_path.exists():
+    p = STATIC_DIR / "admin.html"
+    if not p.exists():
         return HTMLResponse("<h2>static/admin.html yok</h2>", status_code=500)
-    return FileResponse(admin_path)
+    return FileResponse(p)
 
 
 @app.get("/admin-data")
@@ -242,6 +240,7 @@ def chat(payload: ChatIn):
     messages: List[Dict[str, str]] = [{"role": "system", "content": system_persona()}]
     if use_memory:
         messages.extend(load_history(email))
+
     messages.append({"role": "user", "content": text})
 
     try:
@@ -255,9 +254,13 @@ def chat(payload: ChatIn):
             reply = "Bir şeyler ters gitti, tekrar dener misin?"
 
         if use_memory:
-            new_hist = (load_history(email) + [{"role": "user", "content": text}, {"role": "assistant", "content": reply}])[-40:]
+            new_hist = (load_history(email) + [
+                {"role": "user", "content": text},
+                {"role": "assistant", "content": reply},
+            ])[-40:]
             save_history(email, new_hist)
 
         return {"reply": reply}
+
     except Exception as e:
         return {"reply": f"Şu an teknik bir sorun var ama buradayım. ({e})"}

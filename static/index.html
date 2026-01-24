@@ -22,7 +22,6 @@
 
       --shadow: 0 24px 80px rgba(0,0,0,.55);
     }
-
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
@@ -30,14 +29,11 @@
       font-family: Inter, system-ui, -apple-system, Segoe UI, Arial;
       color:var(--txt);
       overflow:hidden;
-
-      /* if bg.jpg exists, it will be used below */
       background: radial-gradient(1200px 700px at 20% 10%, rgba(29,78,216,.22), transparent 60%),
                   radial-gradient(900px 600px at 80% 0%, rgba(168,85,247,.14), transparent 60%),
                   linear-gradient(180deg, var(--bg0), var(--bg1));
     }
 
-    /* Premium background (works if /static/bg.jpg exists) */
     body.has-bg{
       background: url("/static/bg.jpg") center/cover no-repeat fixed;
     }
@@ -50,7 +46,6 @@
       z-index:-1;
     }
 
-    /* Layout shell */
     .shell{
       height:100dvh;
       display:flex;
@@ -74,15 +69,9 @@
     }
     @media (max-width: 640px){
       .shell{ padding:0; }
-      .app{
-        width:100%;
-        border-radius:0;
-        border:none;
-        box-shadow:none;
-      }
+      .app{ width:100%; border-radius:0; border:none; box-shadow:none; }
     }
 
-    /* Topbar (ChatGPT-like) */
     .topbar{
       flex:0 0 auto;
       display:flex;
@@ -92,33 +81,15 @@
       border-bottom:1px solid rgba(148,163,184,.16);
       background: rgba(5,10,20,.35);
     }
-    .left{
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-    }
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      font-weight:900;
-      letter-spacing:.3px;
-    }
+    .left{ display:flex; flex-direction:column; gap:2px; }
+    .brand{ display:flex; align-items:center; gap:10px; font-weight:900; letter-spacing:.3px; }
     .brand .dot{
       width:10px;height:10px;border-radius:999px;
       background: linear-gradient(135deg,#60a5fa,#a78bfa);
       box-shadow: 0 0 24px rgba(96,165,250,.35);
     }
-    .sub{
-      font-size:12px;
-      color:var(--mut);
-      font-weight:600;
-    }
-    .actions{
-      display:flex;
-      gap:10px;
-      align-items:center;
-    }
+    .sub{ font-size:12px; color:var(--mut); font-weight:600; }
+    .actions{ display:flex; gap:10px; align-items:center; }
     .pill{
       border:1px solid rgba(148,163,184,.18);
       background: rgba(5,10,20,.25);
@@ -131,7 +102,6 @@
     }
     .pill:hover{ background: rgba(5,10,20,.35); }
 
-    /* Login card */
     .login{
       flex:1 1 auto;
       display:flex;
@@ -149,17 +119,8 @@
       -webkit-backdrop-filter: blur(16px);
       padding:18px;
     }
-    .h1{
-      font-size:18px;
-      font-weight:900;
-      margin:6px 0 10px;
-    }
-    .p{
-      font-size:13px;
-      color:var(--mut);
-      line-height:1.55;
-      margin:0 0 14px;
-    }
+    .h1{ font-size:18px; font-weight:900; margin:6px 0 10px; }
+    .p{ font-size:13px; color:var(--mut); line-height:1.55; margin:0 0 14px; }
     .btn{
       width:100%;
       padding:14px;
@@ -182,14 +143,8 @@
       font-weight:900;
     }
     .btn.google:hover{ background:#fff; }
-    .small{
-      margin-top:12px;
-      text-align:center;
-      font-size:12px;
-      color:var(--mut);
-    }
+    .small{ margin-top:12px; text-align:center; font-size:12px; color:var(--mut); }
 
-    /* Chat section (ChatGPT layout) */
     .chat{
       flex:1 1 auto;
       display:none;
@@ -197,36 +152,26 @@
       display:flex;
       flex-direction:column;
     }
-
-    /* Messages scroll area */
     .messages{
       flex:1 1 auto;
       min-height:0;
       overflow-y:auto;
       -webkit-overflow-scrolling: touch;
-      padding:18px 14px 160px; /* make room for composer */
+      padding:18px 14px 160px;
       display:flex;
       flex-direction:column;
       gap:14px;
     }
-
-    /* Message rows */
-    .row{
-      width:100%;
-      display:flex;
-    }
+    .row{ width:100%; display:flex; }
     .row.user{ justify-content:flex-end; }
     .row.ai{ justify-content:flex-start; }
 
-    /* WhatsApp-like bubbles (but in ChatGPT layout) */
     .bubblewrap{
       display:flex;
       flex-direction:column;
       max-width: 82%;
     }
-    @media (min-width: 768px){
-      .bubblewrap{ max-width: 64%; }
-    }
+    @media (min-width: 768px){ .bubblewrap{ max-width: 64%; } }
 
     .bubble{
       position:relative;
@@ -239,7 +184,6 @@
       word-wrap:break-word;
       font-size:15px;
     }
-
     .row.user .bubble{
       background: linear-gradient(135deg, var(--user1), var(--user2));
       border-color: rgba(37,99,235,.35);
@@ -249,8 +193,6 @@
       background: var(--aiBg);
       border-bottom-left-radius:8px;
     }
-
-    /* bubble tails */
     .row.user .bubble::after{
       content:"";
       position:absolute;
@@ -273,8 +215,6 @@
       transform: rotate(45deg);
       border-radius:3px;
     }
-
-    /* time under bubble */
     .meta{
       font-size:11px;
       color: rgba(229,231,235,.70);
@@ -282,7 +222,6 @@
     }
     .row.user .meta{ text-align:right; }
 
-    /* typing */
     .typing{
       font-size:12px;
       color: var(--mut);
@@ -290,7 +229,6 @@
       display:none;
     }
 
-    /* Composer pinned to bottom */
     .composer{
       position: sticky;
       bottom:0;
@@ -301,7 +239,6 @@
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
     }
-
     .inputwrap{
       display:flex;
       gap:10px;
@@ -318,13 +255,12 @@
       outline:none;
       background: transparent;
       color: var(--txt);
-      font-size:16px; /* iOS zoom fix */
+      font-size:16px;
       line-height:1.5;
       min-height:26px;
       max-height:180px;
     }
     textarea::placeholder{ color: rgba(148,163,184,.85); }
-
     .send{
       width:40px;
       height:40px;
@@ -363,11 +299,10 @@
         </div>
         <div class="actions">
           <div class="pill" id="adminBtn" style="display:none;">Admin</div>
-          <div class="pill" onclick="hardRefreshHint()">Cache</div>
+          <div class="pill" onclick="alert('Edge cache için: Ctrl+F5 veya linke ?v=2 ekle')">Cache</div>
         </div>
       </div>
 
-      <!-- LOGIN -->
       <div class="login" id="login">
         <div class="card">
           <div class="h1">Devam etmek için giriş yap</div>
@@ -386,11 +321,10 @@
           <div style="height:10px"></div>
 
           <button class="btn" onclick="guest()">Misafir olarak devam et</button>
-          <div class="small">Edge bazen eski UI’yi cache’ler. Ctrl+F5 işe yarar.</div>
+          <div class="small">Not: Google girişte sohbet açılmazsa linke tekrar girip Ctrl+F5 yap.</div>
         </div>
       </div>
 
-      <!-- CHAT -->
       <div class="chat" id="chat">
         <div class="messages" id="msgs"></div>
 
@@ -422,7 +356,12 @@
     if(email === "berkekarakulak@gmail.com"){
       const a = document.getElementById("adminBtn");
       a.style.display="inline-block";
-      a.onclick = () => location.href = `/admin?email=${encodeURIComponent(email)}`;
+      a.onclick = () => {
+        const key = prompt("Admin key (Render'da ADMIN_PANEL_KEY verdiysen)","");
+        const u = key ? `/admin-ui?email=${encodeURIComponent(email)}&key=${encodeURIComponent(key)}` :
+                        `/admin-ui?email=${encodeURIComponent(email)}`;
+        location.href = u;
+      };
     }
     scrollBottom();
   }
@@ -437,7 +376,6 @@
     showChat();
   }
 
-  // Enter send, Shift+Enter newline
   ta.addEventListener("keydown", (e)=>{
     if(e.key==="Enter" && !e.shiftKey){
       e.preventDefault();
@@ -445,13 +383,11 @@
     }
   });
 
-  // Auto-grow textarea
   ta.addEventListener("input", ()=>{
     ta.style.height = "auto";
     ta.style.height = Math.min(180, ta.scrollHeight) + "px";
   });
 
-  // Mobile keyboard keep bottom
   ta.addEventListener("focus", ()=>{
     setTimeout(scrollBottom, 160);
   });
@@ -514,10 +450,6 @@
       typingOff();
       addMsg("ai", "Bağlantı hatası oldu. Tekrar dener misin?");
     }
-  }
-
-  function hardRefreshHint(){
-    alert("Edge bazen eski arayüzü cache’ler.\nCtrl+F5 yap veya URL’ye ?v=2 ekle.");
   }
 </script>
 </body>

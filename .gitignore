@@ -1,7 +1,16 @@
 __pycache__/
 *.pyc
-
-memories/
-profiles/
-
 .env
+.venv/
+venv/
+.env.*
+
+# local data
+memories/
+data/
+memory.json
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
