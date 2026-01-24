@@ -7,9 +7,12 @@ from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, RedirectResponse, HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, RedirectResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+
+# ✅ Session middleware (needed for Google OAuth)
+from starlette.middleware.sessions import SessionMiddleware
 
 # Google OAuth (Authlib)
 from authlib.integrations.starlette_client import OAuth, OAuthError
@@ -21,7 +24,7 @@ from openai import OpenAI
 # ----------------------------
 # Config
 # ----------------------------
-ADMIN_EMAIL = "berkekarakulak@gmail.com"  # admin sensin
+ADMIN_EMAIL = "berkekarakulak@gmail.com"
 BASE_DIR = Path(__file__).parent.resolve()
 STATIC_DIR = BASE_DIR / "static"
 DATA_DIR = BASE_DIR / "data"
@@ -37,11 +40,15 @@ OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
-GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "")  # ör: https://mberke-ai.onrender.com/auth/google/callback
+GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "")  # https://.../auth/google/callback
 
-# Admin paneli gerçek güvenlik için bir anahtar koy (Render Env Var)
-# Admin URL: /admin-ui?email=...&key=...
-ADMIN_PANEL_KEY = os.getenv("ADMIN_PANEL_KEY", "")  # boş bırakılırsa sadece email kontrolüyle çalışır (zayıf)
+ADMIN_PANEL_KEY = os.getenv("ADMIN_PANEL_KEY", "")
+
+# ✅ Session secret
+SESSION_SECRET = os.getenv("SESSION_SECRET", "")
+if not SESSION_SECRET:
+    # localde de çalışsın diye fallback (Render'da env ile ver)
+    SESSION_SECRET = "dev-session-secret-change-me"
 
 
 # ----------------------------
@@ -51,7 +58,6 @@ def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 def safe_user_id(email: str) -> str:
-    # email -> dosya adı güvenli hale gelsin
     h = hashlib.sha256(email.strip().lower().encode("utf-8")).hexdigest()[:24]
     return f"u_{h}"
 
@@ -89,14 +95,9 @@ def bump_user_login(email: str):
 def require_admin(email: str, key: str):
     if email.strip().lower() != ADMIN_EMAIL.lower():
         raise HTTPException(status_code=403, detail="Yetkisiz (admin email değil).")
-    if ADMIN_PANEL_KEY:
-        if key != ADMIN_PANEL_KEY:
-            raise HTTPException(status_code=403, detail="Yetkisiz (admin key yanlış).")
+    if ADMIN_PANEL_KEY and key != ADMIN_PANEL_KEY:
+        raise HTTPException(status_code=403, detail="Yetkisiz (admin key yanlış).")
 
-
-# ----------------------------
-# Memory (per user)
-# ----------------------------
 def memory_path_for_email(email: str) -> Path:
     uid = safe_user_id(email)
     return MEMORIES_DIR / f"{uid}.json"
@@ -107,7 +108,6 @@ def load_history(email: str) -> List[Dict[str, str]]:
     msgs = data.get("messages", [])
     if not isinstance(msgs, list):
         return []
-    # güvenlik: max 40 mesaj tut
     return msgs[-40:]
 
 def save_history(email: str, messages: List[Dict[str, str]]):
@@ -115,7 +115,6 @@ def save_history(email: str, messages: List[Dict[str, str]]):
     save_json(p, {"email": email, "updated_at": now_iso(), "messages": messages[-40:]})
 
 def system_persona() -> str:
-    # samimi, dost gibi, cana yakın
     return (
         "Sen samimi, cana yakın, kısa ve net konuşan bir asistansın. "
         "Kullanıcıyla 'kanka/bro' vibeında konuşabilirsin ama saygılı ol. "
@@ -128,10 +127,16 @@ def system_persona() -> str:
 # ----------------------------
 app = FastAPI()
 
-# Static serve
+# ✅ must be BEFORE OAuth routes
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=SESSION_SECRET,
+    same_site="lax",
+    https_only=True,   # Render HTTPS -> good
+)
+
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
-# OAuth setup
 oauth = OAuth()
 if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
     oauth.register(
@@ -145,7 +150,7 @@ if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
 
 class ChatIn(BaseModel):
     message: str
-    email: Optional[str] = ""  # google login varsa gönderiyoruz
+    email: Optional[str] = ""
 
 
 @app.get("/")
@@ -167,7 +172,6 @@ async def auth_google(request: Request):
     if not (GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET and GOOGLE_REDIRECT_URI):
         raise HTTPException(status_code=500, detail="Google env eksik: GOOGLE_CLIENT_ID/SECRET/REDIRECT_URI")
     try:
-        # Google'a yönlendir
         return await oauth.google.authorize_redirect(request, GOOGLE_REDIRECT_URI)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Google redirect hata: {e}")
@@ -179,18 +183,14 @@ async def auth_google_callback(request: Request):
         token = await oauth.google.authorize_access_token(request)
         userinfo = token.get("userinfo")
         if not userinfo:
-            # bazı durumlarda userinfo ayrı çekilir
             userinfo = await oauth.google.userinfo(token=token)
 
         email = (userinfo.get("email") or "").strip()
         if not email:
             raise HTTPException(status_code=400, detail="Google email alınamadı.")
 
-        # giriş sayacı
         bump_user_login(email)
 
-        # login sonrası direkt sohbet açılsın diye query ile dönüyoruz
-        # (kalıcı login istemediğin için cookie/session tutmuyoruz)
         ts = str(int(time.time()))
         return RedirectResponse(url=f"/?login=google&email={email}&t={ts}", status_code=302)
 
@@ -213,7 +213,6 @@ def admin_ui(email: str = "", key: str = ""):
 def admin_data(email: str = "", key: str = ""):
     require_admin(email, key)
     a = load_analytics()
-    # kullanıcıları login'e göre sırala
     users = a.get("users", {})
     sorted_users = sorted(users.items(), key=lambda kv: kv[1].get("logins", 0), reverse=True)
     return {"guests_total": a.get("guests_total", 0), "users": sorted_users}
@@ -225,7 +224,6 @@ def chat(payload: ChatIn):
     if not text:
         return {"reply": "Bir şey yazmadın kanka 😄"}
 
-    # OpenAI yoksa fall back
     if not OPENAI_API_KEY:
         return {"reply": "OPENAI_API_KEY yok. Render Env Vars'a ekleyip deploy etmen lazım."}
 
@@ -235,10 +233,8 @@ def chat(payload: ChatIn):
     use_memory = bool(email)
 
     messages: List[Dict[str, str]] = [{"role": "system", "content": system_persona()}]
-
     if use_memory:
-        history = load_history(email)
-        messages.extend(history)
+        messages.extend(load_history(email))
 
     messages.append({"role": "user", "content": text})
 
@@ -252,7 +248,6 @@ def chat(payload: ChatIn):
         if not reply:
             reply = "Bir şeyler ters gitti, tekrar dener misin?"
 
-        # hafıza kaydet
         if use_memory:
             new_hist = (load_history(email) + [{"role": "user", "content": text}, {"role": "assistant", "content": reply}])[-40:]
             save_history(email, new_hist)
