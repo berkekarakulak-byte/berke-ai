@@ -11,13 +11,9 @@ from fastapi.responses import FileResponse, RedirectResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-# ✅ Session middleware (needed for Google OAuth)
-from starlette.middleware.sessions import SessionMiddleware
-
-# Google OAuth (Authlib)
+from starlette.middleware.sessions import SessionMiddleware  # ✅ MUST
 from authlib.integrations.starlette_client import OAuth, OAuthError
 
-# OpenAI
 from openai import OpenAI
 
 
@@ -25,6 +21,7 @@ from openai import OpenAI
 # Config
 # ----------------------------
 ADMIN_EMAIL = "berkekarakulak@gmail.com"
+
 BASE_DIR = Path(__file__).parent.resolve()
 STATIC_DIR = BASE_DIR / "static"
 DATA_DIR = BASE_DIR / "data"
@@ -44,10 +41,9 @@ GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "")  # https://.../auth/g
 
 ADMIN_PANEL_KEY = os.getenv("ADMIN_PANEL_KEY", "")
 
-# ✅ Session secret
+# ✅ session secret
 SESSION_SECRET = os.getenv("SESSION_SECRET", "")
 if not SESSION_SECRET:
-    # localde de çalışsın diye fallback (Render'da env ile ver)
     SESSION_SECRET = "dev-session-secret-change-me"
 
 
@@ -85,8 +81,6 @@ def bump_user_login(email: str):
     users = a.setdefault("users", {})
     u = users.setdefault(email, {"logins": 0, "first_login": now_iso(), "last_login": now_iso()})
     u["logins"] = int(u.get("logins", 0)) + 1
-    if "first_login" not in u:
-        u["first_login"] = now_iso()
     u["last_login"] = now_iso()
     users[email] = u
     a["users"] = users
@@ -127,12 +121,13 @@ def system_persona() -> str:
 # ----------------------------
 app = FastAPI()
 
-# ✅ must be BEFORE OAuth routes
+# ✅ If this middleware is active, request.session will work
+# NOTE: https_only=False to avoid local/test issues. Render already HTTPS.
 app.add_middleware(
     SessionMiddleware,
     secret_key=SESSION_SECRET,
     same_site="lax",
-    https_only=True,   # Render HTTPS -> good
+    https_only=False,
 )
 
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
@@ -151,6 +146,18 @@ if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
 class ChatIn(BaseModel):
     message: str
     email: Optional[str] = ""
+
+
+@app.get("/health")
+def health(request: Request):
+    # ✅ This will prove whether SessionMiddleware is active
+    session_ok = "session" in request.scope
+    return {
+        "ok": True,
+        "session_ok": session_ok,
+        "has_google_env": bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET and GOOGLE_REDIRECT_URI),
+        "running_file": str(__file__),
+    }
 
 
 @app.get("/")
@@ -235,7 +242,6 @@ def chat(payload: ChatIn):
     messages: List[Dict[str, str]] = [{"role": "system", "content": system_persona()}]
     if use_memory:
         messages.extend(load_history(email))
-
     messages.append({"role": "user", "content": text})
 
     try:
@@ -253,6 +259,5 @@ def chat(payload: ChatIn):
             save_history(email, new_hist)
 
         return {"reply": reply}
-
     except Exception as e:
         return {"reply": f"Şu an teknik bir sorun var ama buradayım. ({e})"}
