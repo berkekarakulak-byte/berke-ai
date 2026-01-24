@@ -1,138 +1,125 @@
 import os
 import json
-import time
-from datetime import datetime, timedelta, timezone
+import secrets
+from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
 
-from fastapi import FastAPI, Request, Response, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from starlette.middleware.sessions import SessionMiddleware
 
-from dotenv import load_dotenv
+from authlib.integrations.starlette_client import OAuth, OAuthError
 
 from sqlalchemy import (
-    create_engine, Column, Integer, String, Text, DateTime, Boolean, ForeignKey, func
+    create_engine, Column, Integer, String, DateTime, Text, Boolean, ForeignKey
 )
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship
 
-from authlib.integrations.starlette_client import OAuth
 from openai import OpenAI
 
-# =========================
+# ----------------------------
 # ENV
-# =========================
-load_dotenv()
-
+# ----------------------------
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "").strip()
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "").strip()
-BASE_URL = (os.getenv("BASE_URL") or "").strip()  # e.g. https://mberke-ai.onrender.com
-ADMIN_PASSWORD = (os.getenv("ADMIN_PASSWORD") or "").strip()
-SESSION_SECRET = (os.getenv("SESSION_SECRET") or "change-me-please").strip()
+SESSION_SECRET = os.getenv("SESSION_SECRET", "").strip() or secrets.token_urlsafe(32)
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "").strip()  # set on Render
 
-# =========================
-# DB URL (FORCE psycopg3)
-# =========================
-DATABASE_URL = (os.getenv("DATABASE_URL") or "sqlite:///./app.db").strip()
+DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 
-# Render bazen postgres:// veya postgresql:// verir.
-# SQLAlchemy'ın psycopg2'ye kaymasını engellemek için driver'ı ZORLA psycopg3 yapıyoruz.
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
-elif DATABASE_URL.startswith("postgresql://"):
+# Render Postgres often gives "postgresql://"
+# SQLAlchemy + psycopg3 wants "postgresql+psycopg://"
+if DATABASE_URL.startswith("postgresql://"):
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
-elif DATABASE_URL.startswith("postgresql+psycopg2://"):
-    DATABASE_URL = DATABASE_URL.replace("postgresql+psycopg2://", "postgresql+psycopg://", 1)
 
-print("DB_URL_EFFECTIVE=", DATABASE_URL)
+# fallback local
+if not DATABASE_URL:
+    DATABASE_URL = "sqlite:///./app.db"
 
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
-
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,
-    connect_args=connect_args,
-)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# ----------------------------
+# DB
+# ----------------------------
 Base = declarative_base()
 
-
-# =========================
-# MODELS
-# =========================
 class User(Base):
     __tablename__ = "users"
-
     id = Column(Integer, primary_key=True)
-    provider = Column(String(50), default="google")  # google / guest
-    provider_user_id = Column(String(255), nullable=True)  # google "sub"
+
+    provider = Column(String(32), nullable=False, default="guest")  # google/guest
     email = Column(String(255), nullable=True, index=True)
     name = Column(String(255), nullable=True)
     picture = Column(Text, nullable=True)
 
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    last_login_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     logins = relationship("LoginEvent", back_populates="user", cascade="all, delete-orphan")
     messages = relationship("ChatMessage", back_populates="user", cascade="all, delete-orphan")
-
+    pins = relationship("PinnedMessage", back_populates="user", cascade="all, delete-orphan")
 
 class LoginEvent(Base):
     __tablename__ = "login_events"
-
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), index=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    ip = Column(String(100), nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    ip = Column(String(64), nullable=True)
     user_agent = Column(Text, nullable=True)
 
     user = relationship("User", back_populates="logins")
 
-
 class ChatMessage(Base):
     __tablename__ = "chat_messages"
-
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
-    role = Column(String(50))  # "user" / "assistant" / "system"
-    content = Column(Text)
+    role = Column(String(16), nullable=False)  # user/assistant/system
+    content = Column(Text, nullable=False)
 
-    pinned = Column(Boolean, default=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     user = relationship("User", back_populates="messages")
 
+class PinnedMessage(Base):
+    __tablename__ = "pinned_messages"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    message_id = Column(Integer, ForeignKey("chat_messages.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
-def init_db():
-    Base.metadata.create_all(bind=engine)
+    user = relationship("User", back_populates="pins")
 
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
+)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+Base.metadata.create_all(bind=engine)
 
-# =========================
+# ----------------------------
 # APP
-# =========================
+# ----------------------------
 app = FastAPI()
+
 app.add_middleware(
     SessionMiddleware,
     secret_key=SESSION_SECRET,
     same_site="lax",
-    https_only=True if (BASE_URL.startswith("https://")) else False,
+    https_only=True,  # Render uses HTTPS
 )
 
-# Static
-if os.path.isdir("static"):
-    app.mount("/static", StaticFiles(directory="static"), name="static")
+# static
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
-# OpenAI client (optional)
-client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
-
-# OAuth
+# ----------------------------
+# OAuth (Google)
+# ----------------------------
 oauth = OAuth()
 
-if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET and BASE_URL:
+if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
     oauth.register(
         name="google",
         client_id=GOOGLE_CLIENT_ID,
@@ -141,367 +128,392 @@ if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET and BASE_URL:
         client_kwargs={"scope": "openid email profile"},
     )
 
+# ----------------------------
+# OpenAI
+# ----------------------------
+client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 
-# =========================
-# HELPERS
-# =========================
-def db():
-    return SessionLocal()
-
-def now_utc():
+# ----------------------------
+# helpers
+# ----------------------------
+def _now():
     return datetime.now(timezone.utc)
+
+def get_db():
+    return SessionLocal()
 
 def get_current_user(request: Request) -> Optional[Dict[str, Any]]:
     return request.session.get("user")
 
-def require_user(request: Request):
+def require_user(request: Request) -> Dict[str, Any]:
     u = get_current_user(request)
     if not u:
         raise HTTPException(status_code=401, detail="Not logged in")
     return u
 
-def is_admin_session(request: Request) -> bool:
-    return bool(request.session.get("is_admin") is True)
+def ensure_guest_user(request: Request) -> Dict[str, Any]:
+    """Creates a guest session user (and DB user) if not exists."""
+    u = get_current_user(request)
+    if u:
+        return u
 
-def sanitize_email(email: Optional[str]) -> Optional[str]:
-    if not email:
-        return None
-    return email.strip().lower()
-
-
-# =========================
-# STARTUP
-# =========================
-@app.on_event("startup")
-def _startup():
-    init_db()
-
-
-# =========================
-# UI (index)
-# =========================
-INDEX_PATH = os.path.join(os.path.dirname(__file__), "index.html")
-
-@app.get("/", response_class=HTMLResponse)
-def home():
-    if os.path.exists(INDEX_PATH):
-        with open(INDEX_PATH, "r", encoding="utf-8") as f:
-            return f.read()
-    return "<h1>index.html not found</h1>"
-
-
-# =========================
-# AUTH ROUTES
-# =========================
-@app.get("/auth/google")
-async def auth_google(request: Request):
-    if not (GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET and BASE_URL):
-        raise HTTPException(status_code=400, detail="Google OAuth is not configured.")
-    redirect_uri = f"{BASE_URL}/auth/google/callback"
-    return await oauth.google.authorize_redirect(request, redirect_uri)
-
-@app.get("/auth/google/callback")
-async def auth_google_callback(request: Request):
-    if not (GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET and BASE_URL):
-        raise HTTPException(status_code=400, detail="Google OAuth is not configured.")
-    token = await oauth.google.authorize_access_token(request)
-    userinfo = token.get("userinfo")
-    if not userinfo:
-        # fallback
-        userinfo = await oauth.google.parse_id_token(request, token)
-
-    sub = str(userinfo.get("sub", "")).strip()
-    email = sanitize_email(userinfo.get("email"))
-    name = userinfo.get("name")
-    picture = userinfo.get("picture")
-
-    if not sub:
-        raise HTTPException(status_code=400, detail="Google user id (sub) missing")
-
-    session = db()
+    guest_id = "guest_" + secrets.token_hex(8)
+    db = get_db()
     try:
-        user = session.query(User).filter(User.provider == "google", User.provider_user_id == sub).first()
-        if not user and email:
-            # if same email exists (rare)
-            user = session.query(User).filter(User.email == email).first()
+        user = User(provider="guest", email=None, name="Guest", picture=None)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
 
-        if not user:
-            user = User(
-                provider="google",
-                provider_user_id=sub,
-                email=email,
-                name=name,
-                picture=picture,
-                last_login_at=now_utc(),
-            )
-            session.add(user)
-            session.commit()
-            session.refresh(user)
-        else:
-            user.email = email or user.email
-            user.name = name or user.name
-            user.picture = picture or user.picture
-            user.last_login_at = now_utc()
-            session.commit()
+        request.session["user"] = {
+            "id": user.id,
+            "provider": "guest",
+            "email": None,
+            "name": "Guest",
+            "picture": None,
+        }
+        request.session["guest_id"] = guest_id
 
         # login event
-        le = LoginEvent(
+        ev = LoginEvent(
             user_id=user.id,
             ip=request.client.host if request.client else None,
             user_agent=request.headers.get("user-agent"),
         )
-        session.add(le)
-        session.commit()
+        db.add(ev)
+        db.commit()
 
-        request.session["user"] = {
-            "id": user.id,
-            "provider": user.provider,
-            "email": user.email,
-            "name": user.name,
-            "picture": user.picture,
-        }
+        return request.session["user"]
     finally:
-        session.close()
+        db.close()
 
-    return RedirectResponse(url="/")
+def upsert_google_user(db, email: str, name: str, picture: str) -> User:
+    user = db.query(User).filter(User.provider == "google", User.email == email).first()
+    if user:
+        user.name = name
+        user.picture = picture
+        db.commit()
+        db.refresh(user)
+        return user
 
-@app.post("/auth/guest")
+    user = User(provider="google", email=email, name=name, picture=picture)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+# ----------------------------
+# Routes: UI
+# ----------------------------
+@app.get("/", response_class=HTMLResponse)
+def home():
+    # Always serve the SPA file from /static/index.html
+    index_path = os.path.join(STATIC_DIR, "index.html")
+    if not os.path.exists(index_path):
+        return HTMLResponse("static/index.html missing", status_code=500)
+    return FileResponse(index_path)
+
+@app.get("/health")
+def health():
+    return {"ok": True, "time": _now().isoformat()}
+
+# ----------------------------
+# Auth routes
+# ----------------------------
+@app.get("/auth/guest")
 def auth_guest(request: Request):
-    # guest user create/store
-    session = db()
-    try:
-        user = User(
-            provider="guest",
-            provider_user_id=None,
-            email=None,
-            name="Guest",
-            picture=None,
-            last_login_at=now_utc(),
-        )
-        session.add(user)
-        session.commit()
-        session.refresh(user)
+    ensure_guest_user(request)
+    return RedirectResponse(url="/", status_code=302)
 
-        le = LoginEvent(
-            user_id=user.id,
-            ip=request.client.host if request.client else None,
-            user_agent=request.headers.get("user-agent"),
-        )
-        session.add(le)
-        session.commit()
+@app.get("/login/google")
+async def login_google(request: Request):
+    if not (GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET):
+        raise HTTPException(400, detail="Google OAuth not configured")
+    redirect_uri = str(request.url_for("auth_google_callback"))
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+@app.get("/auth/google")
+async def auth_google_callback(request: Request):
+    if not (GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET):
+        raise HTTPException(400, detail="Google OAuth not configured")
+    try:
+        token = await oauth.google.authorize_access_token(request)
+    except OAuthError as e:
+        raise HTTPException(400, detail=f"OAuth error: {str(e)}")
+
+    userinfo = token.get("userinfo")
+    if not userinfo:
+        # Some flows return id_token; Authlib can parse userinfo via /userinfo automatically,
+        # but if not present, try fetch:
+        userinfo = await oauth.google.userinfo(request, token=token)
+
+    email = userinfo.get("email")
+    name = userinfo.get("name") or userinfo.get("given_name") or "User"
+    picture = userinfo.get("picture")
+
+    if not email:
+        raise HTTPException(400, detail="Google did not return email")
+
+    db = get_db()
+    try:
+        user = upsert_google_user(db, email=email, name=name, picture=picture)
 
         request.session["user"] = {
             "id": user.id,
-            "provider": user.provider,
+            "provider": "google",
             "email": user.email,
             "name": user.name,
             "picture": user.picture,
         }
-    finally:
-        session.close()
 
-    return {"ok": True}
+        ev = LoginEvent(
+            user_id=user.id,
+            ip=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+        )
+        db.add(ev)
+        db.commit()
+
+    finally:
+        db.close()
+
+    return RedirectResponse(url="/", status_code=302)
 
 @app.post("/auth/logout")
-def auth_logout(request: Request):
-    request.session.pop("user", None)
-    request.session.pop("is_admin", None)
+async def logout(request: Request):
+    request.session.clear()
     return {"ok": True}
 
-@app.get("/api/me")
-def api_me(request: Request):
-    return {"user": get_current_user(request)}
-
-
-# =========================
-# ADMIN
-# =========================
+# ----------------------------
+# Admin auth (simple)
+# ----------------------------
 @app.post("/admin/login")
-def admin_login(request: Request, payload: Dict[str, Any]):
-    pw = str(payload.get("password", "")).strip()
+async def admin_login(request: Request):
+    data = await request.json()
+    pwd = (data.get("password") or "").strip()
     if not ADMIN_PASSWORD:
-        raise HTTPException(status_code=400, detail="ADMIN_PASSWORD not set")
-    if pw != ADMIN_PASSWORD:
-        raise HTTPException(status_code=401, detail="Wrong password")
-
-    request.session["is_admin"] = True
+        raise HTTPException(400, detail="ADMIN_PASSWORD not set")
+    if pwd != ADMIN_PASSWORD:
+        raise HTTPException(401, detail="Wrong password")
+    request.session["admin"] = True
     return {"ok": True}
 
 @app.post("/admin/logout")
-def admin_logout(request: Request):
-    request.session["is_admin"] = False
+async def admin_logout(request: Request):
+    request.session.pop("admin", None)
     return {"ok": True}
 
 @app.get("/admin/stats")
 def admin_stats(request: Request):
-    if not is_admin_session(request):
-        raise HTTPException(status_code=401, detail="Not admin")
-
-    session = db()
+    if not request.session.get("admin"):
+        raise HTTPException(401, detail="Not admin")
+    db = get_db()
     try:
-        total_users = session.query(User).count()
-        total_logins = session.query(LoginEvent).count()
-        last_20 = (
-            session.query(LoginEvent)
-            .order_by(LoginEvent.id.desc())
-            .limit(20)
+        users_count = db.query(User).count()
+        logins_count = db.query(LoginEvent).count()
+        msgs_count = db.query(ChatMessage).count()
+
+        # last 30 logins
+        last_logins = (
+            db.query(LoginEvent, User)
+            .join(User, User.id == LoginEvent.user_id)
+            .order_by(LoginEvent.created_at.desc())
+            .limit(30)
             .all()
         )
-
         items = []
-        for ev in last_20:
-            u = session.query(User).filter(User.id == ev.user_id).first()
+        for ev, u in last_logins:
             items.append({
-                "id": ev.id,
-                "created_at": ev.created_at.isoformat() if ev.created_at else None,
-                "user_id": ev.user_id,
-                "email": u.email if u else None,
-                "provider": u.provider if u else None,
+                "at": ev.created_at.isoformat() if ev.created_at else None,
+                "provider": u.provider,
+                "email": u.email,
+                "name": u.name,
                 "ip": ev.ip,
             })
 
         return {
-            "total_users": total_users,
-            "total_logins": total_logins,
-            "last_20_logins": items,
+            "users": users_count,
+            "logins": logins_count,
+            "messages": msgs_count,
+            "last_logins": items,
         }
     finally:
-        session.close()
+        db.close()
 
+# ----------------------------
+# API: user + chat + history + pin
+# ----------------------------
+@app.get("/api/me")
+def api_me(request: Request):
+    u = get_current_user(request)
+    return {"user": u}
 
-# =========================
-# CHAT
-# =========================
 @app.get("/api/history")
-def chat_history(request: Request):
+def api_history(request: Request, limit: int = 50):
     u = require_user(request)
-    session = db()
+    db = get_db()
     try:
         msgs = (
-            session.query(ChatMessage)
+            db.query(ChatMessage)
             .filter(ChatMessage.user_id == u["id"])
-            .order_by(ChatMessage.id.asc())
-            .limit(200)
+            .order_by(ChatMessage.created_at.desc())
+            .limit(max(1, min(limit, 200)))
             .all()
         )
+        msgs = list(reversed(msgs))
+        pins = (
+            db.query(PinnedMessage)
+            .filter(PinnedMessage.user_id == u["id"])
+            .all()
+        )
+        pinned_ids = {p.message_id for p in pins}
         return {
             "messages": [
                 {
                     "id": m.id,
                     "role": m.role,
                     "content": m.content,
-                    "pinned": bool(m.pinned),
                     "created_at": m.created_at.isoformat() if m.created_at else None,
+                    "pinned": m.id in pinned_ids,
                 }
                 for m in msgs
             ]
         }
     finally:
-        session.close()
+        db.close()
 
 @app.post("/api/pin")
-def chat_pin(request: Request, payload: Dict[str, Any]):
+async def api_pin(request: Request):
     u = require_user(request)
-    msg_id = int(payload.get("id", 0))
-    pinned = bool(payload.get("pinned", True))
+    data = await request.json()
+    message_id = int(data.get("message_id", 0))
+    if not message_id:
+        raise HTTPException(400, detail="message_id required")
 
-    session = db()
+    db = get_db()
     try:
-        m = session.query(ChatMessage).filter(ChatMessage.id == msg_id, ChatMessage.user_id == u["id"]).first()
-        if not m:
-            raise HTTPException(status_code=404, detail="Message not found")
-        m.pinned = pinned
-        session.commit()
+        exists = (
+            db.query(PinnedMessage)
+            .filter(PinnedMessage.user_id == u["id"], PinnedMessage.message_id == message_id)
+            .first()
+        )
+        if exists:
+            return {"ok": True}
+
+        # ensure message belongs to user
+        msg = db.query(ChatMessage).filter(ChatMessage.id == message_id, ChatMessage.user_id == u["id"]).first()
+        if not msg:
+            raise HTTPException(404, detail="message not found")
+
+        db.add(PinnedMessage(user_id=u["id"], message_id=message_id))
+        db.commit()
         return {"ok": True}
     finally:
-        session.close()
+        db.close()
+
+@app.post("/api/unpin")
+async def api_unpin(request: Request):
+    u = require_user(request)
+    data = await request.json()
+    message_id = int(data.get("message_id", 0))
+    if not message_id:
+        raise HTTPException(400, detail="message_id required")
+
+    db = get_db()
+    try:
+        db.query(PinnedMessage).filter(
+            PinnedMessage.user_id == u["id"], PinnedMessage.message_id == message_id
+        ).delete()
+        db.commit()
+        return {"ok": True}
+    finally:
+        db.close()
 
 @app.post("/api/chat")
-def chat_send(request: Request, payload: Dict[str, Any]):
-    """
-    payload: { message: "..." }
-    """
+async def api_chat(request: Request):
     u = require_user(request)
-    message = str(payload.get("message", "")).strip()
-    if not message:
-        raise HTTPException(status_code=400, detail="Empty message")
+    data = await request.json()
+    user_text = (data.get("message") or "").strip()
+    if not user_text:
+        raise HTTPException(400, detail="message required")
 
-    session = db()
+    db = get_db()
     try:
-        # save user msg
-        um = ChatMessage(user_id=u["id"], role="user", content=message, pinned=False)
-        session.add(um)
-        session.commit()
-        session.refresh(um)
+        # store user msg
+        um = ChatMessage(user_id=u["id"], role="user", content=user_text)
+        db.add(um)
+        db.commit()
+        db.refresh(um)
 
-        # If OpenAI configured, generate assistant reply.
-        # If billing limit etc -> show error text but still keep app alive.
-        assistant_text = "Şu an AI cevap veremiyor (API anahtarı yok ya da limit)."
-        if client:
+        # build context from last N msgs
+        last = (
+            db.query(ChatMessage)
+            .filter(ChatMessage.user_id == u["id"])
+            .order_by(ChatMessage.created_at.desc())
+            .limit(20)
+            .all()
+        )
+        last = list(reversed(last))
+
+        messages = [{"role": "system", "content": "Sen Berke_AI’sin. Türkçe konuş. Kısa, net, yardımcı ol."}]
+        for m in last:
+            if m.role in ("user", "assistant"):
+                messages.append({"role": m.role, "content": m.content})
+
+        if not client:
+            assistant_text = "OPENAI_API_KEY ayarlı değil."
+        else:
             try:
-                # Keep minimal context: last 20 msgs
-                last_msgs = (
-                    session.query(ChatMessage)
-                    .filter(ChatMessage.user_id == u["id"])
-                    .order_by(ChatMessage.id.desc())
-                    .limit(20)
-                    .all()
-                )
-                # reverse to chronological
-                last_msgs = list(reversed(last_msgs))
-
-                chat_messages = []
-                for m in last_msgs:
-                    if m.role in ("user", "assistant", "system"):
-                        chat_messages.append({"role": m.role, "content": m.content})
-
                 resp = client.chat.completions.create(
                     model="gpt-4o-mini",
-                    messages=chat_messages,
+                    messages=messages,
+                    temperature=0.6,
                 )
                 assistant_text = resp.choices[0].message.content or ""
             except Exception as e:
                 assistant_text = f"AI hata: {str(e)}"
 
-        am = ChatMessage(user_id=u["id"], role="assistant", content=assistant_text, pinned=False)
-        session.add(am)
-        session.commit()
-        session.refresh(am)
+        am = ChatMessage(user_id=u["id"], role="assistant", content=assistant_text)
+        db.add(am)
+        db.commit()
+        db.refresh(am)
 
         return {
-            "user_message": {"id": um.id, "role": "user", "content": um.content, "pinned": um.pinned},
-            "assistant_message": {"id": am.id, "role": "assistant", "content": am.content, "pinned": am.pinned},
+            "assistant": assistant_text,
+            "user_message_id": um.id,
+            "assistant_message_id": am.id,
         }
     finally:
-        session.close()
+        db.close()
 
-
-# =========================
-# IMAGE (keeps endpoint, returns nice error when billing)
-# =========================
+# ----------------------------
+# Image endpoint (kalsın ama billing olursa hata döner)
+# ----------------------------
 @app.post("/api/image")
-def generate_image(request: Request, payload: Dict[str, Any]):
+async def api_image(request: Request):
     u = require_user(request)
-    prompt = str(payload.get("prompt", "")).strip()
+    data = await request.json()
+    prompt = (data.get("prompt") or "").strip()
     if not prompt:
-        raise HTTPException(status_code=400, detail="Empty prompt")
+        raise HTTPException(400, detail="prompt required")
 
     if not client:
-        return JSONResponse(status_code=400, content={"error": "OPENAI_API_KEY yok. Görsel için API key gerekli."})
+        raise HTTPException(400, detail="OPENAI_API_KEY not set")
 
     try:
-        # NOTE: Görsel için billing şart. Limit varsa 400 döner, UI gösterecek.
+        # NOTE: If billing limit reached, OpenAI returns 400; we surface it to UI.
         img = client.images.generate(
             model="gpt-image-1",
             prompt=prompt,
             size="1024x1024",
         )
-        b64 = img.data[0].b64_json
+        # openai python returns b64_json (depending on model), keep generic:
+        b64 = None
+        if getattr(img, "data", None) and len(img.data) > 0:
+            d0 = img.data[0]
+            b64 = getattr(d0, "b64_json", None) or getattr(d0, "b64", None)
+        if not b64:
+            raise HTTPException(500, detail="Image returned no data")
         return {"b64": b64}
     except Exception as e:
-        return JSONResponse(status_code=400, content={"error": str(e)})
-
-
-@app.get("/health")
-def health():
-    return {"ok": True}
+        raise HTTPException(status_code=400, detail=f"Görsel üretim hata: {str(e)}")

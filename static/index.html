@@ -3,719 +3,710 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Berke AI</title>
+  <title>Berke_AI</title>
   <style>
     :root{
       --bg:#0b0f17;
-      --panel:#111827;
-      --panel2:#0f172a;
-      --border:#243042;
-      --text:#e5e7eb;
-      --muted:#9ca3af;
-      --accent:#22c55e;
-      --danger:#ef4444;
-      --warn:#f59e0b;
-      --shadow: 0 12px 40px rgba(0,0,0,.35);
+      --panel:#0f1626cc;
+      --card:#121b2fcc;
+      --border:#22304fcc;
+      --text:#e8eefc;
+      --muted:#9fb0d0;
+      --accent:#7c5cff;
+      --good:#2bd4a7;
+      --bad:#ff5c7a;
+      --shadow: 0 12px 40px rgba(0,0,0,.45);
       --radius:16px;
     }
+    [data-theme="light"]{
+      --bg:#f6f7fb;
+      --panel:#ffffffcc;
+      --card:#ffffffcc;
+      --border:#d8def0;
+      --text:#111827;
+      --muted:#51607e;
+      --accent:#5b5cff;
+      --shadow: 0 12px 40px rgba(18,24,40,.12);
+    }
     *{box-sizing:border-box}
+    html,body{height:100%}
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background: radial-gradient(1200px 800px at 20% -10%, rgba(34,197,94,.12), transparent 60%),
-                  radial-gradient(900px 600px at 80% 0%, rgba(59,130,246,.12), transparent 55%),
-                  var(--bg);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 600px at 20% 0%, rgba(124,92,255,.25), transparent 55%),
+                  radial-gradient(900px 500px at 90% 10%, rgba(43,212,167,.18), transparent 55%),
+                  linear-gradient(180deg, var(--bg), var(--bg));
       color:var(--text);
-    }
-    a{color:inherit}
-    .wrap{
-      max-width: 1100px;
-      margin: 28px auto;
-      padding: 0 16px;
-    }
-    .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom:14px;
-    }
-    .brand{
-      display:flex; align-items:center; gap:10px;
-    }
-    .logo{
-      width:40px;height:40px;border-radius:12px;
-      background: linear-gradient(135deg, rgba(34,197,94,.9), rgba(59,130,246,.9));
-      box-shadow: var(--shadow);
-    }
-    .title{
-      line-height:1.1;
-    }
-    .title b{display:block;font-size:16px}
-    .title span{font-size:12px;color:var(--muted)}
-    .pill{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:8px 12px;
-      border:1px solid var(--border);
-      border-radius:999px;
-      background: rgba(17,24,39,.7);
-      backdrop-filter: blur(6px);
-      max-width: 520px;
       overflow:hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
-    .pill small{color:var(--muted)}
-    .grid{
+    .bg{
+      position:fixed; inset:0;
+      background-image: url("/static/bg.jpg");
+      background-size: cover;
+      background-position: center;
+      opacity:.10;
+      pointer-events:none;
+      filter: blur(0px);
+    }
+    .wrap{
+      height:100%;
       display:grid;
-      grid-template-columns: 1fr 360px;
+      grid-template-columns: 340px 1fr;
       gap:14px;
+      padding:14px;
+      max-width: 1300px;
+      margin:0 auto;
     }
-    @media (max-width: 980px){
-      .grid{grid-template-columns:1fr}
+    @media (max-width: 960px){
+      body{overflow:auto}
+      .wrap{
+        grid-template-columns: 1fr;
+        height:auto;
+      }
     }
-    .card{
-      background: rgba(17,24,39,.75);
+    .panel{
+      background: var(--panel);
       border:1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       overflow:hidden;
+      backdrop-filter: blur(10px);
     }
-    .cardHeader{
-      padding:14px 14px 12px;
+    .side{
+      display:flex; flex-direction:column;
+      min-height: 300px;
+    }
+    .side .top{
+      padding:14px;
       border-bottom:1px solid var(--border);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
+      display:flex; align-items:center; justify-content:space-between;
       gap:10px;
     }
-    .cardHeader h2{
-      margin:0;
-      font-size:14px;
-      letter-spacing:.3px;
+    .brand{
+      display:flex; flex-direction:column;
+      line-height:1.1;
     }
-    .cardHeader .sub{
-      color:var(--muted);
-      font-size:12px;
-      margin-top:2px;
-    }
-    .cardBody{padding:14px}
-    .row{display:flex; gap:10px; flex-wrap:wrap}
+    .brand b{font-size:16px}
+    .brand span{font-size:12px; color:var(--muted)}
     .btn{
-      appearance:none;
       border:1px solid var(--border);
-      background: rgba(15,23,42,.7);
-      color: var(--text);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
       padding:10px 12px;
       border-radius: 12px;
       cursor:pointer;
-      transition:.15s;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
       font-weight:600;
-      font-size:13px;
+      transition:.15s;
+      user-select:none;
     }
-    .btn:hover{transform: translateY(-1px); border-color:#334155}
-    .btn.primary{background: rgba(34,197,94,.15); border-color: rgba(34,197,94,.35)}
-    .btn.danger{background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.3)}
-    .btn.warn{background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.35)}
-    .btn:disabled{opacity:.5; cursor:not-allowed; transform:none}
-    .input{
-      width:100%;
+    .btn:hover{transform: translateY(-1px); border-color: rgba(124,92,255,.55)}
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(124,92,255,.95), rgba(124,92,255,.55));
+      border-color: rgba(124,92,255,.65);
+    }
+    .btn.good{
+      background: linear-gradient(135deg, rgba(43,212,167,.95), rgba(43,212,167,.45));
+      border-color: rgba(43,212,167,.55);
+      color:#071016;
+    }
+    .btn.bad{
+      background: linear-gradient(135deg, rgba(255,92,122,.95), rgba(255,92,122,.45));
+      border-color: rgba(255,92,122,.55);
+    }
+    .btn.small{padding:8px 10px; font-size:12px; border-radius:10px}
+    .stack{display:flex; flex-direction:column; gap:10px; padding:14px}
+    .card{
+      background: var(--card);
       border:1px solid var(--border);
-      background: rgba(15,23,42,.7);
-      color: var(--text);
-      border-radius: 12px;
-      padding: 10px 12px;
-      outline:none;
-      font-size: 14px;
+      border-radius: var(--radius);
+      padding:12px;
     }
-    .muted{color:var(--muted)}
-    .divider{height:1px;background:var(--border); margin:12px 0}
-    .chat{
-      height: 540px;
-      display:flex;
-      flex-direction:column;
+    .row{display:flex; gap:10px; flex-wrap:wrap}
+    .muted{color:var(--muted); font-size:12px}
+    .userline{
+      display:flex; align-items:center; gap:10px;
     }
-    .chatList{
-      flex:1;
-      overflow:auto;
-      padding: 14px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-    .msg{
-      border:1px solid var(--border);
-      background: rgba(15,23,42,.55);
-      border-radius: 14px;
-      padding: 10px 10px 8px;
-      position:relative;
-    }
-    .msg.user{border-color: rgba(34,197,94,.25)}
-    .msg.assistant{border-color: rgba(59,130,246,.25)}
-    .meta{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      margin-bottom:6px;
-      font-size:12px;
-      color:var(--muted);
-    }
-    .meta .left{display:flex; gap:8px; align-items:center}
-    .tag{
-      font-size:11px;
-      padding:2px 8px;
+    .avatar{
+      width:36px; height:36px;
       border-radius:999px;
       border:1px solid var(--border);
-      background: rgba(17,24,39,.6);
+      background: rgba(255,255,255,.08);
+      overflow:hidden;
+      flex: 0 0 auto;
+    }
+    .avatar img{width:100%; height:100%; object-fit:cover}
+    .pill{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
       color: var(--muted);
     }
-    .actions{
-      display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;
+    .main{
+      display:flex; flex-direction:column;
+      min-height: 420px;
+    }
+    .main .head{
+      padding:14px;
+      border-bottom:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px;
+    }
+    .title{
+      display:flex; flex-direction:column;
+      gap:2px;
+    }
+    .title b{font-size:16px}
+    .title span{font-size:12px; color:var(--muted)}
+    .chat{
+      flex:1;
+      overflow:auto;
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .msg{
+      max-width: 820px;
+      border:1px solid var(--border);
+      border-radius: 16px;
+      padding:10px 10px 8px;
+      background: rgba(255,255,255,.04);
+      position:relative;
+    }
+    .msg.user{
+      margin-left:auto;
+      background: linear-gradient(135deg, rgba(124,92,255,.18), rgba(124,92,255,.05));
+      border-color: rgba(124,92,255,.35);
+    }
+    .msg.assistant{
+      margin-right:auto;
+      background: linear-gradient(135deg, rgba(43,212,167,.12), rgba(43,212,167,.04));
+      border-color: rgba(43,212,167,.25);
+    }
+    .msg .meta{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px;
+      margin-bottom:6px;
+      color:var(--muted);
+      font-size:12px;
+    }
+    .msg .text{
+      white-space:pre-wrap;
+      line-height:1.45;
+      font-size:14px;
+    }
+    .tools{
+      display:flex; gap:8px; align-items:center; justify-content:flex-end;
       margin-top:8px;
     }
-    .iconBtn{
-      border:1px solid var(--border);
-      background: rgba(17,24,39,.5);
-      color: var(--text);
-      border-radius: 10px;
-      padding: 7px 10px;
-      cursor:pointer;
-      font-size: 12px;
-      font-weight:700;
-    }
-    .iconBtn:hover{border-color:#334155}
-    .iconBtn.pinOn{border-color: rgba(245,158,11,.5); background: rgba(245,158,11,.12)}
+    .pin{color:var(--accent); font-weight:700}
     .composer{
       border-top:1px solid var(--border);
-      padding: 12px;
+      padding:12px;
       display:flex;
       gap:10px;
       align-items:flex-end;
-      background: rgba(17,24,39,.55);
+      background: rgba(0,0,0,.06);
     }
     textarea{
-      resize:none;
-      min-height:44px;
-      max-height:140px;
       width:100%;
-    }
-    .toast{
-      position: fixed;
-      bottom: 18px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(17,24,39,.92);
+      min-height: 46px;
+      max-height: 160px;
+      resize:none;
+      border-radius: 14px;
       border:1px solid var(--border);
-      border-radius: 999px;
-      padding: 10px 14px;
-      box-shadow: var(--shadow);
+      background: rgba(255,255,255,.06);
       color: var(--text);
-      font-size: 13px;
+      padding:12px 12px;
+      outline:none;
+      line-height:1.3;
+      font-size:14px;
+    }
+    textarea:focus{border-color: rgba(124,92,255,.6)}
+    .rightBtns{display:flex; flex-direction:column; gap:8px}
+    .toast{
+      position:fixed;
+      left:50%; bottom:16px;
+      transform:translateX(-50%);
+      background: rgba(0,0,0,.7);
+      border:1px solid rgba(255,255,255,.12);
+      color:white;
+      padding:10px 12px;
+      border-radius: 14px;
+      font-size:13px;
+      opacity:0;
+      pointer-events:none;
+      transition:.2s;
+      z-index:50;
+      max-width: 92vw;
+    }
+    .toast.show{opacity:1; transform:translateX(-50%) translateY(-2px)}
+    .adminBox{
       display:none;
-      gap:10px;
-      align-items:center;
-      z-index: 9999;
+      margin-top:10px;
     }
-    .toast.show{display:flex}
-    .badge{
-      display:inline-flex; align-items:center; gap:6px;
-      font-size:12px; color:var(--muted);
-    }
-    .dot{width:8px;height:8px;border-radius:999px;background: var(--accent)}
-    .dangerDot{background: var(--danger)}
-    .warnDot{background: var(--warn)}
-
-    .adminTable{
+    .adminBox.show{display:block}
+    .table{
       width:100%;
       border-collapse: collapse;
-      font-size: 12px;
-      overflow:hidden;
-      border-radius: 12px;
-      border:1px solid var(--border);
+      font-size:12px;
     }
-    .adminTable th, .adminTable td{
-      padding: 8px 10px;
+    .table th,.table td{
       border-bottom:1px solid var(--border);
-      color: var(--text);
-      vertical-align: top;
-    }
-    .adminTable th{
-      background: rgba(15,23,42,.6);
+      padding:8px 6px;
       text-align:left;
       color: var(--muted);
-      font-weight:800;
-      letter-spacing:.2px;
     }
-    .adminTable tr:last-child td{border-bottom:none}
-    .small{font-size:12px}
-    .hidden{display:none !important}
+    .table th{color:var(--text); font-weight:700}
+    .imgBox{
+      margin-top:10px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .imgPreview{
+      width:100%;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      overflow:hidden;
+      background: rgba(255,255,255,.04);
+      display:none;
+    }
+    .imgPreview.show{display:block}
+    .imgPreview img{width:100%; display:block}
   </style>
 </head>
 
 <body>
+  <div class="bg"></div>
+
   <div class="wrap">
-    <div class="topbar">
-      <div class="brand">
-        <div class="logo"></div>
-        <div class="title">
-          <b>Berke AI</b>
-          <span>Google login + DB + pin/kopyala/ses + admin panel</span>
+    <!-- LEFT -->
+    <section class="panel side">
+      <div class="top">
+        <div class="brand">
+          <b>Berke_AI</b>
+          <span class="muted">Premium chat + admin</span>
         </div>
+        <button class="btn small" id="themeBtn">🌙</button>
       </div>
 
-      <div class="pill" id="userPill">
-        <span class="badge" id="statusBadge"><span class="dot"></span><span id="statusText">Kontrol ediliyor...</span></span>
-        <span style="opacity:.45">•</span>
-        <small id="userText">-</small>
-      </div>
-    </div>
-
-    <div class="grid">
-      <!-- LEFT: CHAT -->
-      <div class="card chat">
-        <div class="cardHeader">
-          <div>
-            <h2>Sohbet</h2>
-            <div class="sub">Pin / Kopyala / Ses (TTS)</div>
+      <div class="stack">
+        <div class="card">
+          <div class="userline">
+            <div class="avatar" id="avatar"></div>
+            <div style="min-width:0">
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <b id="name">...</b>
+                <span class="pill" id="provider">...</span>
+              </div>
+              <div class="muted" id="email">...</div>
+            </div>
           </div>
+        </div>
+
+        <div class="card">
           <div class="row">
-            <button class="btn danger" id="logoutBtn">Çıkış</button>
+            <button class="btn primary" id="googleBtn">Google ile giriş</button>
+            <button class="btn good" id="guestBtn">Misafir devam</button>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn" id="logoutBtn">Çıkış</button>
+            <button class="btn" id="adminBtn">Admin</button>
+          </div>
+
+          <div class="adminBox card" id="adminBox">
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
+              <input id="adminPass" type="password" placeholder="Admin şifre"
+                     style="flex:1;min-width:160px;border-radius:12px;border:1px solid var(--border);
+                            background:rgba(255,255,255,.06);color:var(--text);padding:10px 10px;outline:none;">
+              <button class="btn primary" id="adminLoginBtn">Giriş</button>
+              <button class="btn" id="adminLogoutBtn">Çık</button>
+            </div>
+            <div class="muted" id="adminHint" style="margin-top:8px"></div>
+            <div style="margin-top:10px">
+              <div class="muted" id="adminStatsLine">—</div>
+              <div style="max-height:220px;overflow:auto;margin-top:10px">
+                <table class="table" id="adminTable"></table>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="chatList" id="chatList"></div>
+        <div class="card">
+          <b>🖼️ Görsel üretim</b>
+          <div class="muted">Billing limit varsa hata gösterecek. Şimdilik kalsın.</div>
+          <div class="imgBox">
+            <input id="imgPrompt" placeholder="Örn: Cyberpunk İstanbul gece, sinematik..."
+                   style="width:100%;border-radius:12px;border:1px solid var(--border);
+                          background:rgba(255,255,255,.06);color:var(--text);padding:10px 10px;outline:none;">
+            <div class="row">
+              <button class="btn primary" id="imgBtn">Görsel üret</button>
+              <button class="btn" id="imgClearBtn">Temizle</button>
+            </div>
+            <div class="muted" id="imgStatus"></div>
+            <div class="imgPreview" id="imgPreview"><img id="imgTag" alt="generated"/></div>
+          </div>
+        </div>
 
-        <div class="composer">
-          <textarea class="input" id="msgInput" placeholder="Mesaj yaz..." rows="2"></textarea>
+        <div class="card">
+          <b>⚡ Kısayollar</b>
+          <div class="muted">Mesajlarda: Pin / Kopyala / Ses</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT -->
+    <section class="panel main">
+      <div class="head">
+        <div class="title">
+          <b>Sohbet</b>
+          <span class="muted" id="statusLine">Bağlanıyor...</span>
+        </div>
+        <div class="row">
+          <button class="btn small" id="reloadBtn">↻</button>
+          <button class="btn small" id="clearBtn">🧹</button>
+        </div>
+      </div>
+
+      <div class="chat" id="chat"></div>
+
+      <div class="composer">
+        <textarea id="input" placeholder="Mesaj yaz... (Enter gönder, Shift+Enter alt satır)"></textarea>
+        <div class="rightBtns">
           <button class="btn primary" id="sendBtn">Gönder</button>
         </div>
       </div>
-
-      <!-- RIGHT: AUTH + ADMIN -->
-      <div class="card">
-        <div class="cardHeader">
-          <div>
-            <h2>Giriş</h2>
-            <div class="sub">Google / Misafir</div>
-          </div>
-        </div>
-        <div class="cardBody">
-          <div id="authBox">
-            <div class="row">
-              <button class="btn primary" id="googleBtn">Google ile giriş</button>
-              <button class="btn" id="guestBtn">Misafir olarak devam et</button>
-            </div>
-            <div class="divider"></div>
-            <div class="muted small">
-              Not: Giriş yaptıktan sonra mailin üstte görünecek ve oturum (session) kalıcı kalacak.
-            </div>
-          </div>
-
-          <div id="loggedBox" class="hidden">
-            <div class="muted small">Giriş yaptın:</div>
-            <div style="margin-top:8px">
-              <div><b id="meName">-</b></div>
-              <div class="muted" id="meEmail">-</div>
-            </div>
-            <div class="divider"></div>
-            <div class="row">
-              <button class="btn" id="refreshBtn">Yenile</button>
-              <button class="btn danger" id="logoutBtn2">Çıkış</button>
-            </div>
-          </div>
-
-          <div class="divider"></div>
-
-          <!-- IMAGE DISABLED -->
-          <div>
-            <h3 style="margin:0 0 6px;font-size:13px">Görsel (şimdilik kapalı)</h3>
-            <div class="muted small">
-              Şu an görsel üretimini kapattık. (Billing limit yüzünden). İstediğinde tekrar açarız.
-            </div>
-          </div>
-
-          <div class="divider"></div>
-
-          <!-- ADMIN -->
-          <div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-              <h3 style="margin:0;font-size:13px">Admin</h3>
-              <span class="tag" id="adminState">Kapalı</span>
-            </div>
-
-            <div id="adminLoginBox" style="margin-top:10px">
-              <input class="input" id="adminPw" type="password" placeholder="Admin şifresi" />
-              <div class="row" style="margin-top:10px">
-                <button class="btn warn" id="adminLoginBtn">Admin Giriş</button>
-                <button class="btn" id="adminLoadBtn" disabled>Paneli Yükle</button>
-              </div>
-              <div class="muted small" style="margin-top:8px">
-                Render ENV: <code>ADMIN_PASSWORD</code> set olmalı.
-              </div>
-            </div>
-
-            <div id="adminPanel" class="hidden" style="margin-top:12px">
-              <div class="row">
-                <button class="btn" id="adminRefreshBtn">Yenile</button>
-                <button class="btn danger" id="adminLogoutBtn">Admin Çıkış</button>
-              </div>
-              <div class="divider"></div>
-
-              <div class="row" style="justify-content:space-between">
-                <div>
-                  <div class="muted small">Toplam Kullanıcı</div>
-                  <div style="font-size:20px;font-weight:900" id="totalUsers">-</div>
-                </div>
-                <div>
-                  <div class="muted small">Toplam Giriş</div>
-                  <div style="font-size:20px;font-weight:900" id="totalLogins">-</div>
-                </div>
-              </div>
-
-              <div class="divider"></div>
-
-              <div class="muted small" style="margin-bottom:8px">Son 20 giriş</div>
-              <div style="overflow:auto; max-height: 240px">
-                <table class="adminTable">
-                  <thead>
-                    <tr>
-                      <th>Zaman</th>
-                      <th>Email</th>
-                      <th>Provider</th>
-                      <th>IP</th>
-                    </tr>
-                  </thead>
-                  <tbody id="adminRows"></tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
-    <div class="toast" id="toast"></div>
+    </section>
   </div>
 
+  <div class="toast" id="toast"></div>
+
 <script>
-  // ---------------------------
-  // helpers
-  // ---------------------------
-  const $ = (id) => document.getElementById(id);
+  const $ = (q)=>document.querySelector(q);
 
-  function toast(msg, type="ok"){
-    const t = $("toast");
-    const dot = type==="ok" ? "dot" : (type==="warn" ? "warnDot" : "dangerDot");
-    t.innerHTML = `<span class="${dot}" style="display:inline-block;width:10px;height:10px;border-radius:999px;"></span><span>${escapeHtml(msg)}</span>`;
-    t.classList.add("show");
-    setTimeout(()=>t.classList.remove("show"), 2600);
+  const chatEl = $("#chat");
+  const inputEl = $("#input");
+  const statusLine = $("#statusLine");
+
+  const themeBtn = $("#themeBtn");
+  const googleBtn = $("#googleBtn");
+  const guestBtn = $("#guestBtn");
+  const logoutBtn = $("#logoutBtn");
+
+  const adminBtn = $("#adminBtn");
+  const adminBox = $("#adminBox");
+  const adminLoginBtn = $("#adminLoginBtn");
+  const adminLogoutBtn = $("#adminLogoutBtn");
+  const adminPass = $("#adminPass");
+  const adminHint = $("#adminHint");
+  const adminStatsLine = $("#adminStatsLine");
+  const adminTable = $("#adminTable");
+
+  const imgBtn = $("#imgBtn");
+  const imgClearBtn = $("#imgClearBtn");
+  const imgPrompt = $("#imgPrompt");
+  const imgStatus = $("#imgStatus");
+  const imgPreview = $("#imgPreview");
+  const imgTag = $("#imgTag");
+
+  const toast = $("#toast");
+
+  let me = null;
+  let theme = localStorage.getItem("theme") || "dark";
+  document.documentElement.setAttribute("data-theme", theme);
+  themeBtn.textContent = theme === "dark" ? "🌙" : "☀️";
+
+  function showToast(text){
+    toast.textContent = text;
+    toast.classList.add("show");
+    setTimeout(()=>toast.classList.remove("show"), 1400);
   }
 
-  function escapeHtml(s){
-    return (s ?? "").toString()
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
+  function esc(s){
+    return (s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   }
 
-  async function api(url, method="GET", body=null){
-    const opts = { method, headers: {} };
-    if(body !== null){
-      opts.headers["Content-Type"] = "application/json";
-      opts.body = JSON.stringify(body);
+  function setUser(u){
+    me = u;
+    const name = $("#name");
+    const provider = $("#provider");
+    const email = $("#email");
+    const avatar = $("#avatar");
+
+    if(!u){
+      name.textContent = "Giriş yok";
+      provider.textContent = "—";
+      email.textContent = "—";
+      avatar.innerHTML = "";
+      return;
     }
-    const res = await fetch(url, opts);
-    const data = await res.json().catch(()=> ({}));
-    if(!res.ok){
-      const msg = data?.detail || data?.error || ("HTTP " + res.status);
+
+    name.textContent = u.name || "User";
+    provider.textContent = u.provider || "—";
+    email.textContent = u.email ? u.email : "Misafir";
+    avatar.innerHTML = u.picture ? `<img src="${esc(u.picture)}" />` : "";
+  }
+
+  async function api(path, method="GET", body=null){
+    const opt = { method, headers: {} };
+    if(body){
+      opt.headers["Content-Type"]="application/json";
+      opt.body = JSON.stringify(body);
+    }
+    const r = await fetch(path, opt);
+    let data = null;
+    const ct = r.headers.get("content-type") || "";
+    if(ct.includes("application/json")) data = await r.json();
+    else data = await r.text();
+
+    if(!r.ok){
+      const msg = (data && data.detail) ? data.detail : (typeof data === "string" ? data : "Hata");
       throw new Error(msg);
     }
     return data;
   }
 
-  function setStatus(loggedIn, user){
-    const badge = $("statusBadge");
-    const statusText = $("statusText");
-    const userText = $("userText");
-
-    if(loggedIn){
-      badge.innerHTML = `<span class="dot"></span><span>Online</span>`;
-      statusText.textContent = "Online";
-      const label = user?.email || (user?.provider === "guest" ? "Guest" : "User");
-      userText.textContent = label;
-    } else {
-      badge.innerHTML = `<span class="dangerDot" style="display:inline-block;width:8px;height:8px;border-radius:999px"></span><span>Offline</span>`;
-      statusText.textContent = "Offline";
-      userText.textContent = "Giriş yap";
-    }
-  }
-
-  // ---------------------------
-  // AUTH
-  // ---------------------------
-  async function loadMe(){
-    const data = await api("/api/me");
-    const user = data.user;
-    const loggedIn = !!user;
-
-    setStatus(loggedIn, user);
-
-    $("authBox").classList.toggle("hidden", loggedIn);
-    $("loggedBox").classList.toggle("hidden", !loggedIn);
-
-    $("logoutBtn").disabled = !loggedIn;
-    $("logoutBtn2").disabled = !loggedIn;
-
-    if(loggedIn){
-      $("meName").textContent = user?.name || (user?.provider === "guest" ? "Guest" : "User");
-      $("meEmail").textContent = user?.email || (user?.provider === "guest" ? "Misafir" : "-");
-      await loadHistory();
-    } else {
-      $("chatList").innerHTML = "";
-    }
-  }
-
-  $("googleBtn").addEventListener("click", () => {
-    window.location.href = "/auth/google";
-  });
-
-  $("guestBtn").addEventListener("click", async () => {
+  function speak(text){
     try{
-      await api("/auth/guest", "POST", {});
-      toast("Misafir girişi tamam.", "ok");
-      await loadMe();
-    }catch(e){
-      toast(e.message, "err");
-    }
-  });
-
-  async function logout(){
-    try{
-      await api("/auth/logout", "POST", {});
-      toast("Çıkış yapıldı.", "ok");
-      await loadMe();
-    }catch(e){
-      toast(e.message, "err");
-    }
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "tr-TR";
+      speechSynthesis.cancel();
+      speechSynthesis.speak(u);
+    }catch(e){}
   }
-  $("logoutBtn").addEventListener("click", logout);
-  $("logoutBtn2").addEventListener("click", logout);
-  $("refreshBtn").addEventListener("click", loadMe);
 
-  // ---------------------------
-  // CHAT
-  // ---------------------------
-  function renderMsg(m){
-    const roleLabel = m.role === "user" ? "Sen" : (m.role === "assistant" ? "Berke AI" : m.role);
-    const pinned = !!m.pinned;
+  function renderMessage(m){
+    const wrap = document.createElement("div");
+    wrap.className = "msg " + (m.role === "user" ? "user" : "assistant");
+    wrap.dataset.id = m.id;
 
-    const el = document.createElement("div");
-    el.className = "msg " + (m.role === "user" ? "user" : "assistant");
-    el.dataset.id = m.id;
-
-    el.innerHTML = `
+    const when = m.created_at ? new Date(m.created_at).toLocaleString("tr-TR") : "";
+    wrap.innerHTML = `
       <div class="meta">
-        <div class="left">
-          <span class="tag">${escapeHtml(roleLabel)}</span>
-          ${pinned ? `<span class="tag" style="border-color: rgba(245,158,11,.45); background: rgba(245,158,11,.1)">PIN</span>` : ``}
-        </div>
-        <div class="muted">${m.created_at ? escapeHtml(new Date(m.created_at).toLocaleString()) : ""}</div>
+        <span>${m.role === "user" ? "Sen" : "Berke_AI"} ${m.pinned ? '<span class="pin">• PIN</span>' : ""}</span>
+        <span>${esc(when)}</span>
       </div>
-      <div class="content">${escapeHtml(m.content).replaceAll("\n","<br>")}</div>
-      <div class="actions">
-        <button class="iconBtn ${pinned ? "pinOn":""}" data-act="pin">${pinned ? "Unpin":"Pin"}</button>
-        <button class="iconBtn" data-act="copy">Kopyala</button>
-        <button class="iconBtn" data-act="tts">Ses</button>
+      <div class="text">${esc(m.content)}</div>
+      <div class="tools">
+        <button class="btn small" data-act="pin">${m.pinned ? "Unpin" : "Pin"}</button>
+        <button class="btn small" data-act="copy">Kopyala</button>
+        <button class="btn small" data-act="tts">Ses</button>
       </div>
     `;
-    return el;
+
+    wrap.addEventListener("click", async (e)=>{
+      const btn = e.target.closest("button");
+      if(!btn) return;
+      const act = btn.dataset.act;
+      const id = parseInt(wrap.dataset.id, 10);
+
+      if(act === "copy"){
+        await navigator.clipboard.writeText(m.content || "");
+        showToast("Kopyalandı");
+      }
+      if(act === "tts"){
+        speak(m.content || "");
+      }
+      if(act === "pin"){
+        try{
+          if(m.pinned){
+            await api("/api/unpin","POST",{message_id:id});
+            m.pinned = false;
+            btn.textContent = "Pin";
+            wrap.querySelector(".pin")?.remove();
+            showToast("Unpin");
+          }else{
+            await api("/api/pin","POST",{message_id:id});
+            m.pinned = true;
+            btn.textContent = "Unpin";
+            wrap.querySelector(".meta span").innerHTML += ' <span class="pin">• PIN</span>';
+            showToast("Pinlendi");
+          }
+        }catch(err){
+          showToast(err.message);
+        }
+      }
+    });
+
+    return wrap;
+  }
+
+  function scrollBottom(){
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
+
+  async function loadMe(){
+    const r = await api("/api/me");
+    setUser(r.user);
+    statusLine.textContent = r.user ? "Hazır" : "Giriş yap veya misafir devam et";
   }
 
   async function loadHistory(){
+    chatEl.innerHTML = "";
+    if(!me){
+      const info = document.createElement("div");
+      info.className = "card";
+      info.innerHTML = `<b>Giriş gerekli</b><div class="muted">Google ile giriş yap veya Misafir devam et.</div>`;
+      chatEl.appendChild(info);
+      return;
+    }
+    const r = await api("/api/history?limit=60");
+    (r.messages||[]).forEach(m => chatEl.appendChild(renderMessage(m)));
+    scrollBottom();
+  }
+
+  async function sendMessage(){
+    const text = (inputEl.value || "").trim();
+    if(!text) return;
+    if(!me){
+      showToast("Önce giriş yap");
+      return;
+    }
+
+    inputEl.value = "";
+    statusLine.textContent = "Yazıyor...";
     try{
-      const data = await api("/api/history");
-      const list = $("chatList");
-      list.innerHTML = "";
-      for(const m of data.messages || []){
-        list.appendChild(renderMsg(m));
-      }
-      list.scrollTop = list.scrollHeight;
-    }catch(e){
-      // not logged in
+      const r = await api("/api/chat", "POST", {message:text});
+      await loadHistory();
+      statusLine.textContent = "Hazır";
+    }catch(err){
+      statusLine.textContent = "Hata";
+      showToast(err.message);
     }
   }
 
-  $("sendBtn").addEventListener("click", sendMessage);
-  $("msgInput").addEventListener("keydown", (e)=>{
+  // Enter to send, Shift+Enter newline
+  inputEl.addEventListener("keydown", (e)=>{
     if(e.key === "Enter" && !e.shiftKey){
       e.preventDefault();
       sendMessage();
     }
   });
 
-  async function sendMessage(){
-    const ta = $("msgInput");
-    const text = (ta.value || "").trim();
-    if(!text) return;
+  $("#sendBtn").addEventListener("click", sendMessage);
 
-    $("sendBtn").disabled = true;
-    ta.disabled = true;
+  // Theme
+  themeBtn.addEventListener("click", ()=>{
+    theme = theme === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", theme);
+    themeBtn.textContent = theme === "dark" ? "🌙" : "☀️";
+    localStorage.setItem("theme", theme);
+  });
 
+  // Login actions
+  googleBtn.addEventListener("click", ()=> location.href="/login/google");
+  guestBtn.addEventListener("click", ()=> location.href="/auth/guest");
+
+  logoutBtn.addEventListener("click", async ()=>{
     try{
-      const data = await api("/api/chat", "POST", { message: text });
-      ta.value = "";
-
-      const list = $("chatList");
-      list.appendChild(renderMsg(data.user_message));
-      list.appendChild(renderMsg(data.assistant_message));
-      list.scrollTop = list.scrollHeight;
-    }catch(e){
-      toast(e.message, "err");
-    }finally{
-      $("sendBtn").disabled = false;
-      ta.disabled = false;
-      ta.focus();
-    }
-  }
-
-  // Actions: pin/copy/tts
-  $("chatList").addEventListener("click", async (e)=>{
-    const btn = e.target.closest("button");
-    if(!btn) return;
-    const act = btn.dataset.act;
-    if(!act) return;
-    const msgEl = e.target.closest(".msg");
-    const msgId = parseInt(msgEl?.dataset?.id || "0", 10);
-    if(!msgId) return;
-
-    const contentEl = msgEl.querySelector(".content");
-    const rawText = contentEl ? contentEl.innerText : "";
-
-    if(act === "copy"){
-      try{
-        await navigator.clipboard.writeText(rawText);
-        toast("Kopyalandı.", "ok");
-      }catch(err){
-        toast("Kopyalama engellendi. Tarayıcı izinlerini kontrol et.", "warn");
-      }
-      return;
-    }
-
-    if(act === "tts"){
-      try{
-        if(!("speechSynthesis" in window)){
-          toast("Tarayıcı ses özelliği yok.", "warn");
-          return;
-        }
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(rawText);
-        u.lang = "tr-TR";
-        u.rate = 1.0;
-        u.pitch = 1.0;
-        window.speechSynthesis.speak(u);
-        toast("Seslendiriliyor...", "ok");
-      }catch(err){
-        toast("Ses çalışmadı.", "warn");
-      }
-      return;
-    }
-
-    if(act === "pin"){
-      const isPinned = btn.classList.contains("pinOn");
-      const next = !isPinned;
-      try{
-        await api("/api/pin", "POST", { id: msgId, pinned: next });
-        toast(next ? "Pinlendi." : "Pin kaldırıldı.", "ok");
-        await loadHistory();
-      }catch(err){
-        toast(err.message, "err");
-      }
-      return;
+      await api("/auth/logout", "POST");
+      setUser(null);
+      await loadMe();
+      await loadHistory();
+      showToast("Çıkış yapıldı");
+    }catch(err){
+      showToast(err.message);
     }
   });
 
-  // ---------------------------
-  // ADMIN
-  // ---------------------------
-  async function adminLogin(){
-    const pw = ($("adminPw").value || "").trim();
-    if(!pw){
-      toast("Admin şifresi gir.", "warn");
-      return;
-    }
-    try{
-      await api("/admin/login", "POST", { password: pw });
-      $("adminState").textContent = "Açık";
-      $("adminState").style.borderColor = "rgba(34,197,94,.45)";
-      $("adminState").style.background = "rgba(34,197,94,.12)";
-      $("adminLoadBtn").disabled = false;
-      toast("Admin giriş başarılı.", "ok");
-      await loadAdmin();
-    }catch(e){
-      toast(e.message, "err");
-    }
-  }
+  // Admin
+  adminBtn.addEventListener("click", ()=>{
+    adminBox.classList.toggle("show");
+  });
 
-  async function loadAdmin(){
+  adminLoginBtn.addEventListener("click", async ()=>{
+    adminHint.textContent = "";
+    try{
+      await api("/admin/login","POST",{password: adminPass.value});
+      adminHint.textContent = "Admin aktif ✅";
+      showToast("Admin giriş");
+      await refreshAdmin();
+    }catch(err){
+      adminHint.textContent = err.message;
+      showToast(err.message);
+    }
+  });
+
+  adminLogoutBtn.addEventListener("click", async ()=>{
+    try{
+      await api("/admin/logout","POST");
+      adminHint.textContent = "Admin kapandı";
+      adminStatsLine.textContent = "—";
+      adminTable.innerHTML = "";
+      showToast("Admin çıkış");
+    }catch(err){
+      showToast(err.message);
+    }
+  });
+
+  async function refreshAdmin(){
     try{
       const s = await api("/admin/stats");
-      $("adminPanel").classList.remove("hidden");
-      $("adminLoadBtn").disabled = false;
-
-      $("totalUsers").textContent = s.total_users ?? "-";
-      $("totalLogins").textContent = s.total_logins ?? "-";
-
-      const rows = $("adminRows");
-      rows.innerHTML = "";
-      for(const it of (s.last_20_logins || [])){
-        const tr = document.createElement("tr");
-        const dt = it.created_at ? new Date(it.created_at).toLocaleString() : "-";
-        tr.innerHTML = `
-          <td>${escapeHtml(dt)}</td>
-          <td>${escapeHtml(it.email || "-")}</td>
-          <td>${escapeHtml(it.provider || "-")}</td>
-          <td>${escapeHtml(it.ip || "-")}</td>
-        `;
-        rows.appendChild(tr);
-      }
-      toast("Admin panel güncellendi.", "ok");
+      adminStatsLine.textContent = `Users: ${s.users} • Logins: ${s.logins} • Messages: ${s.messages}`;
+      let html = `<tr><th>Zaman</th><th>Provider</th><th>Email</th><th>IP</th></tr>`;
+      (s.last_logins||[]).forEach(x=>{
+        html += `<tr>
+          <td>${esc(new Date(x.at).toLocaleString("tr-TR"))}</td>
+          <td>${esc(x.provider||"")}</td>
+          <td>${esc(x.email||"")}</td>
+          <td>${esc(x.ip||"")}</td>
+        </tr>`;
+      });
+      adminTable.innerHTML = html;
     }catch(e){
-      $("adminPanel").classList.add("hidden");
-      $("adminLoadBtn").disabled = true;
-      $("adminState").textContent = "Kapalı";
-      $("adminState").style.borderColor = "";
-      $("adminState").style.background = "";
-      toast("Admin değil / erişim yok: " + e.message, "warn");
+      // not admin -> ignore
     }
   }
 
-  async function adminLogout(){
+  // Tools
+  $("#reloadBtn").addEventListener("click", async ()=>{
+    await loadMe();
+    await loadHistory();
+    showToast("Yenilendi");
+  });
+  $("#clearBtn").addEventListener("click", ()=>{
+    chatEl.innerHTML = "";
+    showToast("Ekran temiz");
+  });
+
+  // Image
+  imgBtn.addEventListener("click", async ()=>{
+    imgStatus.textContent = "";
+    imgPreview.classList.remove("show");
+    const p = (imgPrompt.value||"").trim();
+    if(!p){ showToast("Prompt yaz"); return; }
+    if(!me){ showToast("Önce giriş"); return; }
+
+    imgStatus.textContent = "Üretiliyor...";
     try{
-      await api("/admin/logout", "POST", {});
-      $("adminPanel").classList.add("hidden");
-      $("adminLoadBtn").disabled = true;
-      $("adminState").textContent = "Kapalı";
-      $("adminState").style.borderColor = "";
-      $("adminState").style.background = "";
-      toast("Admin çıkış yapıldı.", "ok");
-    }catch(e){
-      toast(e.message, "err");
+      const r = await api("/api/image", "POST", {prompt:p});
+      imgTag.src = `data:image/png;base64,${r.b64}`;
+      imgPreview.classList.add("show");
+      imgStatus.textContent = "Hazır ✅";
+      showToast("Görsel hazır");
+    }catch(err){
+      imgStatus.textContent = err.message;
+      showToast("Görsel hata");
     }
-  }
+  });
 
-  $("adminLoginBtn").addEventListener("click", adminLogin);
-  $("adminLoadBtn").addEventListener("click", loadAdmin);
-  $("adminRefreshBtn").addEventListener("click", loadAdmin);
-  $("adminLogoutBtn").addEventListener("click", adminLogout);
+  imgClearBtn.addEventListener("click", ()=>{
+    imgPrompt.value = "";
+    imgStatus.textContent = "";
+    imgPreview.classList.remove("show");
+    imgTag.src = "";
+    showToast("Temiz");
+  });
 
-  // ---------------------------
   // init
-  // ---------------------------
-  loadMe().catch(()=>{});
+  (async ()=>{
+    await loadMe();
+    await loadHistory();
+    await refreshAdmin();
+  })();
 </script>
 </body>
 </html>
