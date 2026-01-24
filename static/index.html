@@ -23,6 +23,8 @@
 
       --focus: rgba(96,165,250,.35);
       --ok: rgba(34,197,94,.85);
+
+      --danger: rgba(239,68,68,.92);
     }
 
     body.light{
@@ -77,6 +79,7 @@
       .app{border-radius:0;border:none;box-shadow:none}
     }
 
+    /* TOPBAR */
     .top{
       flex:0 0 auto;
       display:flex;
@@ -108,9 +111,7 @@
       overflow:hidden;
       text-overflow:ellipsis;
     }
-    .right{
-      display:flex; gap:10px; align-items:center;
-    }
+    .right{ display:flex; gap:10px; align-items:center; }
     .pill{
       border:1px solid var(--stroke);
       background: rgba(5,10,20,.10);
@@ -127,6 +128,7 @@
     body.light .pill{ background: rgba(255,255,255,.55); }
     .pill:hover{ filter: brightness(1.05); }
 
+    /* LOGIN */
     .login{
       flex:1 1 auto;
       display:flex;
@@ -173,6 +175,7 @@
     }
     .small{ margin-top:12px; text-align:center; font-size:12px; color:var(--mut); }
 
+    /* CHAT */
     .chat{
       flex:1 1 auto;
       min-height:0;
@@ -190,6 +193,7 @@
       gap:14px;
     }
 
+    /* UTILBAR */
     .utilbar{
       position: sticky;
       top:0;
@@ -207,7 +211,6 @@
       -webkit-backdrop-filter: blur(16px);
     }
     body.light .utilbar{ background: rgba(255,255,255,.55); }
-
     .pintext{
       font-size:12px;
       color:var(--mut);
@@ -233,6 +236,7 @@
     body.light .chip{ background: rgba(255,255,255,.65); }
     .chip:hover{ filter: brightness(1.05); }
 
+    /* BUBBLES */
     .row{ display:flex; width:100%; }
     .row.ai{ justify-content:flex-start; }
     .row.me{ justify-content:flex-end; }
@@ -303,6 +307,7 @@
     body.light .mini{ background: rgba(255,255,255,.65); }
     .mini:hover{ filter: brightness(1.05); }
 
+    /* COMPOSER */
     .composer{
       position: sticky;
       bottom:0;
@@ -383,6 +388,7 @@
       40%{ transform: translateY(-4px); opacity:1; }
     }
 
+    /* TOAST */
     .toast{
       position: fixed;
       bottom: 18px;
@@ -400,6 +406,117 @@
       z-index:999;
     }
     body.light .toast{ background: rgba(255,255,255,.85); color:#0b1220; }
+
+    /* ===== Admin Modal ===== */
+    .modalWrap{
+      position: fixed;
+      inset: 0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+      z-index: 1000;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .modal{
+      width:min(520px, 92vw);
+      border-radius: 18px;
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, var(--card), var(--card2));
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+    .modalHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom: 10px;
+    }
+    .modalTitle{
+      font-weight: 900;
+      font-size: 16px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .xbtn{
+      width:38px; height:38px;
+      border-radius: 12px;
+      border:1px solid var(--stroke);
+      background: rgba(5,10,20,.10);
+      color: var(--txt);
+      cursor:pointer;
+      font-weight: 900;
+    }
+    body.light .xbtn{ background: rgba(255,255,255,.65); }
+    .xbtn:hover{ filter: brightness(1.05); }
+
+    .modalBody{
+      color: var(--mut);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .field{
+      margin-top: 12px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .label{
+      color: var(--txt);
+      font-weight: 800;
+      font-size: 12px;
+      opacity:.9;
+    }
+    .input{
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(148,163,184,.18);
+      background: rgba(5,10,20,.10);
+      color: var(--txt);
+      outline:none;
+      font-size: 14px;
+    }
+    body.light .input{ background: rgba(255,255,255,.65); }
+    .input:focus{
+      border-color: rgba(96,165,250,.35);
+      box-shadow: 0 0 0 6px rgba(96,165,250,.10);
+    }
+
+    .modalActions{
+      margin-top: 14px;
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+    }
+    .btn2{
+      padding: 12px 14px;
+      border-radius: 14px;
+      border:1px solid rgba(148,163,184,.18);
+      background: rgba(5,10,20,.10);
+      color: var(--txt);
+      cursor:pointer;
+      font-weight: 900;
+      font-size: 13px;
+    }
+    body.light .btn2{ background: rgba(255,255,255,.65); }
+    .btn2:hover{ filter: brightness(1.05); }
+
+    .btn2.primary{
+      border:none;
+      color:#081021;
+      background: linear-gradient(135deg, var(--me1), var(--me2));
+      box-shadow: 0 18px 50px rgba(96,165,250,.20);
+    }
+    .btn2.danger{
+      border:1px solid rgba(239,68,68,.35);
+      background: rgba(239,68,68,.12);
+      color: var(--txt);
+    }
+    .btn2.danger:hover{ filter: brightness(1.07); }
 
     @media (prefers-reduced-motion: reduce){
       .dot3{ animation:none; }
@@ -479,6 +596,27 @@
 
   <div class="toast" id="toast"></div>
 
+  <!-- ===== Admin Modal ===== -->
+  <div class="modalWrap" id="adminModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
+      <div class="modalHead">
+        <div class="modalTitle" id="adminTitle">🔒 Admin Panel</div>
+        <button class="xbtn" id="adminClose" type="button" aria-label="Kapat">✕</button>
+      </div>
+      <div class="modalBody">
+        Admin paneline girmek için <b>ADMIN_PANEL_KEY</b> gir.
+        <div class="field">
+          <div class="label">Admin Key</div>
+          <input class="input" id="adminKey" type="password" placeholder="••••••••" autocomplete="off" />
+        </div>
+        <div class="modalActions">
+          <button class="btn2 danger" id="adminCancel" type="button">Vazgeç</button>
+          <button class="btn2 primary" id="adminGo" type="button">Aç</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 <script>
   // ====== State
   const msgs = document.getElementById("msgs");
@@ -493,7 +631,7 @@
   const email = params.get("email") || "";
   const loginType = params.get("login") || "";
 
-  // ====== Settings: sound + theme (persist)
+  // ====== Settings
   const LS_SOUND = "berke_ai_sound";
   const LS_THEME = "berke_ai_theme";
   const LS_PIN = "berke_ai_pin";
@@ -548,7 +686,7 @@
     showToast._t = setTimeout(()=> toast.style.display="none", 1500);
   }
 
-  // ====== WebAudio sfx (no file)
+  // ====== WebAudio SFX
   let audioCtx;
   function sfx(freq=440, dur=0.06, type="sine", gain=0.06){
     if(!soundOn) return;
@@ -675,7 +813,7 @@
   }
   document.getElementById("clrPinBtn").addEventListener("click", clearPin);
 
-  // ====== Summary (uses /chat prompt)
+  // ====== Summary
   function collectContext(max=20){
     const items = Array.from(msgs.querySelectorAll(".row"));
     const last = items.slice(-max);
@@ -728,25 +866,15 @@ ${context}`;
 
     subtitle.textContent = email ? ("Giriş: " + email) : "Misafir Modu";
 
-    // Admin only for you
     if(email && email.toLowerCase() === "berkekarakulak@gmail.com"){
       adminBtn.style.display="inline-flex";
-      adminBtn.onclick = () => {
-        clickSfx();
-        const key = prompt("Admin key (Render ENV: ADMIN_PANEL_KEY)","");
-        const url = key
-          ? `/admin-ui?email=${encodeURIComponent(email)}&key=${encodeURIComponent(key)}`
-          : `/admin-ui?email=${encodeURIComponent(email)}`;
-        location.href = url;
-      };
+      adminBtn.onclick = () => { openAdminModal(); };
     } else {
       adminBtn.style.display="none";
     }
 
     loadPin();
     scrollBottom(true);
-
-    // focus input for desktop
     setTimeout(()=>{ try{ ta.focus(); }catch(e){} }, 120);
   }
 
@@ -767,7 +895,7 @@ ${context}`;
     showChat();
   }
 
-  // ====== FIXED SENDING (no requestSubmit)
+  // ====== FIXED Sending
   async function sendMessage(){
     const text = (ta.value || "").trim();
     if(!text) return;
@@ -799,27 +927,84 @@ ${context}`;
     }
   }
 
-  // send button
   document.getElementById("sendBtn").addEventListener("click", (e)=>{
     e.preventDefault();
     sendMessage();
   });
 
-  // Enter send / Shift+Enter newline
   ta.addEventListener("keydown", (e)=>{
     if(e.key === "Enter" && !e.shiftKey){
       e.preventDefault();
       sendMessage();
     }
+    if(e.key === "Escape"){
+      // just in case: close modal if open
+      closeAdminModal();
+    }
   });
 
-  // Auto-grow textarea
   ta.addEventListener("input", ()=>{
     ta.style.height = "auto";
     ta.style.height = Math.min(180, ta.scrollHeight) + "px";
   });
 
   ta.addEventListener("focus", ()=> setTimeout(()=>scrollBottom(true), 200));
+
+  // ====== Admin Modal Logic (no prompt)
+  const adminModal = document.getElementById("adminModal");
+  const adminKeyInput = document.getElementById("adminKey");
+  const adminClose = document.getElementById("adminClose");
+  const adminCancel = document.getElementById("adminCancel");
+  const adminGo = document.getElementById("adminGo");
+
+  function openAdminModal(){
+    clickSfx();
+    adminModal.style.display = "flex";
+    adminModal.setAttribute("aria-hidden", "false");
+    // clear
+    adminKeyInput.value = "";
+    setTimeout(()=> adminKeyInput.focus(), 80);
+  }
+
+  function closeAdminModal(){
+    if(adminModal.style.display !== "flex") return;
+    clickSfx();
+    adminModal.style.display = "none";
+    adminModal.setAttribute("aria-hidden", "true");
+    setTimeout(()=>{ try{ ta.focus(); }catch(e){} }, 60);
+  }
+
+  function goAdmin(){
+    const key = (adminKeyInput.value || "").trim();
+    if(!key){
+      showToast("Admin key boş olamaz");
+      return;
+    }
+    clickSfx();
+    const url = `/admin-ui?email=${encodeURIComponent(email)}&key=${encodeURIComponent(key)}`;
+    location.href = url;
+  }
+
+  adminClose.addEventListener("click", closeAdminModal);
+  adminCancel.addEventListener("click", closeAdminModal);
+  adminGo.addEventListener("click", goAdmin);
+
+  // click outside to close
+  adminModal.addEventListener("click", (e)=>{
+    if(e.target === adminModal) closeAdminModal();
+  });
+
+  // keyboard in modal
+  adminKeyInput.addEventListener("keydown", (e)=>{
+    if(e.key === "Enter"){
+      e.preventDefault();
+      goAdmin();
+    }
+    if(e.key === "Escape"){
+      e.preventDefault();
+      closeAdminModal();
+    }
+  });
 </script>
 </body>
 </html>
