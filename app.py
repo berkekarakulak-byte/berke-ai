@@ -1,6 +1,7 @@
 import os
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, Request, HTTPException
@@ -9,458 +10,408 @@ from fastapi.staticfiles import StaticFiles
 
 from starlette.middleware.sessions import SessionMiddleware
 
-from sqlalchemy import create_engine, text
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import (
+    create_engine, Column, String, Integer, DateTime, Text, Boolean
+)
+from sqlalchemy.orm import sessionmaker, declarative_base
 
-from authlib.integrations.starlette_client import OAuth, OAuthError
+from authlib.integrations.starlette_client import OAuth
 
 from openai import OpenAI
-from pydantic import BaseModel
 
-
-# -------------------------
+# -----------------------------
 # Config
-# -------------------------
-ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "").strip().lower()
+# -----------------------------
+APP_NAME = "Berke AI"
+
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
+
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
+
+SESSION_SECRET = os.getenv("SESSION_SECRET", "").strip()
+if not SESSION_SECRET:
+    # local dev fallback (Render'da mutlaka env set et)
+    SESSION_SECRET = "dev-secret-change-me"
+
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "berkekarakulak@gmail.com").strip().lower()
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "").strip()
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "").strip()
-
-SESSION_SECRET = os.getenv("SESSION_SECRET", "").strip() or "dev-secret-change-me"
-IS_PROD = bool(os.getenv("RENDER")) or os.getenv("APP_ENV", "").lower() == "production"
+GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "").strip()
 
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 if not DATABASE_URL:
-    # local fallback
     DATABASE_URL = "sqlite:///./berke_ai.db"
 
+# Render bazen postgres:// verir, SQLAlchemy için postgresql:// daha stabil
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# -----------------------------
+# DB
+# -----------------------------
+Base = declarative_base()
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(String(64), primary_key=True)           # internal uuid
+    email = Column(String(320), unique=True, index=True)
+    name = Column(String(200), default="")
+    avatar = Column(Text, default="")
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    last_login_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    login_count = Column(Integer, default=0)
+    is_admin = Column(Boolean, default=False)
+
+class GuestStats(Base):
+    __tablename__ = "guest_stats"
+    id = Column(String(64), primary_key=True)           # single row: "guest"
+    guest_count = Column(Integer, default=0)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
-client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+def init_db():
+    Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        row = db.get(GuestStats, "guest")
+        if not row:
+            row = GuestStats(id="guest", guest_count=0)
+            db.add(row)
+            db.commit()
+    finally:
+        db.close()
 
+# -----------------------------
+# OpenAI client (safe init)
+# -----------------------------
+client: Optional[OpenAI] = None
+if OPENAI_API_KEY:
+    try:
+        client = OpenAI(api_key=OPENAI_API_KEY)
+    except Exception:
+        # server yine çalışsın; chat endpoint hata döner
+        client = None
 
-# -------------------------
-# App
-# -------------------------
-app = FastAPI()
+# -----------------------------
+# FastAPI
+# -----------------------------
+app = FastAPI(title=APP_NAME)
 
 app.add_middleware(
     SessionMiddleware,
     secret_key=SESSION_SECRET,
-    max_age=60 * 60 * 24 * 30,   # 30 gün login kalsın
     same_site="lax",
-    https_only=IS_PROD,
+    https_only=True,  # Render https
 )
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
-
-# -------------------------
-# OAuth
-# -------------------------
 oauth = OAuth()
-oauth.register(
-    name="google",
-    client_id=GOOGLE_CLIENT_ID,
-    client_secret=GOOGLE_CLIENT_SECRET,
-    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
-    client_kwargs={"scope": "openid email profile"},
-)
 
-
-# -------------------------
-# Helpers
-# -------------------------
-def now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-def base_url_from_request(request: Request) -> str:
-    # Render arkasında https doğru gelsin diye
-    proto = request.headers.get("x-forwarded-proto", request.url.scheme)
-    host = request.headers.get("x-forwarded-host", request.headers.get("host", request.url.netloc))
-    return f"{proto}://{host}".rstrip("/")
-
-
-# -------------------------
-# DB init
-# -------------------------
-def db_init():
-    with engine.begin() as conn:
-        conn.execute(text("""
-            CREATE TABLE IF NOT EXISTS users (
-                id TEXT PRIMARY KEY,
-                email TEXT UNIQUE,
-                name TEXT,
-                created_at TEXT,
-                last_login_at TEXT,
-                login_count INTEGER DEFAULT 0,
-                guest_id TEXT UNIQUE
-            );
-        """))
-        conn.execute(text("""
-            CREATE TABLE IF NOT EXISTS login_logs (
-                id TEXT PRIMARY KEY,
-                user_id TEXT,
-                method TEXT,
-                created_at TEXT
-            );
-        """))
-        conn.execute(text("""
-            CREATE TABLE IF NOT EXISTS messages (
-                id TEXT PRIMARY KEY,
-                user_id TEXT,
-                role TEXT,
-                content TEXT,
-                created_at TEXT,
-                is_pinned INTEGER DEFAULT 0
-            );
-        """))
-
+if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
+    oauth.register(
+        name="google",
+        client_id=GOOGLE_CLIENT_ID,
+        client_secret=GOOGLE_CLIENT_SECRET,
+        server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+        client_kwargs={"scope": "openid email profile"},
+    )
 
 @app.on_event("startup")
 def _startup():
-    db_init()
+    init_db()
 
+# -----------------------------
+# Helpers
+# -----------------------------
+def now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
 
-# -------------------------
-# DB ops
-# -------------------------
-def upsert_user_by_email(email: str, name: Optional[str]):
-    email_l = (email or "").strip().lower()
-    with engine.begin() as conn:
-        row = conn.execute(text("SELECT id, login_count FROM users WHERE email = :email"), {"email": email_l}).fetchone()
-        if row:
-            user_id, login_count = row[0], int(row[1] or 0)
-            conn.execute(
-                text("""
-                    UPDATE users
-                    SET name = COALESCE(:name, name),
-                        last_login_at = :last,
-                        login_count = :cnt
-                    WHERE id = :id
-                """),
-                {"name": name, "last": now_iso(), "cnt": login_count + 1, "id": user_id}
-            )
-            return user_id
-        else:
-            user_id = str(uuid.uuid4())
-            conn.execute(
-                text("""
-                    INSERT INTO users (id, email, name, created_at, last_login_at, login_count)
-                    VALUES (:id, :email, :name, :created, :last, 1)
-                """),
-                {"id": user_id, "email": email_l, "name": name, "created": now_iso(), "last": now_iso()}
-            )
-            return user_id
-
-
-def create_guest():
-    guest_id = str(uuid.uuid4())
-    user_id = str(uuid.uuid4())
-    with engine.begin() as conn:
-        conn.execute(
-            text("""
-                INSERT INTO users (id, guest_id, created_at, last_login_at, login_count)
-                VALUES (:id, :guest_id, :created, :last, 1)
-            """),
-            {"id": user_id, "guest_id": guest_id, "created": now_iso(), "last": now_iso()}
-        )
-    return user_id, guest_id
-
-
-def log_login(user_id: str, method: str):
-    with engine.begin() as conn:
-        conn.execute(
-            text("""
-                INSERT INTO login_logs (id, user_id, method, created_at)
-                VALUES (:id, :uid, :m, :t)
-            """),
-            {"id": str(uuid.uuid4()), "uid": user_id, "m": method, "t": now_iso()}
-        )
-
-
-def get_user_by_id(user_id: str):
-    with engine.begin() as conn:
-        row = conn.execute(
-            text("""
-                SELECT id, email, name, guest_id, login_count, last_login_at
-                FROM users WHERE id = :id
-            """),
-            {"id": user_id}
-        ).fetchone()
-        if not row:
-            return None
+def get_session_user(request: Request):
+    """
+    Returns dict: {mode, email, name, user_id, is_admin}
+    """
+    s = request.session
+    if s.get("mode") == "google" and s.get("email"):
         return {
-            "id": row[0],
-            "email": row[1],
-            "name": row[2],
-            "guest_id": row[3],
-            "login_count": int(row[4] or 0),
-            "last_login_at": row[5],
+            "mode": "google",
+            "email": s.get("email", ""),
+            "name": s.get("name", ""),
+            "user_id": s.get("user_id", ""),
+            "is_admin": bool(s.get("is_admin", False)),
         }
+    if s.get("mode") == "guest":
+        return {
+            "mode": "guest",
+            "email": "",
+            "name": s.get("guest_name", "Misafir"),
+            "user_id": s.get("guest_id", ""),
+            "is_admin": False,
+        }
+    return None
 
+def require_admin(request: Request):
+    u = get_session_user(request)
+    if not u or not u.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Yetkisiz")
+    return u
 
-def save_message(user_id: str, role: str, content: str) -> str:
-    mid = str(uuid.uuid4())
-    with engine.begin() as conn:
-        conn.execute(
-            text("""
-                INSERT INTO messages (id, user_id, role, content, created_at, is_pinned)
-                VALUES (:id, :uid, :r, :c, :t, 0)
-            """),
-            {"id": mid, "uid": user_id, "r": role, "c": content, "t": now_iso()}
-        )
-    return mid
+def upsert_user_on_login(email: str, name: str, avatar: str) -> dict:
+    email_l = (email or "").strip().lower()
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.email == email_l).first()
+        if not user:
+            user = User(
+                id=str(uuid.uuid4()),
+                email=email_l,
+                name=name or "",
+                avatar=avatar or "",
+                created_at=datetime.now(timezone.utc),
+                login_count=0,
+            )
+            db.add(user)
 
+        user.name = name or user.name or ""
+        user.avatar = avatar or user.avatar or ""
+        user.last_login_at = datetime.now(timezone.utc)
+        user.login_count = (user.login_count or 0) + 1
+        user.is_admin = (email_l == ADMIN_EMAIL)
 
-def recent_messages(user_id: str, limit: int = 20):
-    with engine.begin() as conn:
-        rows = conn.execute(
-            text("""
-                SELECT id, role, content, created_at, is_pinned
-                FROM messages
-                WHERE user_id = :uid
-                ORDER BY created_at DESC
-                LIMIT :lim
-            """),
-            {"uid": user_id, "lim": limit}
-        ).fetchall()
-    rows = list(reversed(rows))
-    return [
-        {"id": r[0], "role": r[1], "content": r[2], "created_at": r[3], "is_pinned": bool(r[4])}
-        for r in rows
-    ]
+        db.commit()
+        db.refresh(user)
 
+        return {
+            "id": user.id,
+            "email": user.email,
+            "name": user.name,
+            "avatar": user.avatar,
+            "login_count": user.login_count,
+            "is_admin": user.is_admin,
+        }
+    finally:
+        db.close()
 
-def toggle_pin(user_id: str, message_id: str, pinned: bool):
-    with engine.begin() as conn:
-        conn.execute(
-            text("""
-                UPDATE messages
-                SET is_pinned = :p
-                WHERE id = :mid AND user_id = :uid
-            """),
-            {"p": 1 if pinned else 0, "mid": message_id, "uid": user_id}
-        )
+def bump_guest_count():
+    db = SessionLocal()
+    try:
+        row = db.get(GuestStats, "guest")
+        if not row:
+            row = GuestStats(id="guest", guest_count=0)
+            db.add(row)
+        row.guest_count = (row.guest_count or 0) + 1
+        row.updated_at = datetime.now(timezone.utc)
+        db.commit()
+    finally:
+        db.close()
 
-
-# -------------------------
-# Routes
-# -------------------------
+# -----------------------------
+# Routes: UI
+# -----------------------------
 @app.get("/", response_class=HTMLResponse)
 def home():
-    with open("static/index.html", "r", encoding="utf-8") as f:
-        return f.read()
-
+    index_path = STATIC_DIR / "index.html"
+    if not index_path.exists():
+        return HTMLResponse("<h1>index.html bulunamadı</h1>", status_code=500)
+    return HTMLResponse(index_path.read_text(encoding="utf-8"))
 
 @app.get("/admin-ui", response_class=HTMLResponse)
 def admin_ui(request: Request):
-    uid = request.session.get("user_id")
-    if not uid:
-        raise HTTPException(status_code=403, detail="Yetkisiz (login gerekli).")
-    user = get_user_by_id(uid)
-    if not user:
-        raise HTTPException(status_code=403, detail="Yetkisiz.")
-    if (user.get("email") or "").lower() != ADMIN_EMAIL:
-        raise HTTPException(status_code=403, detail="Yetkisiz (admin değil).")
+    # basit koruma: admin değilse 403
+    require_admin(request)
+    admin_path = STATIC_DIR / "admin.html"
+    if admin_path.exists():
+        return HTMLResponse(admin_path.read_text(encoding="utf-8"))
+    # admin.html yoksa fallback
+    return HTMLResponse(
+        "<h2>Admin UI dosyası yok</h2><p>static/admin.html ekleyebilirsin.</p>",
+        status_code=200
+    )
 
-    with open("static/admin.html", "r", encoding="utf-8") as f:
-        return f.read()
-
-
-@app.get("/admin/data")
-def admin_data(request: Request):
-    uid = request.session.get("user_id")
-    if not uid:
-        raise HTTPException(status_code=403, detail="Yetkisiz.")
-    user = get_user_by_id(uid)
-    if not user or (user.get("email") or "").lower() != ADMIN_EMAIL:
-        raise HTTPException(status_code=403, detail="Yetkisiz (admin değil).")
-
-    with engine.begin() as conn:
-        users = conn.execute(text("""
-            SELECT id, email, name, guest_id, login_count, last_login_at, created_at
-            FROM users
-            ORDER BY last_login_at DESC
-            LIMIT 200
-        """)).fetchall()
-
-        logs = conn.execute(text("""
-            SELECT method, created_at
-            FROM login_logs
-            ORDER BY created_at DESC
-            LIMIT 200
-        """)).fetchall()
-
-        guest_count = conn.execute(text("""
-            SELECT COUNT(*) FROM users WHERE email IS NULL
-        """)).fetchone()[0]
-
-        google_count = conn.execute(text("""
-            SELECT COUNT(*) FROM users WHERE email IS NOT NULL
-        """)).fetchone()[0]
-
-    return {
-        "counts": {"guest_users": int(guest_count), "google_users": int(google_count)},
-        "users": [
-            {
-                "id": u[0],
-                "email": u[1],
-                "name": u[2],
-                "guest_id": u[3],
-                "login_count": int(u[4] or 0),
-                "last_login_at": u[5],
-                "created_at": u[6],
-            }
-            for u in users
-        ],
-        "recent_logins": [{"method": l[0], "created_at": l[1]} for l in logs],
-    }
-
-
-@app.get("/me")
-def me(request: Request):
-    uid = request.session.get("user_id")
-    if not uid:
-        return {"logged_in": False}
-
-    user = get_user_by_id(uid)
-    if not user:
-        request.session.clear()
-        return {"logged_in": False}
-
-    email = (user.get("email") or "").lower()
-    is_admin = bool(email) and (email == ADMIN_EMAIL)
-
-    return {
-        "logged_in": True,
-        "user_id": user["id"],
-        "email": user.get("email"),
-        "name": user.get("name"),
-        "guest": user.get("email") is None,
-        "login_count": user.get("login_count", 0),
-        "is_admin": is_admin,
-    }
-
-
-@app.post("/guest")
-def guest_login(request: Request):
-    user_id, guest_id = create_guest()
-    request.session["user_id"] = user_id
-    request.session["guest_id"] = guest_id
-    log_login(user_id, "guest")
-    return {"ok": True}
-
-
+# -----------------------------
+# Routes: Auth
+# -----------------------------
 @app.get("/auth/google")
 async def auth_google(request: Request):
-    if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
-        raise HTTPException(status_code=500, detail="Google OAuth env eksik (GOOGLE_CLIENT_ID/SECRET).")
-
-    base = base_url_from_request(request)
-    redirect_uri = f"{base}/auth/google/callback"
+    if not (GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET):
+        raise HTTPException(status_code=500, detail="Google OAuth ayarlı değil (CLIENT_ID/SECRET yok).")
+    redirect_uri = GOOGLE_REDIRECT_URI or str(request.url_for("auth_google_callback"))
     return await oauth.google.authorize_redirect(request, redirect_uri)
-
 
 @app.get("/auth/google/callback")
 async def auth_google_callback(request: Request):
+    if not (GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET):
+        raise HTTPException(status_code=500, detail="Google OAuth ayarlı değil (CLIENT_ID/SECRET yok).")
+
     try:
         token = await oauth.google.authorize_access_token(request)
-    except OAuthError as e:
-        raise HTTPException(status_code=400, detail=f"Google OAuth hata: {str(e)}")
+        userinfo = token.get("userinfo") or {}
+        # fallback: id_token parse
+        if not userinfo:
+            userinfo = await oauth.google.parse_id_token(request, token)
 
-    userinfo = token.get("userinfo")
-    if not userinfo:
-        userinfo = await oauth.google.userinfo(token=token)
+        email = (userinfo.get("email") or "").strip()
+        name = (userinfo.get("name") or userinfo.get("given_name") or "").strip()
+        avatar = (userinfo.get("picture") or "").strip()
 
-    email = (userinfo.get("email") or "").strip()
-    name = (userinfo.get("name") or "").strip() or None
+        if not email:
+            raise HTTPException(status_code=400, detail="Google'dan email alınamadı.")
 
-    if not email:
-        raise HTTPException(status_code=400, detail="Google'dan email alınamadı.")
+        up = upsert_user_on_login(email=email, name=name, avatar=avatar)
 
-    user_id = upsert_user_by_email(email=email, name=name)
-    request.session["user_id"] = user_id
-    request.session.pop("guest_id", None)
+        # session'a yaz
+        request.session.clear()
+        request.session["mode"] = "google"
+        request.session["email"] = up["email"]
+        request.session["name"] = up["name"]
+        request.session["user_id"] = up["id"]
+        request.session["is_admin"] = bool(up["is_admin"])
 
-    log_login(user_id, "google")
+        # direkt sohbete dön (UI zaten / üzerinde)
+        return RedirectResponse(url="/", status_code=302)
 
-    return RedirectResponse(url="/", status_code=302)
+    except HTTPException:
+        raise
+    except Exception as e:
+        # kullanıcı görsün diye
+        return JSONResponse({"detail": f"Callback hata: {str(e)}"}, status_code=400)
 
+@app.post("/auth/guest")
+async def auth_guest(request: Request):
+    data = await request.json()
+    guest_name = (data.get("name") or "Misafir").strip()[:40]
+    guest_id = str(uuid.uuid4())
+
+    request.session.clear()
+    request.session["mode"] = "guest"
+    request.session["guest_name"] = guest_name
+    request.session["guest_id"] = guest_id
+
+    bump_guest_count()
+    return {"ok": True, "mode": "guest", "name": guest_name}
 
 @app.post("/logout")
 def logout(request: Request):
     request.session.clear()
     return {"ok": True}
 
+@app.get("/api/me")
+def api_me(request: Request):
+    u = get_session_user(request)
+    if not u:
+        return {"logged_in": False}
+    return {"logged_in": True, **u}
 
-# -------------------------
-# Chat + Pin
-# -------------------------
-class ChatReq(BaseModel):
-    message: str
+# -----------------------------
+# Routes: Admin API
+# -----------------------------
+@app.get("/api/admin/stats")
+def admin_stats(request: Request):
+    require_admin(request)
+    db = SessionLocal()
+    try:
+        users = db.query(User).order_by(User.last_login_at.desc()).limit(200).all()
+        guest = db.get(GuestStats, "guest")
+        return {
+            "guest_count": guest.guest_count if guest else 0,
+            "users": [
+                {
+                    "email": u.email,
+                    "name": u.name,
+                    "login_count": u.login_count,
+                    "last_login_at": u.last_login_at.isoformat() if u.last_login_at else None,
+                    "is_admin": u.is_admin,
+                }
+                for u in users
+            ],
+        }
+    finally:
+        db.close()
 
-class PinReq(BaseModel):
-    message_id: str
-    pinned: bool
+# -----------------------------
+# Routes: Chat / Image
+# -----------------------------
+@app.post("/api/chat")
+async def chat(request: Request):
+    u = get_session_user(request)
+    if not u:
+        raise HTTPException(status_code=401, detail="Önce giriş yap (Google / Misafir).")
 
-@app.get("/history")
-def history(request: Request):
-    uid = request.session.get("user_id")
-    if not uid:
-        return {"messages": []}
-    return {"messages": recent_messages(uid, limit=30)}
+    data = await request.json()
+    message = (data.get("message") or "").strip()
+    if not message:
+        return {"reply": "", "ts": now_iso()}
 
-@app.post("/pin")
-def pin(req: PinReq, request: Request):
-    uid = request.session.get("user_id")
-    if not uid:
-        raise HTTPException(status_code=403, detail="Login gerekli.")
-    toggle_pin(uid, req.message_id, req.pinned)
-    return {"ok": True}
+    # Persona: samimi, dostça
+    persona = (
+        "Sen samimi, cana yakın, kısa ve net konuşan bir yardımcı botsun. "
+        "Kullanıcıya 'kanka', 'bro' gibi sıcak bir dille yaklaşabilirsin ama saygıyı koru. "
+        "Gereksiz uzatma, pratik çözüm öner."
+    )
 
-@app.post("/chat")
-def chat(req: ChatReq, request: Request):
-    uid = request.session.get("user_id")
-
-    # login yoksa: kullanıcıya onboarding gösteriyoruz; ama chat endpoint’i yine de cevap verebilir
-    if not uid:
-        # otomatik misafir yarat (kullanıcı direkt sohbetten yazarsa)
-        uid, guest_id = create_guest()
-        request.session["user_id"] = uid
-        request.session["guest_id"] = guest_id
-        log_login(uid, "guest")
+    # Basit memory: (şimdilik DB'ye sohbet yazmıyoruz; istersen sonraki adımda ekleriz)
+    # Burada sadece kullanıcı emailini gösterip kişiselleştirme yapıyoruz.
+    user_label = u.get("email") or u.get("name") or "Misafir"
 
     if not client:
-        return JSONResponse({"reply": "OpenAI anahtarı yok. Render ENV: OPENAI_API_KEY ekle."})
-
-    user_text = (req.message or "").strip()
-    if not user_text:
-        return {"reply": "Bir şey yaz kanka 😄"}
-
-    # DB’ye user mesajı yaz
-    save_message(uid, "user", user_text)
-
-    # Son 20 mesajı modele bağlam yap
-    ctx = recent_messages(uid, limit=20)
-    messages = [{"role": "system", "content": "Sen samimi, dost canlısı bir Türkçe asistansın. Kısa ve net konuş. Kullanıcının tonuna uyum sağla."}]
-    for m in ctx:
-        role = "assistant" if m["role"] == "ai" else m["role"]
-        if role not in ("user", "assistant", "system"):
-            role = "user"
-        messages.append({"role": role, "content": m["content"]})
+        return {
+            "reply": "Şu an teknik bir sorun var ama buradayım. (OpenAI anahtarı / bağlantı kontrol et)",
+            "ts": now_iso()
+        }
 
     try:
-        r = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=messages,
+        # Model adını senin projendeki mevcut halinle uyumlu tutmak için:
+        # gpt-4o-mini genelde hızlı/ucuz; yoksa gpt-4.1-mini de olabilir.
+        model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
+        resp = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": persona},
+                {"role": "system", "content": f"Kullanıcı etiketi: {user_label}"},
+                {"role": "user", "content": message},
+            ],
+            temperature=0.7,
         )
-        reply = r.choices[0].message.content or "…"
+        reply = resp.choices[0].message.content or ""
+        return {"reply": reply, "ts": now_iso()}
     except Exception as e:
-        reply = "Şu an teknik bir sorun var ama buradayım."
+        return {"reply": f"Şu an cevap veremedim: {str(e)}", "ts": now_iso()}
 
-    # DB’ye ai mesajı yaz
-    save_message(uid, "ai", reply)
+@app.post("/api/image")
+async def image_generate(request: Request):
+    """
+    UI'da buton kalsın diye endpoint var.
+    Billing limit varsa 400 dönecek. UI bunu gösterir.
+    """
+    u = get_session_user(request)
+    if not u:
+        raise HTTPException(status_code=401, detail="Önce giriş yap (Google / Misafir).")
 
-    return {"reply": reply}
+    data = await request.json()
+    prompt = (data.get("prompt") or "").strip()
+    if not prompt:
+        raise HTTPException(status_code=400, detail="Prompt boş.")
+
+    if not client:
+        raise HTTPException(status_code=500, detail="OpenAI client yok (API key).")
+
+    try:
+        # Görsel modeli (DALL·E / gpt-image-1 vs)
+        image_model = os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-1")
+        out = client.images.generate(
+            model=image_model,
+            prompt=prompt,
+            size="1024x1024",
+        )
+        # base64 dönebilir; url dönebilir. Biz ikisini de handle edelim.
+        img = out.data[0]
+        image_url = getattr(img, "url", None)
+        b64 = getattr(img, "b64_json", None)
+        return {"url": image_url, "b64": b64, "ts": now_iso()}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Görsel üretim hata: {str(e)}")
