@@ -1,744 +1,683 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Berke AI</title>
   <style>
     :root{
-      --bg:#0b0f17;
-      --panel:#101826;
-      --panel2:#0f1623;
-      --text:#e8eefc;
-      --muted:#a8b3cf;
-      --line:rgba(255,255,255,.08);
-      --accent:#6ee7ff;
-      --accent2:#a78bfa;
+      --bg:#0b0f14;
+      --panel:#0f1620;
+      --panel2:#0b121a;
+      --border:rgba(255,255,255,.08);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.6);
+      --accent:#3b82f6;
       --good:#22c55e;
       --warn:#f59e0b;
-      --bad:#ef4444;
-
-      --bubbleUser: rgba(110,231,255,.12);
-      --bubbleAI: rgba(167,139,250,.10);
-      --shadow: 0 12px 40px rgba(0,0,0,.45);
+      --shadow: 0 20px 60px rgba(0,0,0,.45);
+      --radius:18px;
+      --bubbleUser:#1f2a37;
+      --bubbleAI:#0e1b2a;
     }
     [data-theme="light"]{
       --bg:#f6f7fb;
       --panel:#ffffff;
-      --panel2:#f0f3ff;
-      --text:#0a0d14;
-      --muted:#475569;
-      --line:rgba(2,6,23,.10);
-      --bubbleUser: rgba(2,132,199,.10);
-      --bubbleAI: rgba(124,58,237,.10);
-      --shadow: 0 12px 40px rgba(2,6,23,.12);
+      --panel2:#f1f3f7;
+      --border:rgba(0,0,0,.08);
+      --text:rgba(0,0,0,.88);
+      --muted:rgba(0,0,0,.55);
+      --accent:#2563eb;
+      --shadow: 0 20px 60px rgba(0,0,0,.12);
+      --bubbleUser:#eef2ff;
+      --bubbleAI:#f1f5f9;
     }
-
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background: radial-gradient(1200px 700px at 10% 10%, rgba(110,231,255,.18), transparent 55%),
-                  radial-gradient(1000px 650px at 90% 0%, rgba(167,139,250,.18), transparent 55%),
+      background: radial-gradient(1200px 700px at 15% 10%, rgba(59,130,246,.18), transparent 55%),
+                  radial-gradient(900px 600px at 85% 20%, rgba(34,197,94,.10), transparent 55%),
                   var(--bg);
       color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      overflow:hidden;
     }
-    a{color:inherit}
-    .wrap{
+
+    /* Layout */
+    .app{
       height:100%;
       display:flex;
-      align-items:center;
+      align-items:stretch;
       justify-content:center;
-      padding:16px;
+      padding:18px;
+      gap:16px;
     }
-    .app{
+    .shell{
       width:min(1100px, 100%);
-      height:min(760px, 100%);
-      background: linear-gradient(180deg, rgba(255,255,255,.04), transparent 40%), var(--panel);
-      border:1px solid var(--line);
-      border-radius:20px;
-      box-shadow: var(--shadow);
-      overflow:hidden;
+      height:100%;
       display:flex;
       flex-direction:column;
-      position:relative;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.02);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
     }
     .topbar{
-      padding:14px 16px;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      border-bottom:1px solid var(--line);
-      background: linear-gradient(180deg, rgba(255,255,255,.04), transparent);
-      gap:12px;
+      padding:14px 16px;
+      border-bottom:1px solid var(--border);
+      background: linear-gradient(to bottom, rgba(255,255,255,.06), rgba(255,255,255,.02));
     }
     .brand{
-      display:flex; align-items:center; gap:10px;
-      min-width: 220px;
+      display:flex;align-items:center;gap:12px;min-width:0;
     }
     .logo{
-      width:38px; height:38px; border-radius:12px;
-      background: radial-gradient(12px 12px at 30% 30%, rgba(255,255,255,.35), transparent),
-                  linear-gradient(135deg, var(--accent), var(--accent2));
-      box-shadow: 0 10px 22px rgba(110,231,255,.18);
+      width:38px;height:38px;border-radius:12px;
+      background: radial-gradient(circle at 30% 25%, rgba(59,130,246,.95), rgba(59,130,246,.15) 55%),
+                  radial-gradient(circle at 70% 75%, rgba(34,197,94,.75), rgba(34,197,94,.10) 60%),
+                  rgba(255,255,255,.06);
+      border:1px solid var(--border);
     }
     .brand h1{
-      font-size:16px; margin:0; letter-spacing:.4px;
-      line-height:1.1;
+      font-size:14px;margin:0;letter-spacing:.2px;font-weight:700;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     }
     .brand .sub{
-      font-size:12px; color:var(--muted);
+      font-size:12px;color:var(--muted);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     }
-    .actions{
-      display:flex; align-items:center; gap:10px;
-    }
-    .chip{
-      font-size:12px;
-      padding:8px 10px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      background: rgba(255,255,255,.03);
-      display:flex; align-items:center; gap:8px;
-    }
-    .btn{
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.04);
-      color:var(--text);
-      padding:10px 12px;
-      border-radius:12px;
-      cursor:pointer;
-      font-weight:600;
-      transition: transform .05s ease, background .2s ease;
-      display:inline-flex; align-items:center; justify-content:center;
-      gap:8px;
-      user-select:none;
-    }
-    .btn:hover{ background: rgba(255,255,255,.06); }
-    .btn:active{ transform: translateY(1px); }
-    .btn.primary{
-      border:0;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color:#0b0f17;
-    }
-    .btn.danger{
-      border:1px solid rgba(239,68,68,.35);
-      background: rgba(239,68,68,.08);
-    }
-    .btn.icon{
-      width:44px; padding:10px 0;
-    }
-    .main{
-      flex:1;
-      display:flex;
-      min-height:0;
-    }
-    .left{
-      width: 320px;
-      border-right:1px solid var(--line);
-      background: linear-gradient(180deg, rgba(255,255,255,.03), transparent);
-      padding:14px;
-      display:flex; flex-direction:column;
-      gap:12px;
-    }
-    .card{
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:12px;
-      background: rgba(255,255,255,.03);
-    }
-    .card h3{ margin:0 0 6px; font-size:13px; }
-    .card p{ margin:0; font-size:12px; color:var(--muted); line-height:1.4; }
     .right{
-      flex:1;
+      display:flex;align-items:center;gap:10px;
+    }
+    .pill{
+      display:flex;align-items:center;gap:10px;
+      padding:8px 10px;border:1px solid var(--border);border-radius:999px;
+      background:rgba(255,255,255,.04);
+      max-width:320px;
+    }
+    .avatar{
+      width:26px;height:26px;border-radius:999px;background:rgba(255,255,255,.08);
+      border:1px solid var(--border); overflow:hidden; flex:0 0 auto;
+    }
+    .avatar img{width:100%;height:100%;object-fit:cover}
+    .who{min-width:0}
+    .who .name{font-size:12px;font-weight:650;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .who .mail{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+    button{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.05);
+      color:var(--text);
+      border-radius:12px;
+      padding:10px 12px;
+      font-weight:650;
+      cursor:pointer;
+      transition:.15s ease;
+    }
+    button:hover{transform:translateY(-1px);background:rgba(255,255,255,.08)}
+    button:active{transform:translateY(0px)}
+    .btnAccent{background:rgba(59,130,246,.18);border-color:rgba(59,130,246,.35)}
+    .btnAccent:hover{background:rgba(59,130,246,.25)}
+    .btnGhost{background:transparent}
+    .btnSmall{padding:8px 10px;border-radius:10px;font-size:12px}
+    .iconBtn{width:40px;height:40px;display:grid;place-items:center;padding:0;border-radius:12px}
+
+    .content{
+      display:flex;
+      flex:1 1 auto;
+      min-height:0;
+      background: linear-gradient(to bottom, rgba(0,0,0,.0), rgba(0,0,0,.05));
+    }
+
+    /* Chat */
+    .chat{
+      flex:1 1 auto;
       display:flex;
       flex-direction:column;
       min-width:0;
-      min-height:0;
     }
-    /* Chat */
-    .chat{
-      flex:1;
-      min-height:0;
-      padding:16px;
+    .messages{
+      flex:1 1 auto;
       overflow:auto;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
+      padding:18px 14px 10px 14px;
+      scroll-behavior:smooth;
     }
     .row{
       display:flex;
+      margin:10px 0;
       gap:10px;
       align-items:flex-end;
     }
-    .row.user{ justify-content:flex-end; }
+    .row.user{justify-content:flex-end}
+    .row.ai{justify-content:flex-start}
+
     .bubble{
-      max-width:min(720px, 92%);
-      padding:12px 12px;
+      max-width:min(760px, 92%);
+      border:1px solid var(--border);
       border-radius:16px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.03);
+      padding:10px 12px;
+      line-height:1.35;
+      white-space:pre-wrap;
+      word-wrap:break-word;
       position:relative;
     }
-    .row.user .bubble{
-      background: var(--bubbleUser);
-      border-color: rgba(110,231,255,.22);
-    }
-    .row.ai .bubble{
-      background: var(--bubbleAI);
-      border-color: rgba(167,139,250,.22);
-    }
+    .row.user .bubble{background:var(--bubbleUser)}
+    .row.ai .bubble{background:var(--bubbleAI)}
     .meta{
+      display:flex;gap:8px;align-items:center;
       margin-top:6px;
-      display:flex;
-      align-items:center;
+      font-size:11px;color:var(--muted);
       justify-content:space-between;
-      gap:10px;
+    }
+    .actions{
+      display:flex;gap:6px;align-items:center;
+    }
+    .chip{
       font-size:11px;
-      color:var(--muted);
-    }
-    .meta .tools{
-      display:flex; gap:8px; align-items:center;
-    }
-    .tool{
-      cursor:pointer;
-      padding:4px 8px;
+      padding:5px 8px;
+      border:1px solid var(--border);
       border-radius:999px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.03);
+      background:rgba(255,255,255,.04);
+      cursor:pointer;
       user-select:none;
     }
-    .tool:hover{ background: rgba(255,255,255,.05); }
+    .chip:hover{background:rgba(255,255,255,.07)}
     .pinned{
-      border-color: rgba(34,197,94,.35) !important;
-      box-shadow: 0 0 0 2px rgba(34,197,94,.08) inset;
+      border-color:rgba(245,158,11,.45) !important;
+      box-shadow:0 0 0 2px rgba(245,158,11,.12) inset;
     }
-    /* Composer */
+
     .composer{
-      border-top:1px solid var(--line);
-      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.03));
       padding:12px;
-    }
-    .composerInner{
-      display:flex;
-      gap:10px;
-      align-items:flex-end;
+      border-top:1px solid var(--border);
+      background: linear-gradient(to top, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      display:flex;gap:10px;align-items:flex-end;
     }
     textarea{
-      flex:1;
+      flex:1 1 auto;
       min-height:46px;
-      max-height:140px;
+      max-height:160px;
       resize:none;
       padding:12px 12px;
       border-radius:14px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.03);
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
       color:var(--text);
       outline:none;
       font-size:14px;
       line-height:1.35;
     }
-    textarea::placeholder{ color: rgba(168,179,207,.75); }
-    .small{
-      font-size:12px; color:var(--muted);
-      padding:8px 12px;
-    }
+    textarea:focus{border-color:rgba(59,130,246,.45);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+    .sendBtn{height:46px;width:52px;border-radius:14px}
+    .hint{font-size:11px;color:var(--muted);padding:0 14px 12px 14px}
 
-    /* Onboarding modal */
+    /* Drawer */
+    .side{
+      width:340px;
+      border-left:1px solid var(--border);
+      background:rgba(255,255,255,.02);
+      display:flex;flex-direction:column;
+    }
+    .sideHead{
+      padding:14px 14px 10px 14px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;
+    }
+    .sideHead .t{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.2px}
+    .panel{
+      padding:12px 14px;
+      overflow:auto;
+    }
+    .card{
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:12px;
+      background:rgba(255,255,255,.03);
+      margin-bottom:12px;
+    }
+    .card h3{margin:0 0 8px 0;font-size:13px}
+    .card p{margin:0;color:var(--muted);font-size:12px;line-height:1.4}
+    .rowBtns{display:flex;gap:10px;margin-top:10px}
+    .rowBtns button{flex:1}
+
+    /* Login overlay */
+    .overlay{
+      position:fixed;inset:0;
+      display:flex;align-items:center;justify-content:center;
+      padding:18px;
+      background:rgba(0,0,0,.55);
+      backdrop-filter: blur(6px);
+      z-index:50;
+    }
     .modal{
-      position:absolute;
-      inset:0;
-      background: rgba(0,0,0,.55);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:16px;
-    }
-    .modal.show{ display:flex; }
-    .modalBox{
       width:min(520px, 100%);
-      background: var(--panel);
-      border:1px solid var(--line);
-      border-radius:18px;
+      border:1px solid var(--border);
+      border-radius:22px;
+      background:linear-gradient(to bottom, rgba(255,255,255,.06), rgba(255,255,255,.03));
       box-shadow: var(--shadow);
-      overflow:hidden;
+      padding:18px;
     }
-    .modalHead{
-      padding:14px 16px;
-      border-bottom:1px solid var(--line);
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-    }
-    .modalHead h2{ margin:0; font-size:15px; }
-    .modalBody{ padding:16px; display:flex; flex-direction:column; gap:12px; }
-    .modalBody input{
+    .modalTop{display:flex;align-items:center;gap:12px}
+    .modalTop .logo{width:44px;height:44px;border-radius:14px}
+    .modal h2{margin:0;font-size:16px}
+    .modal .desc{margin:6px 0 0 0;color:var(--muted);font-size:12px;line-height:1.4}
+    .stack{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+    .bigBtn{
       width:100%;
-      padding:12px 12px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.03);
-      color:var(--text);
-      outline:none;
+      padding:12px 14px;
+      border-radius:16px;
+      display:flex;align-items:center;justify-content:center;
+      gap:10px;
       font-size:14px;
     }
-    .stack{ display:flex; flex-direction:column; gap:10px; }
-    .hint{ font-size:12px; color:var(--muted); line-height:1.4; }
+    .googleIcon{
+      width:18px;height:18px;border-radius:6px;
+      background:conic-gradient(from 0deg, #ea4335, #fbbc05, #34a853, #4285f4, #ea4335);
+      border:1px solid rgba(255,255,255,.25);
+    }
 
-    /* Responsive */
-    @media (max-width: 900px){
-      .left{ display:none; }
-      .brand{ min-width:auto; }
+    .toast{
+      position:fixed;bottom:16px;left:50%;
+      transform:translateX(-50%);
+      background:rgba(0,0,0,.70);
+      color:white;
+      border:1px solid rgba(255,255,255,.16);
+      border-radius:999px;
+      padding:10px 12px;
+      font-size:12px;
+      display:none;
+      z-index:60;
+    }
+
+    /* Mobile */
+    @media (max-width: 980px){
+      .side{display:none}
+      .shell{border-radius:16px}
+      .messages{padding:14px 10px 10px 10px}
+      .composer{padding:10px}
     }
   </style>
 </head>
-
-<body data-theme="dark">
-<div class="wrap">
-  <div class="app">
+<body>
+<div class="app">
+  <div class="shell">
     <div class="topbar">
       <div class="brand">
         <div class="logo"></div>
-        <div>
-          <h1>Berke AI</h1>
-          <div class="sub" id="subline">premium sohbet • hızlı • karanlık mod</div>
-        </div>
-      </div>
-
-      <div class="actions">
-        <div class="chip" id="whoChip">🔒 Giriş gerekli</div>
-        <button class="btn icon" id="themeBtn" title="Tema">
-          🌙
-        </button>
-        <button class="btn icon" id="soundBtn" title="Ses">
-          🔊
-        </button>
-        <button class="btn" id="adminBtn" style="display:none;">🛡️ Admin</button>
-        <button class="btn danger" id="logoutBtn" style="display:none;">Çıkış</button>
-      </div>
-    </div>
-
-    <div class="main">
-      <div class="left">
-        <div class="card">
-          <h3>Hızlı komutlar</h3>
-          <p>• “Beni motive et”</p>
-          <p>• “Plan çıkar”</p>
-          <p>• “Kod yaz”</p>
-        </div>
-        <div class="card">
-          <h3>Not</h3>
-          <p>Görsel üretim butonu açık. Billing limit varsa hata gösterebilir.</p>
-        </div>
-        <div class="card">
-          <h3>Püf</h3>
-          <p>Enter: gönder • Shift+Enter: alt satır</p>
+        <div style="min-width:0">
+          <h1 id="brandTitle">Berke AI</h1>
+          <div class="sub" id="brandSub">Ultra premium • Dark edition</div>
         </div>
       </div>
 
       <div class="right">
-        <div class="chat" id="chat"></div>
+        <button class="iconBtn" id="themeBtn" title="Tema">
+          🌙
+        </button>
 
-        <div class="composeriver" style="display:none;" id="typingHint"></div>
+        <div class="pill" id="whoPill" style="display:none;">
+          <div class="avatar" id="avatarBox"></div>
+          <div class="who">
+            <div class="name" id="whoName">Kullanıcı</div>
+            <div class="mail" id="whoMail">—</div>
+          </div>
+        </div>
+
+        <button class="btnSmall btnGhost" id="adminBtn" style="display:none;">Admin</button>
+        <button class="btnSmall" id="logoutBtn" style="display:none;">Çıkış</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="chat">
+        <div class="messages" id="messages"></div>
+
+        <div class="hint" id="typingHint" style="display:none;">AI yazıyor…</div>
 
         <div class="composer">
-          <div class="composerInner">
-            <textarea id="msg" placeholder="Mesajını yaz... (Enter gönderir)"></textarea>
-            <button class="btn" id="imgBtn" title="Görsel üret">
-              🖼️
-            </button>
-            <button class="btn primary" id="sendBtn">
-              Gönder ↵
-            </button>
+          <textarea id="input" placeholder="Mesaj yaz… (Enter: gönder • Shift+Enter: yeni satır)"></textarea>
+          <button class="sendBtn btnAccent" id="sendBtn" title="Gönder">➤</button>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="sideHead">
+          <div class="t">Araçlar</div>
+          <div style="display:flex;gap:8px">
+            <button class="btnSmall" id="soundBtn" title="Ses">🔊</button>
+            <button class="btnSmall" id="imgBtn" title="Görsel">🖼️</button>
           </div>
-          <div class="small" id="statusLine"></div>
+        </div>
+        <div class="panel">
+          <div class="card">
+            <h3>🧠 Pin + Kopyala</h3>
+            <p>Mesajların sağındaki “Pin” ile sabitleyebilir, “Kopyala” ile tek tık kopyalayabilirsin.</p>
+          </div>
+          <div class="card">
+            <h3>🖼️ Görsel üretim</h3>
+            <p>Sağ üstteki “Görsel” butonuna basınca prompt sorar. (Bütçe limiti varsa hata gösterebilir.)</p>
+          </div>
+          <div class="card">
+            <h3>👀 Okundu / Yazıyor</h3>
+            <p>AI cevap üretirken “AI yazıyor…” görünür.</p>
+          </div>
         </div>
       </div>
     </div>
-
-    <!-- Onboarding -->
-    <div class="modal" id="modal">
-      <div class="modalBox">
-        <div class="modalHead">
-          <h2>Giriş yap</h2>
-          <button class="btn icon" id="closeModal">✕</button>
-        </div>
-        <div class="modalBody">
-          <div class="hint">
-            Google ile giriş yapabilir ya da misafir devam edebilirsin.
-          </div>
-
-          <div class="stack">
-            <button class="btn primary" id="googleBtn">
-              <span style="font-size:16px">G</span> Google ile giriş yap
-            </button>
-
-            <div class="card" style="margin:0">
-              <h3 style="margin-bottom:8px">Misafir</h3>
-              <input id="guestName" placeholder="Takma ad (opsiyonel)" />
-              <button class="btn" id="guestBtn">Misafir olarak devam et</button>
-              <div class="hint" style="margin-top:8px">
-                Misafir girişte e-posta kaydı olmaz.
-              </div>
-            </div>
-          </div>
-
-          <div class="hint" id="modalErr" style="color: var(--bad); display:none"></div>
-        </div>
-      </div>
-    </div>
-
   </div>
 </div>
 
+<!-- Login Overlay -->
+<div class="overlay" id="overlay" style="display:none;">
+  <div class="modal">
+    <div class="modalTop">
+      <div class="logo"></div>
+      <div>
+        <h2>Giriş yap</h2>
+        <p class="desc">Google ile giriş yap veya misafir olarak devam et. (Admin paneli sadece yetkili mailde görünür.)</p>
+      </div>
+    </div>
+
+    <div class="stack">
+      <button class="bigBtn btnAccent" id="googleBtn">
+        <span class="googleIcon"></span>
+        Google ile giriş yap
+      </button>
+      <button class="bigBtn" id="guestBtn">
+        Misafir olarak devam et
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script>
-  const chatEl = document.getElementById("chat");
-  const msgEl = document.getElementById("msg");
-  const sendBtn = document.getElementById("sendBtn");
-  const imgBtn = document.getElementById("imgBtn");
-  const statusLine = document.getElementById("statusLine");
-  const whoChip = document.getElementById("whoChip");
-  const adminBtn = document.getElementById("adminBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
+  // -----------------------------
+  // helpers
+  // -----------------------------
+  const $ = (id)=>document.getElementById(id);
+  const messagesEl = $("messages");
+  const inputEl = $("input");
+  const typingHint = $("typingHint");
+  const toastEl = $("toast");
+  const overlayEl = $("overlay");
 
-  const modal = document.getElementById("modal");
-  const closeModal = document.getElementById("closeModal");
-  const googleBtn = document.getElementById("googleBtn");
-  const guestBtn = document.getElementById("guestBtn");
-  const guestName = document.getElementById("guestName");
-  const modalErr = document.getElementById("modalErr");
+  const state = {
+    history: [],
+    sound: JSON.parse(localStorage.getItem("soundOn") || "true"),
+    theme: localStorage.getItem("theme") || "dark",
+    pinned: JSON.parse(localStorage.getItem("pinned") || "[]"), // array of message ids
+  };
 
-  const themeBtn = document.getElementById("themeBtn");
-  const soundBtn = document.getElementById("soundBtn");
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.style.display = "block";
+    setTimeout(()=>toastEl.style.display="none", 2200);
+  }
 
-  let soundOn = true;
-  let pinnedIds = new Set();
-  const PIN_KEY = "berke_ai_pins_v1";
-  const THEME_KEY = "berke_ai_theme_v1";
-  const SOUND_KEY = "berke_ai_sound_v1";
+  function setTheme(theme){
+    state.theme = theme;
+    localStorage.setItem("theme", theme);
+    document.documentElement.setAttribute("data-theme", theme === "light" ? "light" : "dark");
+    $("themeBtn").textContent = theme === "light" ? "☀️" : "🌙";
+  }
 
-  function loadPrefs(){
+  function playSend(){
+    if(!state.sound) return;
     try{
-      const pins = JSON.parse(localStorage.getItem(PIN_KEY) || "[]");
-      pinnedIds = new Set(pins);
-    }catch{}
-    const t = localStorage.getItem(THEME_KEY);
-    if(t) document.body.setAttribute("data-theme", t);
-    const s = localStorage.getItem(SOUND_KEY);
-    if(s) soundOn = (s === "1");
-    themeBtn.textContent = document.body.getAttribute("data-theme")==="dark" ? "🌙" : "☀️";
-    soundBtn.textContent = soundOn ? "🔊" : "🔇";
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine";
+      o.frequency.value = 720;
+      g.gain.value = 0.04;
+      o.connect(g); g.connect(ctx.destination);
+      o.start();
+      setTimeout(()=>{o.stop(); ctx.close()}, 90);
+    }catch(e){}
   }
 
-  function savePins(){
-    localStorage.setItem(PIN_KEY, JSON.stringify([...pinnedIds]));
+  function formatTime(ts){
+    const d = new Date(ts);
+    const hh = String(d.getHours()).padStart(2,'0');
+    const mm = String(d.getMinutes()).padStart(2,'0');
+    return `${hh}:${mm}`;
   }
 
-  function beep(type="send"){
-    if(!soundOn) return;
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.type = "sine";
-    o.frequency.value = type==="send" ? 520 : 330;
-    g.gain.value = 0.04;
-    o.connect(g); g.connect(ctx.destination);
-    o.start();
-    setTimeout(()=>{ o.stop(); ctx.close(); }, 90);
-  }
-
-  function fmtTime(iso){
-    try{
-      const d = new Date(iso);
-      return d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
-    }catch{
-      return "";
-    }
-  }
-
-  function escapeHtml(str){
-    return (str||"")
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;");
-  }
-
-  function addBubble(role, text, ts=new Date().toISOString()){
-    const id = crypto.randomUUID();
+  function renderMessage(msg){
     const row = document.createElement("div");
-    row.className = "row " + (role==="user" ? "user" : "ai");
+    row.className = "row " + (msg.role === "user" ? "user" : "ai");
 
     const bubble = document.createElement("div");
     bubble.className = "bubble";
-    bubble.dataset.id = id;
+    bubble.textContent = msg.content;
 
-    const content = document.createElement("div");
-    content.innerHTML = escapeHtml(text).replaceAll("\n","<br/>");
-    bubble.appendChild(content);
+    // pinned state
+    if(state.pinned.includes(msg.id)){
+      bubble.classList.add("pinned");
+    }
 
     const meta = document.createElement("div");
     meta.className = "meta";
 
     const left = document.createElement("div");
-    left.textContent = fmtTime(ts);
+    left.textContent = formatTime(msg.ts);
 
-    const tools = document.createElement("div");
-    tools.className = "tools";
+    const actions = document.createElement("div");
+    actions.className = "actions";
 
-    const copy = document.createElement("div");
-    copy.className = "tool";
+    const copy = document.createElement("span");
+    copy.className = "chip";
     copy.textContent = "Kopyala";
     copy.onclick = async ()=>{
-      await navigator.clipboard.writeText(text);
-      status("Kopyalandı ✅");
-      beep("send");
+      try{
+        await navigator.clipboard.writeText(msg.content);
+        toast("Kopyalandı ✅");
+      }catch(e){
+        toast("Kopyalanamadı");
+      }
     };
 
-    const pin = document.createElement("div");
-    pin.className = "tool";
-    pin.textContent = pinnedIds.has(id) ? "Pinned" : "Pin";
+    const pin = document.createElement("span");
+    pin.className = "chip";
+    pin.textContent = state.pinned.includes(msg.id) ? "Unpin" : "Pin";
     pin.onclick = ()=>{
-      if(pinnedIds.has(id)){
-        pinnedIds.delete(id);
+      const idx = state.pinned.indexOf(msg.id);
+      if(idx >= 0){
+        state.pinned.splice(idx,1);
         bubble.classList.remove("pinned");
         pin.textContent = "Pin";
-        status("Pin kaldırıldı");
       }else{
-        pinnedIds.add(id);
+        state.pinned.push(msg.id);
         bubble.classList.add("pinned");
-        pin.textContent = "Pinned";
-        status("Pinlendi 📌");
+        pin.textContent = "Unpin";
       }
-      savePins();
-      beep("send");
+      localStorage.setItem("pinned", JSON.stringify(state.pinned));
     };
 
-    tools.appendChild(copy);
-    tools.appendChild(pin);
+    actions.appendChild(copy);
+    actions.appendChild(pin);
 
     meta.appendChild(left);
-    meta.appendChild(tools);
+    meta.appendChild(actions);
 
     bubble.appendChild(meta);
     row.appendChild(bubble);
-    chatEl.appendChild(row);
-
-    if(pinnedIds.has(id)){
-      bubble.classList.add("pinned");
-      pin.textContent = "Pinned";
-    }
-
-    chatEl.scrollTop = chatEl.scrollHeight;
-    return id;
+    messagesEl.appendChild(row);
   }
 
-  function status(txt, kind=""){
-    statusLine.textContent = txt || "";
+  function pushMessage(role, content){
+    const msg = { id: crypto.randomUUID(), role, content, ts: Date.now() };
+    state.history.push({ role, content }); // server'a giden history sade
+    renderMessage(msg);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
   }
 
   async function apiMe(){
-    const r = await fetch("/api/me", {credentials:"include"});
+    const r = await fetch("/api/me");
     return await r.json();
   }
 
-  function showModal(show=true){
-    modal.classList.toggle("show", show);
-    modalErr.style.display = "none";
-    modalErr.textContent = "";
+  function showUser(me){
+    $("whoPill").style.display = "flex";
+    $("logoutBtn").style.display = "inline-flex";
+    $("whoName").textContent = me.name || (me.kind === "guest" ? "Misafir" : "Kullanıcı");
+    $("whoMail").textContent = me.email ? me.email : (me.kind === "guest" ? "guest" : "—");
+
+    $("avatarBox").innerHTML = "";
+    if(me.picture){
+      const img = document.createElement("img");
+      img.src = me.picture;
+      $("avatarBox").appendChild(img);
+    }else{
+      $("avatarBox").textContent = me.kind === "guest" ? "G" : "🙂";
+      $("avatarBox").style.display = "grid";
+      $("avatarBox").style.placeItems = "center";
+      $("avatarBox").style.fontSize = "12px";
+    }
+
+    if(me.is_admin){
+      $("adminBtn").style.display = "inline-flex";
+    }else{
+      $("adminBtn").style.display = "none";
+    }
   }
 
-  async function refreshAuthUI(){
+  async function ensureLogin(){
     const me = await apiMe();
     if(!me.logged_in){
-      whoChip.textContent = "🔒 Giriş gerekli";
-      adminBtn.style.display = "none";
-      logoutBtn.style.display = "none";
-      showModal(true);
-      return;
+      overlayEl.style.display = "flex";
+      $("whoPill").style.display = "none";
+      $("logoutBtn").style.display = "none";
+      $("adminBtn").style.display = "none";
+      return null;
     }
+    overlayEl.style.display = "none";
+    showUser(me);
+    return me;
+  }
 
-    showModal(false);
+  // -----------------------------
+  // send logic (ENTER FIX)
+  // -----------------------------
+  async function send(){
+    const text = inputEl.value.trim();
+    if(!text) return;
+    inputEl.value = "";
+    playSend();
+    pushMessage("user", text);
 
-    if(me.mode==="google"){
-      whoChip.textContent = "✅ " + (me.email || "Google kullanıcı");
-    }else{
-      whoChip.textContent = "👤 " + (me.name || "Misafir");
-    }
+    typingHint.style.display = "block";
 
-    logoutBtn.style.display = "inline-flex";
-    adminBtn.style.display = me.is_admin ? "inline-flex" : "none";
+    try{
+      const r = await fetch("/chat", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ message: text, history: state.history })
+      });
+      const data = await r.json();
+      typingHint.style.display = "none";
 
-    if(chatEl.children.length===0){
-      addBubble("ai", "Selam! Buradayım 😄 Ne yapalım bugün?");
+      if(!r.ok){
+        pushMessage("assistant", (data.detail || "Hata oluştu."));
+        return;
+      }
+
+      pushMessage("assistant", data.reply || "");
+    }catch(e){
+      typingHint.style.display = "none";
+      pushMessage("assistant", "Bağlantı hatası oldu. Tekrar dener misin?");
     }
   }
 
-  // Enter gönder / Shift+Enter alt satır
-  msgEl.addEventListener("keydown", (e)=>{
+  inputEl.addEventListener("keydown", (e)=>{
     if(e.key === "Enter" && !e.shiftKey){
       e.preventDefault();
-      sendBtn.click();
+      send();
     }
   });
+  $("sendBtn").onclick = send;
 
-  sendBtn.onclick = async ()=>{
-    const text = msgEl.value.trim();
-    if(!text) return;
-
-    beep("send");
-    addBubble("user", text);
-    msgEl.value = "";
-    status("Yazıyor...");
-
-    const r = await fetch("/api/chat", {
-      method:"POST",
-      headers: {"Content-Type":"application/json"},
-      credentials:"include",
-      body: JSON.stringify({message:text})
-    });
-
-    const data = await r.json();
-    if(!r.ok){
-      status(data.detail || "Hata");
-      addBubble("ai", "Şu an teknik bir sorun var ama buradayım.");
-      return;
-    }
-
-    addBubble("ai", data.reply || "(boş cevap)", data.ts || new Date().toISOString());
-    status("");
-    beep("recv");
+  // -----------------------------
+  // buttons
+  // -----------------------------
+  $("themeBtn").onclick = ()=>{
+    setTheme(state.theme === "light" ? "dark" : "light");
   };
 
-  imgBtn.onclick = async ()=>{
-    const prompt = promptText();
+  $("soundBtn").onclick = ()=>{
+    state.sound = !state.sound;
+    localStorage.setItem("soundOn", JSON.stringify(state.sound));
+    toast(state.sound ? "Ses açık 🔊" : "Ses kapalı 🔇");
+    $("soundBtn").textContent = state.sound ? "🔊" : "🔇";
+  };
+
+  $("imgBtn").onclick = async ()=>{
+    const prompt = window.prompt("Görsel için kısa bir prompt yaz:");
     if(!prompt) return;
 
-    beep("send");
-    status("Görsel üretiliyor...");
+    typingHint.style.display = "block";
+    try{
+      const r = await fetch("/api/image", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ prompt })
+      });
+      const data = await r.json();
+      typingHint.style.display = "none";
 
-    const r = await fetch("/api/image", {
-      method:"POST",
-      headers: {"Content-Type":"application/json"},
-      credentials:"include",
-      body: JSON.stringify({prompt})
-    });
+      if(!r.ok){
+        toast(data.detail || "Görsel hatası");
+        return;
+      }
 
-    const data = await r.json();
-    if(!r.ok){
-      status(data.detail || "Görsel hatası");
-      addBubble("ai", "Görsel üretim başarısız: " + (data.detail || "Bilinmeyen hata"));
-      return;
+      // b64 -> göster
+      const url = "data:image/png;base64," + data.b64;
+      const w = window.open();
+      w.document.write(`<img src="${url}" style="max-width:100%;height:auto;display:block;margin:0 auto;background:#111"/>`);
+      toast("Görsel hazır ✅");
+    }catch(e){
+      typingHint.style.display = "none";
+      toast("Görsel üretim bağlantı hatası");
     }
+  };
 
-    // url varsa göster
-    if(data.url){
-      addBubble("ai", "Görsel hazır 👇");
-      const row = document.createElement("div");
-      row.className = "row ai";
-      const bubble = document.createElement("div");
-      bubble.className = "bubble";
-      bubble.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px">
-        <img src="${data.url}" style="width:100%;max-width:520px;border-radius:14px;border:1px solid var(--line)" />
-        <div class="meta"><div>${fmtTime(data.ts || new Date().toISOString())}</div><div class="tools"></div></div>
-      </div>`;
-      row.appendChild(bubble);
-      chatEl.appendChild(row);
-      chatEl.scrollTop = chatEl.scrollHeight;
-      status("");
-      beep("recv");
-      return;
+  $("logoutBtn").onclick = async ()=>{
+    await fetch("/logout", {method:"POST"});
+    toast("Çıkış yapıldı");
+    location.href = "/";
+  };
+
+  $("adminBtn").onclick = ()=> location.href = "/admin-ui";
+
+  $("googleBtn").onclick = ()=> location.href = "/auth/google";
+  $("guestBtn").onclick = async ()=>{
+    const r = await fetch("/auth/guest", {method:"POST"});
+    if(r.ok){
+      location.href = "/#chat";
+    }else{
+      toast("Misafir girişi hata");
     }
+  };
 
-    // b64 varsa göster
-    if(data.b64){
-      addBubble("ai", "Görsel hazır 👇");
-      const src = "data:image/png;base64," + data.b64;
-      const row = document.createElement("div");
-      row.className = "row ai";
-      const bubble = document.createElement("div");
-      bubble.className = "bubble";
-      bubble.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px">
-        <img src="${src}" style="width:100%;max-width:520px;border-radius:14px;border:1px solid var(--line)" />
-        <div class="meta"><div>${fmtTime(data.ts || new Date().toISOString())}</div><div class="tools"></div></div>
-      </div>`;
-      row.appendChild(bubble);
-      chatEl.appendChild(row);
-      chatEl.scrollTop = chatEl.scrollHeight;
-      status("");
-      beep("recv");
-      return;
+  // -----------------------------
+  // init
+  // -----------------------------
+  (async function init(){
+    setTheme(state.theme);
+    $("soundBtn").textContent = state.sound ? "🔊" : "🔇";
+
+    const me = await ensureLogin();
+    if(me){
+      // hoşgeldin
+      pushMessage("assistant", "Selam! Hazırım 😄");
     }
-
-    status("Görsel döndürülmedi.");
-  };
-
-  function promptText(){
-    const p = window.prompt("Görsel için kısa açıklama yaz:");
-    return (p||"").trim();
-  }
-
-  // Theme toggle
-  themeBtn.onclick = ()=>{
-    const cur = document.body.getAttribute("data-theme");
-    const next = (cur==="dark") ? "light" : "dark";
-    document.body.setAttribute("data-theme", next);
-    localStorage.setItem(THEME_KEY, next);
-    themeBtn.textContent = next==="dark" ? "🌙" : "☀️";
-    beep("send");
-  };
-
-  // Sound toggle
-  soundBtn.onclick = ()=>{
-    soundOn = !soundOn;
-    localStorage.setItem(SOUND_KEY, soundOn ? "1" : "0");
-    soundBtn.textContent = soundOn ? "🔊" : "🔇";
-    beep("send");
-    status(soundOn ? "Ses açıldı" : "Ses kapandı");
-    setTimeout(()=>status(""), 800);
-  };
-
-  // Admin
-  adminBtn.onclick = ()=>{
-    window.location.href = "/admin-ui";
-  };
-
-  // Logout
-  logoutBtn.onclick = async ()=>{
-    await fetch("/logout", {method:"POST", credentials:"include"});
-    chatEl.innerHTML = "";
-    status("");
-    await refreshAuthUI();
-  };
-
-  // Modal buttons
-  closeModal.onclick = ()=>{ /* kapatma yok; login zorunlu hissi */ };
-
-  googleBtn.onclick = ()=>{
-    // OAuth redirect
-    window.location.href = "/auth/google";
-  };
-
-  guestBtn.onclick = async ()=>{
-    const name = (guestName.value || "").trim();
-    const r = await fetch("/auth/guest", {
-      method:"POST",
-      headers: {"Content-Type":"application/json"},
-      credentials:"include",
-      body: JSON.stringify({name})
-    });
-    const data = await r.json();
-    if(!r.ok){
-      modalErr.style.display="block";
-      modalErr.textContent = data.detail || "Misafir giriş hata";
-      return;
-    }
-    await refreshAuthUI();
-  };
-
-  // Init
-  loadPrefs();
-  refreshAuthUI();
+  })();
 </script>
 </body>
 </html>
