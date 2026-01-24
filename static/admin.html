@@ -1,126 +1,571 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Admin • Berke AI</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Berke AI • Admin</title>
   <style>
     :root{
-      --bg:#0b0f19; --panel:#0f1629; --card:#121b33;
-      --text:#e8eefc; --muted:#a7b4d1; --line:rgba(255,255,255,.08);
-      --accent:#6ea8ff; --shadow:0 20px 60px rgba(0,0,0,.35);
-      --radius:16px;
+      --bg:#0b0f17;
+      --panel:#101826;
+      --panel2:#0f1623;
+      --text:#e8eefc;
+      --muted:#a8b3cf;
+      --line:rgba(255,255,255,.08);
+      --accent:#6ee7ff;
+      --accent2:#a78bfa;
+      --good:#22c55e;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+      --shadow: 0 12px 40px rgba(0,0,0,.45);
+      --chip: rgba(255,255,255,.04);
     }
+    [data-theme="light"]{
+      --bg:#f6f7fb;
+      --panel:#ffffff;
+      --panel2:#f0f3ff;
+      --text:#0a0d14;
+      --muted:#475569;
+      --line:rgba(2,6,23,.10);
+      --shadow: 0 12px 40px rgba(2,6,23,.12);
+      --chip: rgba(2,6,23,.04);
+    }
+
     *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui}
-    .wrap{max-width:1100px;margin:0 auto;padding:16px}
-    .top{
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-      background:rgba(15,22,41,.75);border:1px solid var(--line);border-radius:20px;
-      padding:12px 14px;box-shadow:var(--shadow);backdrop-filter:blur(10px);
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(1200px 700px at 10% 10%, rgba(110,231,255,.18), transparent 55%),
+                  radial-gradient(1000px 650px at 90% 0%, rgba(167,139,250,.18), transparent 55%),
+                  var(--bg);
+      color:var(--text);
     }
-    .brand{display:flex;align-items:center;gap:10px;font-weight:800}
-    .logo{width:34px;height:34px;border-radius:12px;background:linear-gradient(135deg, rgba(110,168,255,.95), rgba(51,209,122,.7));}
-    .btn{border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);padding:9px 12px;border-radius:12px;cursor:pointer;font-weight:700}
-    .grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
-    @media(min-width:900px){.grid{grid-template-columns:1.2fr .8fr}}
-    .card{background:rgba(15,22,41,.75);border:1px solid var(--line);border-radius:20px;padding:14px;box-shadow:var(--shadow)}
-    h2{margin:0 0 10px;font-size:16px}
-    .muted{color:var(--muted);font-size:12px}
-    table{width:100%;border-collapse:collapse}
-    th,td{border-bottom:1px solid var(--line);padding:10px 8px;text-align:left;font-size:12px}
-    th{color:rgba(231,238,252,.75);font-weight:800}
-    .pill{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.03);font-size:12px}
+    .wrap{
+      min-height:100%;
+      display:flex;
+      justify-content:center;
+      padding:16px;
+    }
+    .app{
+      width:min(1200px, 100%);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), transparent 40%), var(--panel);
+      border:1px solid var(--line);
+      border-radius:20px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .topbar{
+      padding:14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), transparent);
+      gap:12px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+    }
+    .logo{
+      width:38px; height:38px; border-radius:12px;
+      background: radial-gradient(12px 12px at 30% 30%, rgba(255,255,255,.35), transparent),
+                  linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 10px 22px rgba(110,231,255,.18);
+    }
+    .brand h1{
+      font-size:15px; margin:0; letter-spacing:.4px;
+      line-height:1.1;
+    }
+    .brand .sub{
+      font-size:12px; color:var(--muted);
+      margin-top:2px;
+    }
+    .actions{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    }
+    .chip{
+      font-size:12px;
+      padding:8px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background: var(--chip);
+      display:flex; align-items:center; gap:8px;
+      color: var(--muted);
+      user-select:none;
+    }
+    .btn{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:700;
+      transition: transform .05s ease, background .2s ease;
+      display:inline-flex; align-items:center; justify-content:center;
+      gap:8px;
+      user-select:none;
+    }
+    .btn:hover{ background: rgba(255,255,255,.06); }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{
+      border:0;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color:#0b0f17;
+    }
+    .btn.danger{
+      border:1px solid rgba(239,68,68,.35);
+      background: rgba(239,68,68,.08);
+    }
+    .btn.icon{ width:44px; padding:10px 0; }
+
+    .content{
+      padding:16px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:14px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap:14px;
+    }
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      background: rgba(255,255,255,.03);
+      overflow:hidden;
+    }
+    .card h2{
+      margin:0 0 6px;
+      font-size:14px;
+      letter-spacing:.3px;
+    }
+    .muted{ color:var(--muted); font-size:12px; }
+
+    .kpi{
+      display:flex; align-items:flex-end; justify-content:space-between;
+      gap:10px;
+    }
+    .kpi .num{
+      font-size:28px;
+      font-weight:900;
+      letter-spacing:.5px;
+    }
+    .kpi .tag{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      color: var(--muted);
+    }
+
+    .toolbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .search{
+      flex:1;
+      min-width:220px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+    }
+    .search input{
+      border:0; outline:none;
+      background:transparent;
+      color:var(--text);
+      width:100%;
+      font-size:13px;
+    }
+    .search input::placeholder{
+      color: rgba(168,179,207,.75);
+    }
+
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      overflow:hidden;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background: rgba(255,255,255,.02);
+    }
+    thead th{
+      text-align:left;
+      font-size:12px;
+      padding:12px;
+      color: var(--muted);
+      border-bottom:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), transparent);
+      position:sticky;
+      top:0;
+      z-index:1;
+    }
+    tbody td{
+      padding:12px;
+      font-size:13px;
+      border-bottom:1px solid var(--line);
+      vertical-align:top;
+      word-break: break-word;
+    }
+    tbody tr:hover td{
+      background: rgba(255,255,255,.03);
+    }
+    tbody tr:last-child td{
+      border-bottom:0;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      font-size:12px;
+      background: rgba(255,255,255,.03);
+      color: var(--muted);
+      user-select:none;
+    }
+    .pill.good{ border-color: rgba(34,197,94,.35); }
+    .pill.warn{ border-color: rgba(245,158,11,.35); }
+    .pill.bad{ border-color: rgba(239,68,68,.35); }
+
+    .footnote{
+      margin-top:10px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+    }
+
+    .toast{
+      position:fixed;
+      right:16px;
+      bottom:16px;
+      background: var(--panel2);
+      border:1px solid var(--line);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      box-shadow: var(--shadow);
+      display:none;
+      max-width: min(520px, 92vw);
+      font-size:13px;
+    }
+    .toast.show{ display:block; }
   </style>
 </head>
-<body>
+
+<body data-theme="dark">
   <div class="wrap">
-    <div class="top">
-      <div class="brand"><div class="logo"></div> Admin Panel</div>
-      <div style="display:flex;gap:8px">
-        <button class="btn" onclick="location.href='/'">Sohbete dön</button>
-        <button class="btn" onclick="loadData()">Yenile</button>
-      </div>
-    </div>
+    <div class="app">
+      <div class="topbar">
+        <div class="brand">
+          <div class="logo"></div>
+          <div>
+            <h1>Berke AI • Admin Panel</h1>
+            <div class="sub" id="subline">kullanıcı girişleri • istatistik • güvenli görüntüleme</div>
+          </div>
+        </div>
 
-    <div class="grid">
-      <div class="card">
-        <h2>Kullanıcılar</h2>
-        <div class="muted" id="counts">yükleniyor…</div>
-        <div style="overflow:auto;margin-top:10px">
-          <table id="usersTable">
-            <thead>
-              <tr>
-                <th>Email</th>
-                <th>Ad</th>
-                <th>Tip</th>
-                <th>Giriş</th>
-                <th>Son giriş</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+        <div class="actions">
+          <div class="chip" id="whoChip">Yükleniyor…</div>
+          <button class="btn icon" id="themeBtn" title="Tema">🌙</button>
+          <button class="btn" id="refreshBtn">🔄 Yenile</button>
+          <button class="btn" id="exportBtn">⬇️ CSV</button>
+          <button class="btn primary" id="goChatBtn">💬 Sohbet</button>
+          <button class="btn danger" id="logoutBtn">Çıkış</button>
         </div>
       </div>
 
-      <div class="card">
-        <h2>Son girişler</h2>
-        <div class="muted">En son 200 kayıt</div>
-        <div style="overflow:auto;margin-top:10px;max-height:520px">
-          <table id="logTable">
-            <thead>
-              <tr>
-                <th>Yöntem</th>
-                <th>Zaman</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+      <div class="content">
+        <div class="grid">
+          <div class="card">
+            <h2>Google kullanıcı</h2>
+            <div class="kpi">
+              <div>
+                <div class="num" id="userCount">—</div>
+                <div class="muted">Toplam kayıtlı kullanıcı</div>
+              </div>
+              <div class="tag">DB üzerinden</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Misafir giriş</h2>
+            <div class="kpi">
+              <div>
+                <div class="num" id="guestCount">—</div>
+                <div class="muted">Toplam misafir sayısı</div>
+              </div>
+              <div class="tag">DB üzerinden</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Durum</h2>
+            <div class="kpi">
+              <div>
+                <div class="num" id="statusKpi">✅</div>
+                <div class="muted" id="statusText">Her şey yolunda</div>
+              </div>
+              <div class="tag" id="envTag">Render / Local</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="toolbar">
+            <div class="search">
+              🔎
+              <input id="q" placeholder="Email / isim ara… (örn: gmail, berke)" />
+            </div>
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+              <span class="pill good" id="adminPill">🛡️ Admin: —</span>
+              <span class="pill" id="updatedPill">⏱️ Güncelleme: —</span>
+            </div>
+          </div>
+
+          <div style="margin-top:12px; overflow:auto; border-radius:16px;">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:34%">Email</th>
+                  <th style="width:22%">İsim</th>
+                  <th style="width:12%">Giriş sayısı</th>
+                  <th style="width:22%">Son giriş</th>
+                  <th style="width:10%">Rol</th>
+                </tr>
+              </thead>
+              <tbody id="tbody">
+                <tr><td colspan="5" class="muted">Yükleniyor…</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="footnote">
+            • Bu tablo <b>/api/admin/stats</b> üzerinden geliyor. <br/>
+            • Kişilerin maili sadece admin tarafından görünür. <br/>
+            • İstersen bir sonraki adımda “kullanıcı detay sayfası” + “sohbet geçmişi listesi” de ekleriz.
+          </div>
         </div>
       </div>
+
     </div>
   </div>
 
+  <div class="toast" id="toast"></div>
+
 <script>
-  async function loadData(){
-    const res = await fetch("/admin/data", {credentials:"include"});
-    const data = await res.json();
-    if(!res.ok){
-      alert(data.detail || "Admin data alınamadı");
-      return;
-    }
+  const whoChip = document.getElementById("whoChip");
+  const themeBtn = document.getElementById("themeBtn");
+  const refreshBtn = document.getElementById("refreshBtn");
+  const exportBtn = document.getElementById("exportBtn");
+  const goChatBtn = document.getElementById("goChatBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
 
-    document.getElementById("counts").textContent =
-      `Google kullanıcı: ${data.counts.google_users} • Misafir kullanıcı: ${data.counts.guest_users}`;
+  const userCount = document.getElementById("userCount");
+  const guestCount = document.getElementById("guestCount");
+  const statusKpi = document.getElementById("statusKpi");
+  const statusText = document.getElementById("statusText");
+  const envTag = document.getElementById("envTag");
 
-    const utbody = document.querySelector("#usersTable tbody");
-    utbody.innerHTML = "";
-    for(const u of data.users){
-      const tr = document.createElement("tr");
-      const tip = u.email ? "google" : "guest";
-      tr.innerHTML = `
-        <td>${u.email || "-"}</td>
-        <td>${u.name || "-"}</td>
-        <td><span class="pill">${tip}</span></td>
-        <td>${u.login_count || 0}</td>
-        <td>${(u.last_login_at || "").replace("T"," ").slice(0,19)}</td>
-      `;
-      utbody.appendChild(tr);
-    }
+  const adminPill = document.getElementById("adminPill");
+  const updatedPill = document.getElementById("updatedPill");
+  const tbody = document.getElementById("tbody");
+  const q = document.getElementById("q");
+  const toast = document.getElementById("toast");
 
-    const ltbody = document.querySelector("#logTable tbody");
-    ltbody.innerHTML = "";
-    for(const l of data.recent_logins){
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td><span class="pill">${l.method}</span></td>
-        <td>${(l.created_at || "").replace("T"," ").slice(0,19)}</td>
-      `;
-      ltbody.appendChild(tr);
+  const THEME_KEY = "berke_ai_theme_v1";
+
+  let rawUsers = [];
+
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.classList.add("show");
+    setTimeout(()=>toast.classList.remove("show"), 2200);
+  }
+
+  function loadTheme(){
+    const t = localStorage.getItem(THEME_KEY);
+    if(t) document.body.setAttribute("data-theme", t);
+    themeBtn.textContent = document.body.getAttribute("data-theme")==="dark" ? "🌙" : "☀️";
+  }
+
+  themeBtn.onclick = ()=>{
+    const cur = document.body.getAttribute("data-theme");
+    const next = (cur==="dark") ? "light" : "dark";
+    document.body.setAttribute("data-theme", next);
+    localStorage.setItem(THEME_KEY, next);
+    themeBtn.textContent = next==="dark" ? "🌙" : "☀️";
+  };
+
+  function fmtDate(iso){
+    if(!iso) return "—";
+    try{
+      const d = new Date(iso);
+      return d.toLocaleString([], {year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit"});
+    }catch{
+      return iso;
     }
   }
 
-  loadData();
+  async function apiMe(){
+    const r = await fetch("/api/me", {credentials:"include"});
+    return await r.json();
+  }
+
+  async function apiStats(){
+    const r = await fetch("/api/admin/stats", {credentials:"include"});
+    const data = await r.json();
+    if(!r.ok){
+      throw new Error(data.detail || "Admin stats hata");
+    }
+    return data;
+  }
+
+  function renderTable(){
+    const query = (q.value || "").trim().toLowerCase();
+    const users = rawUsers.filter(u=>{
+      if(!query) return true;
+      return (u.email||"").toLowerCase().includes(query) || (u.name||"").toLowerCase().includes(query);
+    });
+
+    tbody.innerHTML = "";
+    if(users.length === 0){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="5" class="muted">Sonuç yok.</td>`;
+      tbody.appendChild(tr);
+      return;
+    }
+
+    for(const u of users){
+      const tr = document.createElement("tr");
+      const role = u.is_admin ? `<span class="pill good">Admin</span>` : `<span class="pill">User</span>`;
+      tr.innerHTML = `
+        <td>${escapeHtml(u.email || "")}</td>
+        <td>${escapeHtml(u.name || "—")}</td>
+        <td><b>${u.login_count ?? 0}</b></td>
+        <td>${escapeHtml(fmtDate(u.last_login_at))}</td>
+        <td>${role}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+  }
+
+  function escapeHtml(str){
+    return (str||"")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;");
+  }
+
+  function toCSV(users){
+    const rows = [
+      ["email","name","login_count","last_login_at","is_admin"]
+    ];
+    for(const u of users){
+      rows.push([
+        u.email || "",
+        u.name || "",
+        String(u.login_count ?? 0),
+        u.last_login_at || "",
+        String(!!u.is_admin),
+      ]);
+    }
+    return rows.map(r => r.map(cell=>{
+      const s = String(cell).replaceAll('"','""');
+      return `"${s}"`;
+    }).join(",")).join("\n");
+  }
+
+  function download(filename, text){
+    const blob = new Blob([text], {type:"text/csv;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  async function refresh(){
+    try{
+      statusKpi.textContent = "⏳";
+      statusText.textContent = "Yükleniyor…";
+
+      const me = await apiMe();
+      if(!me.logged_in){
+        whoChip.textContent = "🔒 Giriş yok";
+        adminPill.textContent = "🛡️ Admin: hayır";
+        statusKpi.textContent = "⛔";
+        statusText.textContent = "Önce Google ile giriş yap";
+        tbody.innerHTML = `<tr><td colspan="5" class="muted">Giriş yok.</td></tr>`;
+        return;
+      }
+
+      whoChip.textContent = "✅ " + (me.email || me.name || "Admin");
+      adminPill.textContent = "🛡️ Admin: " + (me.is_admin ? "evet" : "hayır");
+
+      const data = await apiStats();
+
+      rawUsers = data.users || [];
+      userCount.textContent = String(rawUsers.length);
+      guestCount.textContent = String(data.guest_count ?? 0);
+
+      updatedPill.textContent = "⏱️ Güncelleme: " + new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+      renderTable();
+
+      statusKpi.textContent = "✅";
+      statusText.textContent = "Her şey yolunda";
+
+      envTag.textContent = location.hostname.includes("onrender.com") ? "Render" : "Local";
+    } catch (e){
+      statusKpi.textContent = "⛔";
+      statusText.textContent = "Hata";
+      tbody.innerHTML = `<tr><td colspan="5" class="muted">Hata: ${escapeHtml(e.message || String(e))}</td></tr>`;
+      showToast("Admin stats alınamadı");
+    }
+  }
+
+  refreshBtn.onclick = ()=>refresh();
+
+  exportBtn.onclick = ()=>{
+    const csv = toCSV(rawUsers);
+    const name = "berke_ai_users_" + new Date().toISOString().slice(0,10) + ".csv";
+    download(name, csv);
+    showToast("CSV indirildi ✅");
+  };
+
+  goChatBtn.onclick = ()=>{ window.location.href = "/"; };
+
+  logoutBtn.onclick = async ()=>{
+    await fetch("/logout", {method:"POST", credentials:"include"});
+    window.location.href = "/";
+  };
+
+  q.addEventListener("input", ()=>renderTable());
+
+  loadTheme();
+  refresh();
 </script>
 </body>
 </html>
