@@ -25,7 +25,6 @@
       --ok: rgba(34,197,94,.85);
     }
 
-    /* LIGHT THEME */
     body.light{
       --bg0:#f3f5fb; --bg1:#e9eefc;
       --txt:#0b1220; --mut:#475569;
@@ -36,7 +35,6 @@
 
       --aiBg: rgba(255,255,255,.85);
       --aiBorder: rgba(15,23,42,.10);
-
       --focus: rgba(59,130,246,.22);
     }
 
@@ -79,7 +77,6 @@
       .app{border-radius:0;border:none;box-shadow:none}
     }
 
-    /* TOPBAR */
     .top{
       flex:0 0 auto;
       display:flex;
@@ -130,11 +127,6 @@
     body.light .pill{ background: rgba(255,255,255,.55); }
     .pill:hover{ filter: brightness(1.05); }
 
-    .icon{
-      width:14px; height:14px; display:inline-block;
-    }
-
-    /* LOGIN CARD */
     .login{
       flex:1 1 auto;
       display:flex;
@@ -181,7 +173,6 @@
     }
     .small{ margin-top:12px; text-align:center; font-size:12px; color:var(--mut); }
 
-    /* CHAT */
     .chat{
       flex:1 1 auto;
       min-height:0;
@@ -193,13 +184,12 @@
       min-height:0;
       overflow-y:auto;
       -webkit-overflow-scrolling: touch;
-      padding:18px 14px 200px;
+      padding:18px 14px 190px;
       display:flex;
       flex-direction:column;
       gap:14px;
     }
 
-    /* PINS + SUMMARY BAR */
     .utilbar{
       position: sticky;
       top:0;
@@ -226,9 +216,7 @@
       text-overflow:ellipsis;
       max-width: 70%;
     }
-    .util-actions{
-      display:flex; gap:8px; flex:0 0 auto;
-    }
+    .util-actions{ display:flex; gap:8px; flex:0 0 auto; }
     .chip{
       border:1px solid var(--stroke);
       background: rgba(5,10,20,.10);
@@ -271,11 +259,8 @@
       background: var(--aiBg);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-      position:relative;
     }
-    .row.ai .bubble{
-      border-bottom-left-radius:8px;
-    }
+    .row.ai .bubble{ border-bottom-left-radius:8px; }
     .row.me .bubble{
       background: linear-gradient(135deg, rgba(96,165,250,.95), rgba(167,139,250,.95));
       border:1px solid rgba(96,165,250,.30);
@@ -283,7 +268,20 @@
       border-bottom-right-radius:8px;
     }
 
-    /* message action buttons (pin/copy) */
+    .meta{
+      font-size:11px;
+      color: rgba(229,231,235,.68);
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    body.light .meta{ color: rgba(2,6,23,.65); }
+    .row.me .meta{ justify-content:flex-end; }
+
+    .status{ font-weight:900; color: rgba(229,231,235,.75); }
+    body.light .status{ color: rgba(2,6,23,.60); }
+    .status.ok{ color: var(--ok); }
+
     .msgActions{
       display:flex;
       gap:6px;
@@ -305,24 +303,6 @@
     body.light .mini{ background: rgba(255,255,255,.65); }
     .mini:hover{ filter: brightness(1.05); }
 
-    .meta{
-      font-size:11px;
-      color: rgba(229,231,235,.68);
-      display:flex;
-      gap:8px;
-      align-items:center;
-    }
-    body.light .meta{ color: rgba(2,6,23,.65); }
-    .row.me .meta{ justify-content:flex-end; }
-
-    .status{
-      font-weight:900;
-      color: rgba(229,231,235,.75);
-    }
-    body.light .status{ color: rgba(2,6,23,.60); }
-    .status.ok{ color: var(--ok); }
-
-    /* COMPOSER */
     .composer{
       position: sticky;
       bottom:0;
@@ -351,6 +331,7 @@
       border-color: rgba(96,165,250,.35);
       box-shadow: 0 0 0 6px rgba(96,165,250,.10), 0 16px 45px rgba(0,0,0,.25);
     }
+
     textarea{
       flex:1 1 auto;
       border:none;
@@ -374,12 +355,11 @@
       cursor:pointer;
       font-weight:900;
       color:#081021;
-      background: linear-gradient(135deg, var(--me1), var(--me2));
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
       box-shadow: 0 18px 50px rgba(96,165,250,.20);
     }
     .send:hover{ filter: brightness(1.05); }
 
-    /* Typing dots */
     .typing{
       margin-top:10px;
       display:none;
@@ -390,11 +370,7 @@
       font-size:12px;
       font-weight:800;
     }
-    .dots{
-      display:inline-flex;
-      gap:4px;
-      align-items:center;
-    }
+    .dots{ display:inline-flex; gap:4px; align-items:center; }
     .dot3{
       width:6px;height:6px;border-radius:999px;
       background: rgba(148,163,184,.85);
@@ -425,7 +401,6 @@
     }
     body.light .toast{ background: rgba(255,255,255,.85); color:#0b1220; }
 
-    /* Reduced motion */
     @media (prefers-reduced-motion: reduce){
       .dot3{ animation:none; }
     }
@@ -442,14 +417,8 @@
         </div>
 
         <div class="right">
-          <div class="pill" id="soundBtn" title="Ses aç/kapat">
-            <span class="icon">🔊</span><span id="soundLabel">On</span>
-          </div>
-
-          <div class="pill" id="themeBtn" title="Tema değiştir">
-            <span class="icon">🌙</span><span id="themeLabel">Dark</span>
-          </div>
-
+          <div class="pill" id="soundBtn" title="Ses aç/kapat"><span id="soundIcon">🔊</span><span id="soundLabel">On</span></div>
+          <div class="pill" id="themeBtn" title="Tema değiştir"><span id="themeIcon">🌙</span><span id="themeLabel">Dark</span></div>
           <div class="pill" id="adminBtn" style="display:none;">Admin</div>
         </div>
       </div>
@@ -472,7 +441,7 @@
 
           <div style="height:10px"></div>
 
-          <button class="btn" onclick="guest()">Misafir olarak devam et</button>
+          <button class="btn" id="guestBtn">Misafir olarak devam et</button>
 
           <div class="small">Not: Edge cache bazen sapıtıyor. Çalışmazsa Ctrl+F5 ya da gizli sekme.</div>
         </div>
@@ -483,18 +452,18 @@
         <div class="utilbar" id="utilbar">
           <div class="pintext" id="pintext">Pinned: -</div>
           <div class="util-actions">
-            <div class="chip" onclick="summarize()">🧠 Özet</div>
-            <div class="chip" onclick="clearPin()">📌 Pin Kaldır</div>
+            <div class="chip" id="sumBtn">🧠 Özet</div>
+            <div class="chip" id="clrPinBtn">📌 Pin Kaldır</div>
           </div>
         </div>
 
         <div class="msgs" id="msgs"></div>
 
         <div class="composer">
-          <form class="inputWrap" onsubmit="send(event)">
+          <div class="inputWrap">
             <textarea id="m" rows="1" placeholder="Mesaj yaz…"></textarea>
-            <button class="send" type="submit" title="Gönder">➤</button>
-          </form>
+            <button class="send" id="sendBtn" type="button" title="Gönder">➤</button>
+          </div>
 
           <div class="typing" id="typing">
             <span>Yazıyor</span>
@@ -511,6 +480,7 @@
   <div class="toast" id="toast"></div>
 
 <script>
+  // ====== State
   const msgs = document.getElementById("msgs");
   const typing = document.getElementById("typing");
   const ta = document.getElementById("m");
@@ -523,33 +493,38 @@
   const email = params.get("email") || "";
   const loginType = params.get("login") || "";
 
-  // --- Settings: sound + theme (persist)
+  // ====== Settings: sound + theme (persist)
   const LS_SOUND = "berke_ai_sound";
   const LS_THEME = "berke_ai_theme";
+  const LS_PIN = "berke_ai_pin";
 
   let soundOn = (localStorage.getItem(LS_SOUND) ?? "1") === "1";
   let theme = localStorage.getItem(LS_THEME) || "dark";
 
   const soundBtn = document.getElementById("soundBtn");
+  const soundIcon = document.getElementById("soundIcon");
   const soundLabel = document.getElementById("soundLabel");
   const themeBtn = document.getElementById("themeBtn");
+  const themeIcon = document.getElementById("themeIcon");
   const themeLabel = document.getElementById("themeLabel");
+  const adminBtn = document.getElementById("adminBtn");
 
   function applyTheme(){
     if(theme === "light"){
       document.body.classList.add("light");
       themeLabel.textContent = "Light";
-      themeBtn.querySelector(".icon").textContent = "☀️";
-    }else{
+      themeIcon.textContent = "☀️";
+    } else {
       document.body.classList.remove("light");
       themeLabel.textContent = "Dark";
-      themeBtn.querySelector(".icon").textContent = "🌙";
+      themeIcon.textContent = "🌙";
     }
   }
   function applySound(){
     soundLabel.textContent = soundOn ? "On" : "Off";
-    soundBtn.querySelector(".icon").textContent = soundOn ? "🔊" : "🔇";
+    soundIcon.textContent = soundOn ? "🔊" : "🔇";
   }
+  applyTheme(); applySound();
 
   themeBtn.addEventListener("click", ()=>{
     theme = (theme === "dark") ? "light" : "dark";
@@ -566,10 +541,14 @@
     showToast(soundOn ? "Ses açıldı" : "Ses kapandı");
   });
 
-  applyTheme();
-  applySound();
+  function showToast(text){
+    toast.textContent = text;
+    toast.style.display = "block";
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(()=> toast.style.display="none", 1500);
+  }
 
-  // --- Sounds (WebAudio, no file needed)
+  // ====== WebAudio sfx (no file)
   let audioCtx;
   function sfx(freq=440, dur=0.06, type="sine", gain=0.06){
     if(!soundOn) return;
@@ -580,8 +559,7 @@
       o.type = type;
       o.frequency.value = freq;
       g.gain.value = gain;
-      o.connect(g);
-      g.connect(audioCtx.destination);
+      o.connect(g); g.connect(audioCtx.destination);
       o.start();
       setTimeout(()=>{ o.stop(); }, dur*1000);
     }catch(e){}
@@ -590,82 +568,24 @@
   function recvSfx(){ sfx(520, 0.07, "sine", 0.05); }
   function clickSfx(){ sfx(880, 0.03, "square", 0.03); }
 
-  // --- Login buttons
-  document.getElementById("googleBtn").addEventListener("click", ()=>{
-    clickSfx();
-    location.href = "/auth/google";
-  });
+  // ====== UI helpers
+  function typingOn(){ typing.style.display="flex"; scrollBottom(true); }
+  function typingOff(){ typing.style.display="none"; }
 
-  function showToast(text){
-    toast.textContent = text;
-    toast.style.display = "block";
-    clearTimeout(showToast._t);
-    showToast._t = setTimeout(()=> toast.style.display="none", 1600);
-  }
-
-  // --- Chat open
-  function showChat(){
-    document.getElementById("login").style.display="none";
-    document.getElementById("chat").style.display="flex";
-
-    subtitle.textContent = email ? ("Giriş: " + email) : "Misafir Modu";
-
-    // Admin only for you
-    if(email && email.toLowerCase() === "berkekarakulak@gmail.com"){
-      const a = document.getElementById("adminBtn");
-      a.style.display="inline-block";
-      a.onclick = () => {
-        clickSfx();
-        const key = prompt("Admin key (Render ENV: ADMIN_PANEL_KEY)","");
-        const url = key
-          ? `/admin-ui?email=${encodeURIComponent(email)}&key=${encodeURIComponent(key)}`
-          : `/admin-ui?email=${encodeURIComponent(email)}`;
-        location.href = url;
-      };
+  function scrollBottom(force){
+    if(force){
+      msgs.scrollTop = msgs.scrollHeight;
+      return;
     }
-
-    loadPin();
-    scrollBottom(true);
+    const nearBottom = (msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight) < 220;
+    if(nearBottom) msgs.scrollTop = msgs.scrollHeight;
   }
 
-  if(loginType === "google" && email){
-    showChat();
-  }
-
-  async function guest(){
-    clickSfx();
-    fetch("/guest", {method:"POST"}).catch(()=>{});
-    history.replaceState(null,"", "/");
-    showChat();
-  }
-
-  // --- Enter send / Shift+Enter newline
-  ta.addEventListener("keydown", (e)=>{
-    if(e.key === "Enter" && !e.shiftKey){
-      e.preventDefault();
-      ta.form.requestSubmit();
-    }
-  });
-
-  // --- Auto-grow textarea
-  ta.addEventListener("input", ()=>{
-    ta.style.height = "auto";
-    ta.style.height = Math.min(180, ta.scrollHeight) + "px";
-  });
-
-  ta.addEventListener("focus", ()=> setTimeout(()=>scrollBottom(true), 200));
-
-  // --- Message rendering
   function timeNow(){
     return new Date().toLocaleTimeString("tr-TR", {hour:"2-digit", minute:"2-digit"});
   }
 
-  // Read/Delivered simulation (client-side)
-  const STATUS = {
-    SENT: "Gönderildi",
-    DELIVERED: "Teslim",
-    READ: "Okundu"
-  };
+  const STATUS = { SENT:"Gönderildi", DELIVERED:"Teslim", READ:"Okundu" };
 
   function addMsg(role, text, status=null){
     const row = document.createElement("div");
@@ -726,29 +646,16 @@
     msgs.appendChild(row);
 
     scrollBottom(false);
-    return { row, stEl };
+    return { stEl };
   }
 
-  function scrollBottom(force){
-    if(force){
-      msgs.scrollTop = msgs.scrollHeight;
-      return;
-    }
-    const nearBottom = (msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight) < 220;
-    if(nearBottom) msgs.scrollTop = msgs.scrollHeight;
-  }
-
-  function typingOn(){ typing.style.display="flex"; scrollBottom(true); }
-  function typingOff(){ typing.style.display="none"; }
-
-  // --- Pin + Summary
-  const LS_PIN = "berke_ai_pin";
+  // ====== Pin
   function loadPin(){
     const p = localStorage.getItem(LS_PIN) || "";
     if(p){
       utilbar.style.display = "flex";
       pintext.textContent = "Pinned: " + p;
-    }else{
+    } else {
       utilbar.style.display = "none";
       pintext.textContent = "Pinned: -";
     }
@@ -766,8 +673,9 @@
     loadPin();
     showToast("Pin kaldırıldı");
   }
+  document.getElementById("clrPinBtn").addEventListener("click", clearPin);
 
-  // Collect last N messages from DOM
+  // ====== Summary (uses /chat prompt)
   function collectContext(max=20){
     const items = Array.from(msgs.querySelectorAll(".row"));
     const last = items.slice(-max);
@@ -785,9 +693,7 @@
       showToast("Özetlenecek mesaj yok");
       return;
     }
-
     typingOn();
-    // We use /chat itself: prompt based summary.
     const prompt =
 `Aşağıdaki konuşmayı kısa, net, maddeli şekilde özetle.
 1) Ana konular
@@ -813,24 +719,67 @@ ${context}`;
       addMsg("ai", "Özet sırasında bağlantı hatası oldu.");
     }
   }
+  document.getElementById("sumBtn").addEventListener("click", summarize);
 
-  // --- Send
-  async function send(e){
-    if(e) e.preventDefault();
+  // ====== Chat open
+  function showChat(){
+    document.getElementById("login").style.display="none";
+    document.getElementById("chat").style.display="flex";
 
+    subtitle.textContent = email ? ("Giriş: " + email) : "Misafir Modu";
+
+    // Admin only for you
+    if(email && email.toLowerCase() === "berkekarakulak@gmail.com"){
+      adminBtn.style.display="inline-flex";
+      adminBtn.onclick = () => {
+        clickSfx();
+        const key = prompt("Admin key (Render ENV: ADMIN_PANEL_KEY)","");
+        const url = key
+          ? `/admin-ui?email=${encodeURIComponent(email)}&key=${encodeURIComponent(key)}`
+          : `/admin-ui?email=${encodeURIComponent(email)}`;
+        location.href = url;
+      };
+    } else {
+      adminBtn.style.display="none";
+    }
+
+    loadPin();
+    scrollBottom(true);
+
+    // focus input for desktop
+    setTimeout(()=>{ try{ ta.focus(); }catch(e){} }, 120);
+  }
+
+  // ====== Login actions
+  document.getElementById("googleBtn").addEventListener("click", ()=>{
+    clickSfx();
+    location.href = "/auth/google";
+  });
+
+  document.getElementById("guestBtn").addEventListener("click", async ()=>{
+    clickSfx();
+    fetch("/guest", {method:"POST"}).catch(()=>{});
+    history.replaceState(null,"", "/");
+    showChat();
+  });
+
+  if(loginType === "google" && email){
+    showChat();
+  }
+
+  // ====== FIXED SENDING (no requestSubmit)
+  async function sendMessage(){
     const text = (ta.value || "").trim();
     if(!text) return;
 
     ta.value = "";
     ta.style.height = "auto";
 
-    // user message with delivery simulation
     const { stEl } = addMsg("me", text, STATUS.SENT);
     sendSfx();
 
-    // simulate delivered + read (client side)
     setTimeout(()=>{ if(stEl) stEl.textContent = STATUS.DELIVERED; }, 250);
-    setTimeout(()=>{ if(stEl) { stEl.textContent = STATUS.READ; stEl.classList.add("ok"); } }, 900);
+    setTimeout(()=>{ if(stEl){ stEl.textContent = STATUS.READ; stEl.classList.add("ok"); } }, 900);
 
     typingOn();
 
@@ -849,6 +798,28 @@ ${context}`;
       addMsg("ai", "Bağlantı hatası oldu. Tekrar dener misin?");
     }
   }
+
+  // send button
+  document.getElementById("sendBtn").addEventListener("click", (e)=>{
+    e.preventDefault();
+    sendMessage();
+  });
+
+  // Enter send / Shift+Enter newline
+  ta.addEventListener("keydown", (e)=>{
+    if(e.key === "Enter" && !e.shiftKey){
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  // Auto-grow textarea
+  ta.addEventListener("input", ()=>{
+    ta.style.height = "auto";
+    ta.style.height = Math.min(180, ta.scrollHeight) + "px";
+  });
+
+  ta.addEventListener("focus", ()=> setTimeout(()=>scrollBottom(true), 200));
 </script>
 </body>
 </html>
