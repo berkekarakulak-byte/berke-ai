@@ -1,7 +1,6 @@
 import os
-import time
 import secrets
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict
 
 from fastapi import FastAPI, Request, HTTPException, Body
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, RedirectResponse
@@ -26,16 +25,19 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "").strip()
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "").strip()
 
-# Render ortam tespiti
 IS_PROD = (os.getenv("RENDER") == "true") or (os.getenv("ENV") == "prod")
-SESSION_SECRET = os.getenv("SESSION_SECRET", "").strip() or secrets.token_urlsafe(32)
+SESSION_SECRET = os.getenv("SESSION_SECRET", "").strip() or secrets.token_urlsafe(48)
 
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "").strip()  # Render'da mutlaka ekle
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "").strip()
 
 RAW_DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
-# Render Postgres URL genelde "postgresql://..." gelir.
-# SQLAlchemy + psycopg için "postgresql+psycopg://..." olmalı.
+
+
 def normalize_db_url(url: str) -> str:
+    """
+    SQLAlchemy psycopg (v3) driver kullanacağız.
+    URL postgres/postgresql ise 'postgresql+psycopg://' olmalı.
+    """
     if not url:
         return ""
     if url.startswith("postgresql://"):
@@ -44,6 +46,7 @@ def normalize_db_url(url: str) -> str:
         return url.replace("postgres://", "postgresql+psycopg://", 1)
     return url
 
+
 DATABASE_URL = normalize_db_url(RAW_DATABASE_URL)
 
 # =========================
@@ -51,28 +54,26 @@ DATABASE_URL = normalize_db_url(RAW_DATABASE_URL)
 # =========================
 app = FastAPI()
 
-# Proxy headers => Google redirect_uri https doğru olsun (Render arkasında şart)
+# Render arkasında https + host doğru algılansın (Google OAuth için kritik)
 app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 
-# CORS (tek sayfa frontend için rahat)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # istersen domaininle sınırlarsın
+    allow_origins=["*"],  # Prod'da istersen domaininle sınırla
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Session => admin ve login kalıcılığı
 app.add_middleware(
     SessionMiddleware,
     secret_key=SESSION_SECRET,
     same_site="lax",
-    https_only=IS_PROD,  # Render=https => True, local=http => False
+    https_only=IS_PROD,   # Render https => True, local http => False
 )
 
 # =========================
-# OpenAI Client (opsiyonel)
+# OpenAI
 # =========================
 client: Optional[OpenAI] = None
 if OPENAI_API_KEY:
@@ -83,8 +84,8 @@ if OPENAI_API_KEY:
 # =========================
 engine: Optional[Engine] = None
 if DATABASE_URL:
-    # Postgres için connect_args boş.
     engine = create_engine(DATABASE_URL, pool_pre_ping=True, future=True)
+
 
 def db_exec(sql: str, params: Optional[dict] = None):
     if not engine:
@@ -92,10 +93,10 @@ def db_exec(sql: str, params: Optional[dict] = None):
     with engine.begin() as conn:
         return conn.execute(text(sql), params or {})
 
+
 def ensure_tables():
     if not engine:
         return
-    # basit tablo: users + logins
     db_exec("""
     CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -115,15 +116,16 @@ def ensure_tables():
     );
     """)
 
+
 @app.on_event("startup")
 def on_startup():
     ensure_tables()
+
 
 # =========================
 # OAuth (Google)
 # =========================
 oauth = OAuth()
-
 if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
     oauth.register(
         name="google",
@@ -140,23 +142,26 @@ if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
 def get_user(request: Request) -> Optional[dict]:
     return request.session.get("user")
 
+
 def require_user(request: Request) -> dict:
     u = get_user(request)
     if not u:
         raise HTTPException(status_code=401, detail="Not logged in")
     return u
 
+
 def is_admin(request: Request) -> bool:
     return bool(request.session.get("is_admin"))
+
 
 def require_admin(request: Request):
     if not is_admin(request):
         raise HTTPException(status_code=403, detail="Not admin")
 
+
 def record_login(email: str, name: str = "", picture: str = "", provider: str = "unknown"):
     if not engine:
         return
-    # upsert user
     db_exec("""
     INSERT INTO users (email, name, picture, last_login)
     VALUES (:email, :name, :picture, NOW())
@@ -170,11 +175,10 @@ def record_login(email: str, name: str = "", picture: str = "", provider: str = 
 
 
 # =========================
-# Static Frontend
+# Frontend
 # =========================
 @app.get("/", response_class=HTMLResponse)
 def home():
-    # index dosyan static/index.html olarak duruyor
     path = os.path.join("static", "index.html")
     if not os.path.exists(path):
         return HTMLResponse(
@@ -185,26 +189,27 @@ def home():
 
 
 # =========================
-# Auth Routes
+# Auth
 # =========================
 @app.get("/me")
 def me(request: Request):
-    u = request.session.get("user")
     return {
-        "user": u,
+        "user": request.session.get("user"),
         "is_admin": bool(request.session.get("is_admin")),
         "is_prod": IS_PROD,
+        "db_configured": bool(engine),
     }
+
 
 @app.post("/logout")
 def logout(request: Request):
     request.session.clear()
     return {"ok": True}
 
+
 @app.post("/login/guest")
 def login_guest(request: Request, payload: dict = Body(default={})):
-    # Misafir: random id ve label
-    guest_id = payload.get("guest_id") or f"guest_{secrets.token_hex(4)}"
+    guest_id = (payload.get("guest_id") or f"guest_{secrets.token_hex(4)}").strip()
     request.session["user"] = {
         "email": f"{guest_id}@guest.local",
         "name": "Misafir",
@@ -220,7 +225,7 @@ async def login_google(request: Request):
     if not (GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET):
         raise HTTPException(status_code=500, detail="Google OAuth env missing (GOOGLE_CLIENT_ID/SECRET).")
 
-    # callback URL kesin: https://domain/auth/google
+    # https://<domain>/auth/google
     redirect_uri = str(request.url_for("auth_google"))
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
@@ -230,12 +235,10 @@ async def auth_google(request: Request):
     try:
         token = await oauth.google.authorize_access_token(request)
     except OAuthError as e:
-        # Google "invalid_request" gibi şeyleri burada görürsün
-        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
+        return JSONResponse({"ok": False, "error": f"OAuthError: {str(e)}"}, status_code=400)
 
     userinfo = token.get("userinfo")
     if not userinfo:
-        # bazı durumlarda userinfo ayrı çekilir
         userinfo = await oauth.google.parse_id_token(request, token)
 
     email = (userinfo.get("email") or "").strip()
@@ -253,14 +256,12 @@ async def auth_google(request: Request):
     }
     request.session["is_admin"] = False
 
-    # DB login kaydı
     record_login(email=email, name=name, picture=picture, provider="google")
-
     return RedirectResponse(url="/")
 
 
 # =========================
-# Admin Routes
+# Admin
 # =========================
 @app.post("/admin/login")
 def admin_login(request: Request, payload: dict = Body(...)):
@@ -273,10 +274,12 @@ def admin_login(request: Request, payload: dict = Body(...)):
     request.session["is_admin"] = True
     return {"ok": True}
 
+
 @app.post("/admin/logout")
 def admin_logout(request: Request):
     request.session["is_admin"] = False
     return {"ok": True}
+
 
 @app.get("/admin/stats")
 def admin_stats(request: Request):
@@ -303,21 +306,20 @@ def admin_stats(request: Request):
 
 
 # =========================
-# Chat API
+# Chat
 # =========================
 @app.post("/api/chat")
 def api_chat(request: Request, payload: dict = Body(...)):
     user = require_user(request)
-
     if not client:
         raise HTTPException(status_code=500, detail="OPENAI_API_KEY missing on server.")
 
     message = (payload.get("message") or "").strip()
-    history = payload.get("history") or []  # list[{role, content}]
+    history = payload.get("history") or []
+
     if not message:
         raise HTTPException(status_code=400, detail="message is required")
 
-    # history güvenliği: rol filtrele
     safe_history: List[Dict[str, str]] = []
     for item in history[-12:]:
         r = item.get("role")
@@ -340,7 +342,7 @@ def api_chat(request: Request, payload: dict = Body(...)):
 
 
 # =========================
-# Image API (şimdilik kalsın)
+# Image (şimdilik kalsın)
 # =========================
 @app.post("/api/image")
 def api_image(request: Request, payload: dict = Body(...)):
@@ -352,33 +354,23 @@ def api_image(request: Request, payload: dict = Body(...)):
     if not prompt:
         raise HTTPException(status_code=400, detail="prompt is required")
 
-    # Billing limit vs. için hata mesajını UI'ya net döndürelim
     try:
-        # Eğer hesabında görüntü üretim açıksa:
-        # Not: Model adı değişebilir; env'den alıyoruz.
         image_model = os.getenv("IMAGE_MODEL", "gpt-image-1")
         result = client.images.generate(
             model=image_model,
             prompt=prompt,
             size="1024x1024",
         )
-        # openai python sdk genelde b64 veya url döndürebilir (modele göre)
-        data0 = result.data[0]
-        # url varsa
-        if getattr(data0, "url", None):
-            return {"ok": True, "url": data0.url}
-        # b64 varsa
-        if getattr(data0, "b64_json", None):
-            return {"ok": True, "b64": data0.b64_json}
+        d0 = result.data[0]
+        if getattr(d0, "url", None):
+            return {"ok": True, "url": d0.url}
+        if getattr(d0, "b64_json", None):
+            return {"ok": True, "b64": d0.b64_json}
         return {"ok": False, "error": "Unknown image response format"}
     except Exception as e:
-        # Billing hard limit gibi hataları aynen göster
         raise HTTPException(status_code=400, detail=f"Görsel üretim hata: {e}")
 
 
-# =========================
-# Health
-# =========================
 @app.get("/health")
 def health():
     return {"ok": True, "db": bool(engine), "prod": IS_PROD}
